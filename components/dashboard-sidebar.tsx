@@ -17,7 +17,6 @@ import {
   DollarSign,
   Shield,
   Settings,
-  Wrench,
 } from "lucide-react"
 
 interface NavItem {
@@ -77,9 +76,11 @@ export function DashboardSidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-950/80 backdrop-blur-xl border-r border-white/5 flex flex-col">
       <div className="h-16 flex items-center gap-3 px-6 border-b border-white/5">
-        <div className="rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 p-2 shadow-lg shadow-indigo-500/20">
-          <Wrench className="h-5 w-5 text-white" />
-        </div>
+        <img
+          src="/images/logo-no-background.png"
+          alt="RepairSuite Logo"
+          className="h-7 w-7 object-contain drop-shadow-[0_0_12px_rgba(139,92,246,0.5)]"
+        />
         <div>
           <h1 className="text-lg font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
             RepairSuite

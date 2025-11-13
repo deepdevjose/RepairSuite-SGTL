@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import { Wrench, AlertCircle } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function LoginPage() {
@@ -81,11 +81,12 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 max-w-lg">
-          {/* Logo and name - cleaner design */}
           <div className="flex items-center gap-3 mb-12">
-            <div className="rounded-lg bg-indigo-600 p-2.5">
-              <Wrench className="h-7 w-7 text-white" strokeWidth={2} />
-            </div>
+            <img
+              src="/images/logo-no-background.png"
+              alt="RepairSuite Logo"
+              className="h-12 w-12 object-contain drop-shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+            />
             <div>
               <h1 className="text-2xl font-bold text-slate-100">RepairSuite</h1>
               <p className="text-xs text-indigo-400 font-semibold tracking-wider">SGTL</p>
@@ -124,12 +125,13 @@ export default function LoginPage() {
 
       <div className="flex w-full lg:w-1/2 items-center justify-center p-6 lg:p-12 bg-slate-950">
         <div className="w-full max-w-[460px]">
-          {/* Mobile branding - compact */}
           <div className="mb-10 lg:hidden">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="rounded-lg bg-indigo-600 p-2">
-                <Wrench className="h-6 w-6 text-white" strokeWidth={2} />
-              </div>
+              <img
+                src="/images/logo-no-background.png"
+                alt="RepairSuite Logo"
+                className="h-10 w-10 object-contain drop-shadow-[0_0_16px_rgba(139,92,246,0.4)]"
+              />
               <div>
                 <h1 className="text-xl font-bold text-slate-100">RepairSuite</h1>
                 <p className="text-xs text-indigo-400 font-semibold">SGTL</p>
