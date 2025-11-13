@@ -169,3 +169,80 @@
     animation: none;
   }
 }
+
+/* Adding slower blob animations for dashboard background */
+@keyframes blob-slow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(50px, -60px) scale(1.15);
+    opacity: 0.4;
+  }
+}
+
+@keyframes blob-slower {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-70px, 50px) scale(0.9);
+    opacity: 0.35;
+  }
+}
+
+@keyframes blob-slowest {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate(40px, 70px) scale(1.1);
+    opacity: 0.3;
+  }
+}
+
+.animate-blob-slow {
+  animation: blob-slow 30s ease-in-out infinite alternate;
+}
+
+.animate-blob-slower {
+  animation: blob-slower 35s ease-in-out infinite alternate;
+}
+
+.animate-blob-slowest {
+  animation: blob-slowest 40s ease-in-out infinite alternate;
+}
+
+/* Adding fade-in-up animation for content */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Respect reduced motion for all new animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob-slow,
+  .animate-blob-slower,
+  .animate-blob-slowest,
+  .animate-fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

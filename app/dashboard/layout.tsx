@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
@@ -34,9 +33,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-slate-950">
+    <div className="flex h-screen bg-slate-950 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900/50 pointer-events-none" />
+
       <DashboardSidebar />
-      <div className="flex-1 ml-64 flex flex-col">{children}</div>
+      <div className="flex-1 ml-64 flex flex-col relative z-10">{children}</div>
     </div>
   )
 }
