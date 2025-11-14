@@ -2,22 +2,11 @@
 
 import type React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import {
-  LayoutDashboard,
-  Users,
-  Laptop,
-  ClipboardList,
-  Package,
-  BookOpen,
-  Truck,
-  UserCog,
-  DollarSign,
-  Shield,
-  Settings,
-} from "lucide-react"
+import { LayoutDashboard, Users, Laptop, ClipboardList, Package, BookOpen, Truck, UserCog, DollarSign, Shield, Settings } from 'lucide-react'
+import { Badge } from "@/components/ui/badge"
 
 interface NavItem {
   title: string
@@ -73,6 +62,12 @@ export function DashboardSidebar() {
     {} as Record<string, NavItem[]>,
   )
 
+  const getBadgeCount = (title: string): number | null => {
+    if (title === "Órdenes de Servicio") return 8 // Pending approvals
+    if (title === "Inventario") return 5 // Critical items
+    return null
+  }
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-950/80 backdrop-blur-xl border-r border-white/5 flex flex-col">
       <div className="h-16 flex items-center gap-3 px-6 border-b border-white/5">
@@ -99,6 +94,7 @@ export function DashboardSidebar() {
               {items.map((item) => {
                 const isActive = pathname === item.href
                 const Icon = item.icon
+                const badgeCount = getBadgeCount(item.title)
 
                 return (
                   <Link
@@ -119,7 +115,15 @@ export function DashboardSidebar() {
                           : "text-slate-500 group-hover:text-slate-400 opacity-60 group-hover:opacity-100",
                       )}
                     />
-                    <span className="truncate">{item.title}</span>
+                    <span className="truncate flex-1">{item.title}</span>
+                    {badgeCount !== null && (
+                      <Badge
+                        variant="secondary"
+                        className="h-5 min-w-5 px-1.5 bg-red-500/20 text-red-300 border-red-500/30 text-[10px] font-semibold"
+                      >
+                        {badgeCount}
+                      </Badge>
+                    )}
                   </Link>
                 )
               })}

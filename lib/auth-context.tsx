@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 
 type UserRole = "Administrador" | "Recepción" | "Técnico"
 
@@ -15,7 +15,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>
+  login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
   hasPermission: (module: string) => boolean
@@ -42,6 +42,28 @@ const rolePermissions: Record<UserRole, string[]> = {
   Técnico: ["dashboard", "ordenes", "equipos", "inventario", "garantias"],
 }
 
+const getRoleFromEmail = (email: string): UserRole => {
+  // Check for specific demo emails first
+  if (email === "demo.admin@repairsuite.com") {
+    return "Administrador"
+  }
+  if (email === "demo.recepcion@repairsuite.com") {
+    return "Recepción"
+  }
+  if (email === "demo.tecnico@repairsuite.com") {
+    return "Técnico"
+  }
+  
+  // Fallback to pattern matching for other emails
+  if (email.includes("admin") || email.includes("director") || email.includes("gerente")) {
+    return "Administrador"
+  }
+  if (email.includes("recepcion") || email.includes("reception") || email.includes("front")) {
+    return "Recepción"
+  }
+  return "Técnico"
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -56,9 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string, role: UserRole) => {
+  const login = async (email: string, password: string) => {
     // Simulate login - in real app, this would be an API call
     if (email && password.length >= 6) {
+      const role = getRoleFromEmail(email)
       const userData: User = {
         email,
         role,
