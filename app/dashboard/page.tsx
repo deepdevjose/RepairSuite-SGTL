@@ -1,15 +1,37 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Card } from "@/components/ui/card"
 import { BadgeStatus } from "@/components/badge-status"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { ClipboardList, Wrench, CheckCircle2, TrendingUp, ArrowUpRight, Activity, AlertTriangle, ShieldAlert, ShoppingCart, Clock } from 'lucide-react'
+import {
+  ClipboardList,
+  Wrench,
+  CheckCircle2,
+  TrendingUp,
+  ArrowUpRight,
+  Activity,
+  AlertTriangle,
+  ShoppingCart,
+  Clock,
+  DollarSign,
+  Plus,
+  UserPlus,
+  ShoppingBag,
+  Star,
+  Award,
+  Bell,
+} from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { NewServiceOrderDialog } from "@/components/dashboard/new-service-order-dialog"
+import { PaymentDialog } from "@/components/dashboard/payment-dialog"
+import { NewClientDialog } from "@/components/dashboard/new-client-dialog"
+import { NewSaleDialog } from "@/components/dashboard/new-sale-dialog"
+import { OrderDetailsDialog } from "@/components/dashboard/order-details-dialog"
 
 const chartData = [
   { name: "En diagnóstico", value: 12, mantenimiento: 4, reparacion: 5, upgrade: 3 },
@@ -77,11 +99,55 @@ const recentOrders = [
   },
 ]
 
+const topTechnicians = [
+  {
+    id: "tech-001",
+    nombre: "Ana Martínez",
+    ordenesCompletadas: 42,
+    calificacion: 4.9,
+    ingresosGenerados: 89500,
+    avatar: "AM",
+  },
+  {
+    id: "tech-002",
+    nombre: "Carlos Gómez",
+    ordenesCompletadas: 38,
+    calificacion: 4.8,
+    ingresosGenerados: 76200,
+    avatar: "CG",
+  },
+  {
+    id: "tech-003",
+    nombre: "Luis Torres",
+    ordenesCompletadas: 35,
+    calificacion: 4.7,
+    ingresosGenerados: 68900,
+    avatar: "LT",
+  },
+]
+
+const recentActivity = [
+  { id: 1, tipo: "orden", mensaje: "Orden RS-OS-1024 completada", tiempo: "hace 15 min", icon: CheckCircle2, color: "text-green-400" },
+  { id: 2, tipo: "pago", mensaje: "Pago de $3,400 recibido", tiempo: "hace 1 hora", icon: DollarSign, color: "text-emerald-400" },
+  { id: 3, tipo: "cliente", mensaje: "Nuevo cliente: María González", tiempo: "hace 2 horas", icon: UserPlus, color: "text-blue-400" },
+  { id: 4, tipo: "alerta", mensaje: "Inventario crítico: Pantallas LCD", tiempo: "hace 3 horas", icon: AlertTriangle, color: "text-amber-400" },
+  { id: 5, tipo: "orden", mensaje: "Orden RS-OS-1023 lista para entrega", tiempo: "hace 4 horas", icon: Bell, color: "text-indigo-400" },
+]
+
 export default function DashboardPage() {
+  const router = useRouter()
   const [selectedBranch, setSelectedBranch] = useState<string>("all")
   const [dateFilter, setDateFilter] = useState<string>("30")
   const [technicianFilter, setTechnicianFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  // Dialog states
+  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false)
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [isNewClientOpen, setIsNewClientOpen] = useState(false)
+  const [isNewSaleOpen, setIsNewSaleOpen] = useState(false)
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<typeof recentOrders[0] | null>(null)
 
   return (
     <>
@@ -101,11 +167,8 @@ export default function DashboardPage() {
             <p className="text-slate-400 text-sm">Vista general del desempeño del taller</p>
           </div>
 
-          <div
-            className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up"
-            style={{ animationDelay: "100ms" }}
-          >
-            {/* Existing KPIs */}
+          {/* Fila 1: KPIs Operativos */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/10 group cursor-pointer">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-full blur-2xl group-hover:from-indigo-500/20 transition-all duration-500" />
               <div className="relative">
@@ -164,52 +227,24 @@ export default function DashboardPage() {
                 <div className="text-xs text-slate-500 font-medium">Notificar clientes</div>
               </div>
             </Card>
+          </div>
 
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full blur-2xl group-hover:from-amber-500/20 transition-all duration-500" />
+          {/* Fila 2: KPIs Financieros */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up" style={{ animationDelay: "150ms" }}>
+            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/10 group cursor-pointer">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-2xl group-hover:from-emerald-500/20 transition-all duration-500" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Espera aprobación</div>
-                  <div className="p-2 rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20">
-                    <Clock className="h-4 w-4 text-amber-400" />
+                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Ingresos del mes</div>
+                  <div className="p-2 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
+                    <DollarSign className="h-4 w-4 text-emerald-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">8</div>
-                <div className="text-xs text-amber-400 flex items-center gap-1 font-medium">
-                  <AlertTriangle className="h-3 w-3" />
-                  Requieren acción
+                <div className="text-4xl font-bold text-slate-100 mb-2">$125.4K</div>
+                <div className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
+                  <TrendingUp className="h-3 w-3" />
+                  +18% vs mes anterior
                 </div>
-              </div>
-            </Card>
-
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-red-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-500/10 to-transparent rounded-full blur-2xl group-hover:from-red-500/20 transition-all duration-500" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Inventario crítico</div>
-                  <div className="p-2 rounded-lg bg-red-500/10 ring-1 ring-red-500/20">
-                    <AlertTriangle className="h-4 w-4 text-red-400" />
-                  </div>
-                </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">5</div>
-                <div className="text-xs text-red-400 flex items-center gap-1 font-medium">
-                  <AlertTriangle className="h-3 w-3" />
-                  Reponer urgente
-                </div>
-              </div>
-            </Card>
-
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl group-hover:from-orange-500/20 transition-all duration-500" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Garantías por vencer</div>
-                  <div className="p-2 rounded-lg bg-orange-500/10 ring-1 ring-orange-500/20">
-                    <ShieldAlert className="h-4 w-4 text-orange-400" />
-                  </div>
-                </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">12</div>
-                <div className="text-xs text-slate-500 font-medium">Próximos 30 días</div>
               </div>
             </Card>
 
@@ -217,20 +252,195 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-full blur-2xl group-hover:from-cyan-500/20 transition-all duration-500" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Compras pendientes</div>
+                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Ticket promedio</div>
                   <div className="p-2 rounded-lg bg-cyan-500/10 ring-1 ring-cyan-500/20">
                     <ShoppingCart className="h-4 w-4 text-cyan-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">3</div>
-                <div className="text-xs text-slate-500 font-medium">A proveedores</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">$2,125</div>
+                <div className="text-xs text-slate-500 font-medium">Por orden de servicio</div>
+              </div>
+            </Card>
+
+            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-violet-500/10 group cursor-pointer">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-transparent rounded-full blur-2xl group-hover:from-violet-500/20 transition-all duration-500" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Tasa conversión</div>
+                  <div className="p-2 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20">
+                    <TrendingUp className="h-4 w-4 text-violet-400" />
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">87%</div>
+                <div className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
+                  <TrendingUp className="h-3 w-3" />
+                  +5% vs mes anterior
+                </div>
+              </div>
+            </Card>
+
+            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/10 group cursor-pointer">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full blur-2xl group-hover:from-amber-500/20 transition-all duration-500" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Por cobrar</div>
+                  <div className="p-2 rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20">
+                    <Clock className="h-4 w-4 text-amber-400" />
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">$45.2K</div>
+                <div className="text-xs text-slate-500 font-medium">Pendiente de pago</div>
               </div>
             </Card>
           </div>
 
+          {/* Acciones Rápidas y Alertas */}
+          <div className="grid gap-4 md:grid-cols-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+            {/* Acciones Rápidas */}
+            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-indigo-400" />
+                Acciones Rápidas
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => setIsNewOrderOpen(true)}
+                  className="h-20 flex-col gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 hover:text-indigo-200"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span className="text-sm">Nueva OS</span>
+                </Button>
+                <Button
+                  onClick={() => setIsPaymentOpen(true)}
+                  className="h-20 flex-col gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 hover:text-emerald-200"
+                >
+                  <DollarSign className="h-5 w-5" />
+                  <span className="text-sm">Registrar Pago</span>
+                </Button>
+                <Button
+                  onClick={() => setIsNewClientOpen(true)}
+                  className="h-20 flex-col gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-300 hover:text-blue-200"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  <span className="text-sm">Nuevo Cliente</span>
+                </Button>
+                <Button
+                  onClick={() => setIsNewSaleOpen(true)}
+                  className="h-20 flex-col gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 hover:text-purple-200"
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  <span className="text-sm">Nueva Venta</span>
+                </Button>
+              </div>
+            </Card>
+
+            {/* Alertas */}
+            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                <Bell className="h-5 w-5 text-amber-400" />
+                Alertas y Notificaciones
+              </h3>
+              <div className="space-y-3">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-red-300">5 órdenes retrasadas</p>
+                    <p className="text-xs text-red-400/80">Más de 7 días sin actualización</p>
+                  </div>
+                </div>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-300">8 cotizaciones sin respuesta</p>
+                    <p className="text-xs text-amber-400/80">Más de 3 días esperando</p>
+                  </div>
+                </div>
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-green-300">12 equipos listos</p>
+                    <p className="text-xs text-green-400/80">Notificar a clientes</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Top Técnicos y Actividad Reciente */}
+          <div className="grid gap-4 md:grid-cols-2 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
+            {/* Top Técnicos */}
+            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                <Award className="h-5 w-5 text-yellow-400" />
+                Top Técnicos del Mes
+              </h3>
+              <div className="space-y-3">
+                {topTechnicians.map((tech, index) => (
+                  <div
+                    key={tech.id}
+                    className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:bg-slate-800/50 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                          {tech.avatar}
+                        </div>
+                        {index === 0 && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <Award className="h-3 w-3 text-yellow-900" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-slate-200">{tech.nombre}</span>
+                          <div className="flex items-center gap-0.5">
+                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                            <span className="text-xs text-slate-400">{tech.calificacion}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-slate-400">
+                          <span>{tech.ordenesCompletadas} órdenes</span>
+                          <span className="text-emerald-400">
+                            ${(tech.ingresosGenerados / 1000).toFixed(1)}K generados
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Actividad Reciente */}
+            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-400" />
+                Actividad Reciente
+              </h3>
+              <div className="space-y-3">
+                {recentActivity.map((activity) => {
+                  const Icon = activity.icon
+                  return (
+                    <div key={activity.id} className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg bg-slate-800/50 ${activity.color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-slate-300">{activity.mensaje}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{activity.tiempo}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          </div>
+
+          {/* Gráfico de Órdenes por Estado */}
           <Card
             className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 animate-fade-in-up hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-200"
-            style={{ animationDelay: "200ms" }}
+            style={{ animationDelay: "300ms" }}
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <div>
@@ -352,9 +562,10 @@ export default function DashboardPage() {
             </div>
           </Card>
 
+          {/* Tabla de Órdenes Recientes */}
           <Card
             className="bg-slate-900/60 backdrop-blur-sm border-white/5 animate-fade-in-up hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-200"
-            style={{ animationDelay: "300ms" }}
+            style={{ animationDelay: "350ms" }}
           >
             <div className="p-6 border-b border-white/5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -365,11 +576,10 @@ export default function DashboardPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setStatusFilter("all")}
-                    className={`h-7 text-xs ${
-                      statusFilter === "all"
-                        ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30"
-                        : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                    }`}
+                    className={`h-7 text-xs ${statusFilter === "all"
+                      ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30"
+                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
+                      }`}
                   >
                     Todos
                   </Button>
@@ -377,11 +587,10 @@ export default function DashboardPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setStatusFilter("diagnostico")}
-                    className={`h-7 text-xs ${
-                      statusFilter === "diagnostico"
-                        ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                        : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                    }`}
+                    className={`h-7 text-xs ${statusFilter === "diagnostico"
+                      ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
+                      }`}
                   >
                     En diagnóstico
                   </Button>
@@ -389,11 +598,10 @@ export default function DashboardPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setStatusFilter("proceso")}
-                    className={`h-7 text-xs ${
-                      statusFilter === "proceso"
-                        ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
-                        : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                    }`}
+                    className={`h-7 text-xs ${statusFilter === "proceso"
+                      ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
+                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
+                      }`}
                   >
                     En proceso
                   </Button>
@@ -401,11 +609,10 @@ export default function DashboardPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setStatusFilter("listo")}
-                    className={`h-7 text-xs ${
-                      statusFilter === "listo"
-                        ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
-                        : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                    }`}
+                    className={`h-7 text-xs ${statusFilter === "listo"
+                      ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
+                      }`}
                   >
                     Listo
                   </Button>
@@ -413,11 +620,10 @@ export default function DashboardPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setStatusFilter("aprobacion")}
-                    className={`h-7 text-xs ${
-                      statusFilter === "aprobacion"
-                        ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-                        : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                    }`}
+                    className={`h-7 text-xs ${statusFilter === "aprobacion"
+                      ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
+                      }`}
                   >
                     Espera aprobación
                   </Button>
@@ -460,15 +666,10 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentOrders.map((order, index) => (
+                {recentOrders.map((order) => (
                   <TableRow
                     key={order.folio}
                     className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150 group"
-                    style={{
-                      animation: "fadeInUp 0.3s ease-out forwards",
-                      animationDelay: `${400 + index * 50}ms`,
-                      opacity: 0,
-                    }}
                   >
                     <TableCell className="font-mono text-[13px] text-indigo-400 font-medium">{order.folio}</TableCell>
                     <TableCell className="font-medium text-[13px]">{order.cliente}</TableCell>
@@ -487,6 +688,10 @@ export default function DashboardPage() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => {
+                          setSelectedOrder(order)
+                          setIsOrderDetailsOpen(true)
+                        }}
                         className="h-8 px-3 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-200 group-hover:translate-x-0.5 text-[13px] font-medium"
                       >
                         Detalles
@@ -500,6 +705,13 @@ export default function DashboardPage() {
           </Card>
         </div>
       </main>
+
+      {/* Modals */}
+      <NewServiceOrderDialog open={isNewOrderOpen} onOpenChange={setIsNewOrderOpen} />
+      <PaymentDialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen} />
+      <NewClientDialog open={isNewClientOpen} onOpenChange={setIsNewClientOpen} />
+      <NewSaleDialog open={isNewSaleOpen} onOpenChange={setIsNewSaleOpen} />
+      <OrderDetailsDialog open={isOrderDetailsOpen} onOpenChange={setIsOrderDetailsOpen} order={selectedOrder} />
     </>
   )
 }

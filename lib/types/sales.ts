@@ -43,6 +43,7 @@ export interface SaleConceptItem {
 
 // Complete sale detail
 export interface SaleDetail {
+    id: string
     ordenServicioId: string
     folioOS: string
     cliente: string
@@ -60,8 +61,13 @@ export interface SaleDetail {
     total: number
     pagado: number
     saldo: number
+    utilidad?: number
     estado: PaymentStatus
     pagos: Payment[]
+    ultimoPago?: {
+        fecha: string
+        metodo: PaymentMethod
+    }
     tecnicoAsignado?: string
     notas?: string
 }

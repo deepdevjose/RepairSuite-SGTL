@@ -81,6 +81,7 @@ export const mockPayments: Payment[] = [
 
 export const mockSales: SaleDetail[] = [
     {
+        id: "os-001",
         ordenServicioId: "os-001",
         folioOS: "RS-OS-1024",
         cliente: "Juan Pérez García",
@@ -125,11 +126,17 @@ export const mockSales: SaleDetail[] = [
         total: 2500,
         pagado: 2500,
         saldo: 0,
+        utilidad: 1260, // 2500 - (50 + 1240)
         estado: "Pagado",
         pagos: [mockPayments[0]],
+        ultimoPago: {
+            fecha: "2025-01-20T10:30:00Z",
+            metodo: "Efectivo",
+        },
         tecnicoAsignado: "Carlos Gómez",
     },
     {
+        id: "os-002",
         ordenServicioId: "os-002",
         folioOS: "RS-OS-1023",
         cliente: "María González López",
@@ -165,11 +172,17 @@ export const mockSales: SaleDetail[] = [
         total: 3200,
         pagado: 1600,
         saldo: 1600,
+        utilidad: 1100, // 3200 - 2100
         estado: "Parcial",
         pagos: [mockPayments[1], mockPayments[2]],
+        ultimoPago: {
+            fecha: "2025-01-20T16:45:00Z",
+            metodo: "Mixto",
+        },
         tecnicoAsignado: "Ana Martínez",
     },
     {
+        id: "os-003",
         ordenServicioId: "os-003",
         folioOS: "RS-OS-1022",
         cliente: "Pedro Ramírez Sánchez",
@@ -215,12 +228,14 @@ export const mockSales: SaleDetail[] = [
         total: 1800,
         pagado: 0,
         saldo: 1800,
+        utilidad: 910, // 1800 - 890
         estado: "Pendiente",
         pagos: [],
         tecnicoAsignado: "Luis Torres",
         notas: "Cliente solicitó descuento por ser cliente frecuente",
     },
     {
+        id: "os-004",
         ordenServicioId: "os-004",
         folioOS: "RS-OS-1021",
         cliente: "Laura Martínez Díaz",
@@ -256,11 +271,17 @@ export const mockSales: SaleDetail[] = [
         total: 1500,
         pagado: 1500,
         saldo: 0,
+        utilidad: 520, // 1500 - 980
         estado: "Pagado",
         pagos: [mockPayments[3]],
+        ultimoPago: {
+            fecha: "2025-01-18T11:20:00Z",
+            metodo: "Transferencia",
+        },
         tecnicoAsignado: "Carlos Gómez",
     },
     {
+        id: "os-005",
         ordenServicioId: "os-005",
         folioOS: "RS-OS-1020",
         cliente: "Roberto Silva Torres",
@@ -305,11 +326,17 @@ export const mockSales: SaleDetail[] = [
         total: 1300,
         pagado: 800,
         saldo: 500,
+        utilidad: 680, // 1300 - 620
         estado: "Parcial",
         pagos: [mockPayments[4]],
+        ultimoPago: {
+            fecha: "2025-01-17T09:30:00Z",
+            metodo: "MercadoPago",
+        },
         tecnicoAsignado: "Ana Martínez",
     },
     {
+        id: "os-006",
         ordenServicioId: "os-006",
         folioOS: "RS-OS-1019",
         cliente: "Carmen Rodríguez Vega",
@@ -334,6 +361,7 @@ export const mockSales: SaleDetail[] = [
         total: 800,
         pagado: 0,
         saldo: 800,
+        utilidad: 800, // 800 - 0
         estado: "Vencido",
         pagos: [],
         tecnicoAsignado: "Luis Torres",
