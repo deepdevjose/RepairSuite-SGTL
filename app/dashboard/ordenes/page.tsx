@@ -5,6 +5,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
 import { BadgeStatus } from "@/components/badge-status"
+import { OrderDetailsDialog } from "@/components/ordenes/order-details-dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -89,6 +90,8 @@ export default function OrdenesPage() {
   const [tecnicoFilter, setTecnicoFilter] = useState("all")
   const [sucursalFilter, setSucursalFilter] = useState("all")
   const [marcaFilter, setMarcaFilter] = useState("all")
+  const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   if (!hasPermission("ordenes")) {
     return (
@@ -260,7 +263,9 @@ export default function OrdenesPage() {
                           <div className="flex items-center gap-2">
                             {order.folio}
                             {order.es_garantia && (
-                              <Shield className="h-4 w-4 text-emerald-400" title="OS por garantía" />
+                              <span title="OS por garantía">
+                                <Shield className="h-4 w-4 text-emerald-400" />
+                              </span>
                             )}
                           </div>
                         </TableCell>
@@ -299,15 +304,17 @@ export default function OrdenesPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Link href={`/dashboard/ordenes/${order.folio}`}>
-                            <Button
-                              size="sm"
-                              className="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-600/30"
-                            >
-                              <Eye className="h-4 w-4 mr-1.5" />
-                              Ver OS
-                            </Button>
-                          </Link>
+                          <Button
+                            size="sm"
+                            className="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-600/30"
+                            onClick={() => {
+                              setSelectedOrder(order)
+                              setIsDetailsOpen(true)
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1.5" />
+                            Ver OS
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -318,6 +325,13 @@ export default function OrdenesPage() {
           </Card>
         </div>
       </main>
+
+      {/* Order Details Dialog */}
+      <OrderDetailsDialog
+        order={selectedOrder}
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+      />
     </>
   )
 }

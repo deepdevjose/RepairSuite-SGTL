@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ClientForm } from "@/components/client-form"
+import { ClientDetailsDialog } from "@/components/clients/client-details-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -111,6 +112,8 @@ export default function ClientesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterType>("all")
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null)
+  const [selectedClient, setSelectedClient] = useState<typeof mockClients[0] | null>(null)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   if (!hasPermission("clientes")) {
     return (
@@ -335,9 +338,8 @@ export default function ClientesPage() {
                   filteredClients.map((client, index) => (
                     <TableRow
                       key={client.id}
-                      className={`border-slate-800/30 hover:bg-slate-800/40 transition-all duration-200 text-slate-300 ${
-                        index % 2 === 0 ? "bg-slate-900/20" : "bg-slate-900/40"
-                      }`}
+                      className={`border-slate-800/30 hover:bg-slate-800/40 transition-all duration-200 text-slate-300 ${index % 2 === 0 ? "bg-slate-900/20" : "bg-slate-900/40"
+                        }`}
                     >
                       <TableCell className="font-medium text-slate-200">
                         <div className="flex items-center gap-2">
@@ -374,7 +376,7 @@ export default function ClientesPage() {
                               </div>
                               <p className="text-xs text-slate-400 mt-1">{client.nombre}</p>
                             </div>
-                            
+
                             <div className="max-h-[320px] overflow-y-auto p-3 space-y-2">
                               {client.equipos.map((equipo) => (
                                 <div
@@ -402,18 +404,75 @@ export default function ClientesPage() {
                                       #{equipo.id}
                                     </span>
                                   </div>
-                                  
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="w-full text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 border border-transparent hover:border-indigo-500/20 transition-all mt-2"
-                                    onClick={() => {
-                                      console.log('[v0] Ver equipo:', equipo.id)
-                                    }}
-                                  >
-                                    <Eye className="h-3.5 w-3.5 mr-1.5" />
-                                    Ver equipo
-                                  </Button>
+
+                                  {/* Action Buttons */}
+                                  <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-slate-700/30 pointer-events-auto">
+                                    <button
+                                      type="button"
+                                      className="h-9 w-9 p-0 flex items-center justify-center rounded-md text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 transition-all cursor-pointer"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        console.log('[Clientes] Ver historial del equipo:', equipo.id)
+                                        alert(`Ver historial del equipo ${equipo.marca} ${equipo.modelo}`)
+                                      }}
+                                      title="Ver historial"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 3v5h5" />
+                                        <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+                                        <path d="M12 7v5l4 2" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="h-9 w-9 p-0 flex items-center justify-center rounded-md text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 border border-transparent hover:border-violet-500/20 transition-all cursor-pointer"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        console.log('[Clientes] Crear orden de servicio para equipo:', equipo.id)
+                                        alert(`Crear OS para equipo ${equipo.marca} ${equipo.modelo}`)
+                                      }}
+                                      title="Crear orden de servicio"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="h-9 w-9 p-0 flex items-center justify-center rounded-md text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 transition-all cursor-pointer"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        console.log('[Clientes] Ver garantía del equipo:', equipo.id)
+                                        alert(`Ver garantía del equipo ${equipo.marca} ${equipo.modelo}`)
+                                      }}
+                                      title="Ver garantía"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                        <path d="m9 12 2 2 4-4" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="h-9 w-9 p-0 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-300 hover:bg-slate-500/10 border border-transparent hover:border-slate-500/20 transition-all cursor-pointer"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        console.log('[Clientes] Editar equipo:', equipo.id)
+                                        alert(`Editar equipo ${equipo.marca} ${equipo.modelo}`)
+                                      }}
+                                      title="Editar equipo"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                        <path d="m15 5 4 4" />
+                                      </svg>
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -439,6 +498,10 @@ export default function ClientesPage() {
                           size="sm"
                           variant="ghost"
                           className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all"
+                          onClick={() => {
+                            setSelectedClient(client)
+                            setIsDetailsOpen(true)
+                          }}
                         >
                           Detalles
                         </Button>
@@ -461,6 +524,13 @@ export default function ClientesPage() {
           <ClientForm onClose={() => setIsFormOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Client Details Dialog */}
+      <ClientDetailsDialog
+        client={selectedClient}
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+      />
     </>
   )
 }

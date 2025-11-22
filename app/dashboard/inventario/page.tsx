@@ -269,15 +269,33 @@ export default function InventarioPage() {
               {/* Action Buttons */}
               {!isReadOnly && (
                 <div className="flex gap-2">
-                  <Button className="h-9 bg-green-600 hover:bg-green-500 text-white text-xs font-medium shadow-lg shadow-green-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-green-600/30">
+                  <Button
+                    className="h-9 bg-green-600 hover:bg-green-500 text-white text-xs font-medium shadow-lg shadow-green-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-green-600/30"
+                    onClick={() => {
+                      console.log('[Inventario] Entrada de stock')
+                      alert('Función de Entrada de stock - Por implementar')
+                    }}
+                  >
                     <Plus className="h-3.5 w-3.5 mr-1.5" />
                     Entrada
                   </Button>
-                  <Button className="h-9 bg-red-600 hover:bg-red-500 text-white text-xs font-medium shadow-lg shadow-red-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-red-600/30">
+                  <Button
+                    className="h-9 bg-red-600 hover:bg-red-500 text-white text-xs font-medium shadow-lg shadow-red-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-red-600/30"
+                    onClick={() => {
+                      console.log('[Inventario] Salida de stock')
+                      alert('Función de Salida de stock - Por implementar')
+                    }}
+                  >
                     <Minus className="h-3.5 w-3.5 mr-1.5" />
                     Salida
                   </Button>
-                  <Button className="h-9 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium shadow-lg shadow-blue-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-600/30">
+                  <Button
+                    className="h-9 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium shadow-lg shadow-blue-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-600/30"
+                    onClick={() => {
+                      console.log('[Inventario] Transferir stock')
+                      alert('Función de Transferir stock - Por implementar')
+                    }}
+                  >
                     <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
                     Transferir
                   </Button>
@@ -394,6 +412,10 @@ export default function InventarioPage() {
                                   variant="ghost"
                                   className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
                                   title="Ajuste rápido"
+                                  onClick={() => {
+                                    console.log('[Inventario] Ajuste rápido para:', product.sku)
+                                    alert(`Ajuste rápido para ${product.nombre} (${product.sku})`)
+                                  }}
                                 >
                                   <Settings className="h-3.5 w-3.5" />
                                 </Button>
@@ -402,6 +424,10 @@ export default function InventarioPage() {
                                   variant="ghost"
                                   className="h-7 w-7 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
                                   title="Transferir"
+                                  onClick={() => {
+                                    console.log('[Inventario] Transferir producto:', product.sku)
+                                    alert(`Transferir ${product.nombre} (${product.sku})`)
+                                  }}
                                 >
                                   <ArrowLeftRight className="h-3.5 w-3.5" />
                                 </Button>
@@ -410,6 +436,10 @@ export default function InventarioPage() {
                                   variant="ghost"
                                   className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
                                   title="Generar orden de compra"
+                                  onClick={() => {
+                                    console.log('[Inventario] Generar orden de compra:', product.sku)
+                                    alert(`Generar orden de compra para ${product.nombre} (${product.sku})`)
+                                  }}
                                 >
                                   <ShoppingCart className="h-3.5 w-3.5" />
                                 </Button>
@@ -420,6 +450,10 @@ export default function InventarioPage() {
                               variant="ghost"
                               className="h-7 w-7 p-0 text-slate-400 hover:text-slate-300 hover:bg-white/5"
                               title="Ver historial"
+                              onClick={() => {
+                                console.log('[Inventario] Ver historial:', product.sku)
+                                alert(`Ver historial de ${product.nombre} (${product.sku})`)
+                              }}
                             >
                               <History className="h-3.5 w-3.5" />
                             </Button>

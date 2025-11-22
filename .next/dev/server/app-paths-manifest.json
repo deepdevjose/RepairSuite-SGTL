@@ -1,5 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/dashboard/clientes/page": "app/dashboard/clientes/page.js",
+  "/dashboard/equipos/page": "app/dashboard/equipos/page.js",
+  "/dashboard/inventario/page": "app/dashboard/inventario/page.js",
+  "/dashboard/ordenes/nueva/page": "app/dashboard/ordenes/nueva/page.js",
+  "/dashboard/ordenes/page": "app/dashboard/ordenes/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/page": "app/page.js"
 }
