@@ -11,6 +11,7 @@
   "/dashboard/ordenes/nueva/page": "/dashboard/ordenes/nueva",
   "/dashboard/ordenes/page": "/dashboard/ordenes",
   "/dashboard/page": "/dashboard",
+  "/dashboard/personal/[id]/page": "/dashboard/personal/[id]",
   "/dashboard/personal/page": "/dashboard/personal",
   "/dashboard/proveedores/page": "/dashboard/proveedores",
   "/dashboard/ventas/page": "/dashboard/ventas",

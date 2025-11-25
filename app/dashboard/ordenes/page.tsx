@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
-import { BadgeStatus } from "@/components/badge-status"
+import { OrderStateBadge } from "@/components/ordenes/order-state-badge"
 import { OrderDetailsDialog } from "@/components/ordenes/order-details-dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,75 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Plus, Eye, Shield, Filter, User, Wrench, Building2, Clock } from 'lucide-react'
 import Link from "next/link"
-
-// Mock data con diagnóstico y total estimado
-const mockOrders = [
-  {
-    folio: "RS-OS-1024",
-    cliente: "Juan Pérez",
-    equipo: "HP Pavilion 15",
-    marca: "HP",
-    estado: "En reparación",
-    tecnico: "Carlos Gómez",
-    sucursal: "Sede A",
-    diagnostico: "Pantalla rota, bisagras dañadas",
-    total_estimado: 2500,
-    ultima_actualizacion: "2025-01-15 14:30",
-    es_garantia: false,
-  },
-  {
-    folio: "RS-OS-1023",
-    cliente: "María González",
-    equipo: 'MacBook Pro 13"',
-    marca: "Apple",
-    estado: "Listo para entrega",
-    tecnico: "Ana Martínez",
-    sucursal: "Sede A",
-    diagnostico: "Cambio de batería completado",
-    total_estimado: 3800,
-    ultima_actualizacion: "2025-01-15 10:15",
-    es_garantia: false,
-  },
-  {
-    folio: "RS-OS-1022",
-    cliente: "Pedro Ramírez",
-    equipo: "Dell XPS 15",
-    marca: "Dell",
-    estado: "En diagnóstico",
-    tecnico: "Luis Torres",
-    sucursal: "Sede B",
-    diagnostico: "Revisando componentes internos",
-    total_estimado: 0,
-    ultima_actualizacion: "2025-01-15 09:00",
-    es_garantia: true,
-  },
-  {
-    folio: "RS-OS-1021",
-    cliente: "Ana López",
-    equipo: "Lenovo ThinkPad",
-    marca: "Lenovo",
-    estado: "Pendiente aprobación",
-    tecnico: "Carlos Gómez",
-    sucursal: "Sede A",
-    diagnostico: "Requiere cambio de placa madre y RAM",
-    total_estimado: 5200,
-    ultima_actualizacion: "2025-01-14 16:45",
-    es_garantia: false,
-  },
-  {
-    folio: "RS-OS-1020",
-    cliente: "Roberto Fernández",
-    equipo: "ASUS ROG",
-    marca: "ASUS",
-    estado: "Entregada",
-    tecnico: "Ana Martínez",
-    sucursal: "Sede B",
-    diagnostico: "Limpieza profunda y repaste térmico",
-    total_estimado: 850,
-    ultima_actualizacion: "2025-01-13 18:00",
-    es_garantia: false,
-  },
-]
+import { mockServiceOrders } from "@/lib/data/service-orders-mock"
+import type { ServiceOrder } from "@/lib/types/service-order"
 
 export default function OrdenesPage() {
   const { hasPermission } = useAuth()
@@ -90,7 +23,7 @@ export default function OrdenesPage() {
   const [tecnicoFilter, setTecnicoFilter] = useState("all")
   const [sucursalFilter, setSucursalFilter] = useState("all")
   const [marcaFilter, setMarcaFilter] = useState("all")
-  const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   if (!hasPermission("ordenes")) {
@@ -102,17 +35,17 @@ export default function OrdenesPage() {
     )
   }
 
-  const filteredOrders = mockOrders.filter((order) => {
+  const filteredOrders = mockServiceOrders.filter((order) => {
     const matchesSearch =
       order.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.diagnostico.toLowerCase().includes(searchTerm.toLowerCase())
+      order.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.equipoTipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.problemaReportado.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = statusFilter === "all" || order.estado === statusFilter
-    const matchesTecnico = tecnicoFilter === "all" || order.tecnico === tecnicoFilter
+    const matchesTecnico = tecnicoFilter === "all" || order.tecnicoAsignadoNombre === tecnicoFilter
     const matchesSucursal = sucursalFilter === "all" || order.sucursal === sucursalFilter
-    const matchesMarca = marcaFilter === "all" || order.marca === marcaFilter
+    const matchesMarca = marcaFilter === "all" || order.equipoMarca === marcaFilter
 
     return matchesSearch && matchesStatus && matchesTecnico && matchesSucursal && matchesMarca
   })
@@ -262,37 +195,37 @@ export default function OrdenesPage() {
                         <TableCell className="font-mono text-sm font-medium">
                           <div className="flex items-center gap-2">
                             {order.folio}
-                            {order.es_garantia && (
+                            {order.esGarantia && (
                               <span title="OS por garantía">
                                 <Shield className="h-4 w-4 text-emerald-400" />
                               </span>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{order.cliente}</TableCell>
+                        <TableCell className="font-medium">{order.clienteNombre}</TableCell>
                         <TableCell>
                           <div className="space-y-0.5">
-                            <div className="font-medium text-slate-200">{order.equipo}</div>
-                            <div className="text-xs text-slate-500">{order.marca}</div>
+                            <div className="font-medium text-slate-200">{order.equipoTipo} {order.equipoModelo}</div>
+                            <div className="text-xs text-slate-500">{order.equipoMarca}</div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <BadgeStatus status={order.estado} />
+                          <OrderStateBadge estado={order.estado} />
                         </TableCell>
                         <TableCell className="text-slate-400">
                           <div className="flex items-center gap-2">
                             <User className="h-3.5 w-3.5 text-slate-500" />
-                            {order.tecnico}
+                            {order.tecnicoAsignadoNombre || "No asignado"}
                           </div>
                         </TableCell>
                         <TableCell className="max-w-[250px]">
-                          <div className="text-sm text-slate-400 truncate" title={order.diagnostico}>
-                            {order.diagnostico}
+                          <div className="text-sm text-slate-400 truncate" title={order.diagnostico?.problema || order.problemaReportado}>
+                            {order.diagnostico?.problema || order.problemaReportado}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {order.total_estimado > 0 ? (
-                            <span className="text-emerald-400">${order.total_estimado.toLocaleString()}</span>
+                          {(order.costoDiagnostico + order.costoReparacion) > 0 ? (
+                            <span className="text-emerald-400">${(order.costoDiagnostico + order.costoReparacion).toLocaleString()}</span>
                           ) : (
                             <span className="text-slate-500">Pendiente</span>
                           )}
@@ -300,7 +233,7 @@ export default function OrdenesPage() {
                         <TableCell className="text-slate-500 text-sm">
                           <div className="flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
-                            {order.ultima_actualizacion}
+                            {new Date(order.ultimaActualizacion).toLocaleString("es-MX", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </div>
                         </TableCell>
                         <TableCell className="text-center">

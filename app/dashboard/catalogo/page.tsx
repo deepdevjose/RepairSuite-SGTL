@@ -9,6 +9,7 @@ import { ServiceCategoryBadge } from "@/components/catalog/service-category-badg
 import { ProductTypeBadge } from "@/components/catalog/product-type-badge"
 import { StockIndicator } from "@/components/catalog/stock-indicator"
 import { TimeEstimateBadge } from "@/components/catalog/time-estimate-badge"
+import { NewProductDialog } from "@/components/catalog/new-product-dialog"
 import { MarginIndicator } from "@/components/catalog/margin-indicator"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -45,6 +46,7 @@ import {
 export default function CatalogoPage() {
   const { hasPermission } = useAuth()
   const [activeTab, setActiveTab] = useState<"all" | "servicios" | "refacciones" | "paquetes">("all")
+  const [isNewProductDialogOpen, setIsNewProductDialogOpen] = useState(false)
   const [filters, setFilters] = useState<CatalogFilters>({
     searchTerm: "",
     tipo: "all",
@@ -263,7 +265,10 @@ export default function CatalogoPage() {
               </div>
 
               {/* Action Button */}
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium shadow-lg shadow-indigo-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-600/30">
+              <Button
+                onClick={() => setIsNewProductDialogOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium shadow-lg shadow-indigo-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-600/30"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nuevo Producto
               </Button>
@@ -708,6 +713,16 @@ export default function CatalogoPage() {
             )}
           </Card>
         </div>
+
+        {/* New Product Dialog */}
+        <NewProductDialog
+          open={isNewProductDialogOpen}
+          onOpenChange={setIsNewProductDialogOpen}
+          onSave={(product) => {
+            console.log("Producto guardado:", product)
+            // TODO: Add product to the catalog list
+          }}
+        />
       </main>
     </>
   )

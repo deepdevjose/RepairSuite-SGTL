@@ -11,6 +11,7 @@
   "/dashboard/ordenes/nueva/page": "app/dashboard/ordenes/nueva/page.js",
   "/dashboard/ordenes/page": "app/dashboard/ordenes/page.js",
   "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/personal/[id]/page": "app/dashboard/personal/[id]/page.js",
   "/dashboard/personal/page": "app/dashboard/personal/page.js",
   "/dashboard/proveedores/page": "app/dashboard/proveedores/page.js",
   "/dashboard/ventas/page": "app/dashboard/ventas/page.js",

@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { BadgeStatus } from "@/components/badge-status"
+import { OrderStateBadge } from "./order-state-badge"
+import type { ServiceOrder } from "@/lib/types/service-order"
 import {
     User,
     Package,
@@ -18,20 +19,6 @@ import {
     Printer,
     CreditCard
 } from 'lucide-react'
-
-interface ServiceOrder {
-    folio: string
-    cliente: string
-    equipo: string
-    marca: string
-    estado: string
-    tecnico: string
-    sucursal: string
-    diagnostico: string
-    total_estimado: number
-    ultima_actualizacion: string
-    es_garantia: boolean
-}
 
 interface OrderDetailsDialogProps {
     order: ServiceOrder | null
@@ -53,7 +40,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                         <div className="flex-1">
                             <div className="flex items-center gap-3">
                                 <span className="font-mono">{order.folio}</span>
-                                {order.es_garantia && (
+                                {order.esGarantia && (
                                     <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                                         <Shield className="h-3 w-3 mr-1" />
                                         Garantía
@@ -67,10 +54,10 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                 <div className="space-y-6 mt-4">
                     {/* Status Badge */}
                     <div className="flex items-center gap-2">
-                        <BadgeStatus status={order.estado} />
+                        <OrderStateBadge estado={order.estado} />
                         <span className="text-xs text-slate-500">
                             <Clock className="h-3 w-3 inline mr-1" />
-                            Actualizado: {order.ultima_actualizacion}
+                            Actualizado: {new Date(order.ultimaActualizacion).toLocaleString("es-MX", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                     </div>
 
@@ -84,7 +71,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                             <div className="space-y-3">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium">Cliente</p>
-                                    <p className="text-sm text-slate-200">{order.cliente}</p>
+                                    <p className="text-sm text-slate-200">{order.clienteNombre}</p>
                                 </div>
                             </div>
                         </Card>
@@ -97,11 +84,11 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                             <div className="space-y-3">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium">Modelo</p>
-                                    <p className="text-sm text-slate-200">{order.equipo}</p>
+                                    <p className="text-sm text-slate-200">{order.equipoTipo}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium">Marca</p>
-                                    <p className="text-sm text-slate-200">{order.marca}</p>
+                                    <p className="text-sm text-slate-200">{order.equipoMarca}</p>
                                 </div>
                             </div>
                         </Card>
@@ -118,7 +105,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                                 <p className="text-xs text-slate-500 font-medium">Técnico asignado</p>
                                 <p className="text-sm text-slate-200 flex items-center gap-2 mt-1">
                                     <User className="h-4 w-4 text-slate-400" />
-                                    {order.tecnico}
+                                    {order.tecnicoAsignadoNombre || "No asignado"}
                                 </p>
                             </div>
                             <div>
@@ -138,7 +125,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                             Diagnóstico
                         </h3>
                         <p className="text-sm text-slate-300 leading-relaxed">
-                            {order.diagnostico}
+                            {order.diagnostico?.problema || order.problemaReportado}
                         </p>
                     </Card>
 
@@ -150,9 +137,9 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                                 <h3 className="text-lg font-semibold text-slate-100">Total estimado</h3>
                             </div>
                             <div className="text-right">
-                                {order.total_estimado > 0 ? (
+                                {(order.costoDiagnostico + order.costoReparacion) > 0 ? (
                                     <p className="text-2xl font-bold text-emerald-400">
-                                        ${order.total_estimado.toLocaleString()}
+                                        ${(order.costoDiagnostico + order.costoReparacion).toLocaleString()}
                                     </p>
                                 ) : (
                                     <p className="text-lg text-slate-500">Pendiente</p>

@@ -27,6 +27,14 @@
         "nxtPsku": "nxtPsku"
       },
       "namedRegex": "^/dashboard/inventario/(?<nxtPsku>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/dashboard/personal/[id]",
+      "regex": "^/dashboard/personal/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/dashboard/personal/(?<nxtPid>[^/]+?)(?:/)?$"
     }
   ],
   "staticRoutes": [
