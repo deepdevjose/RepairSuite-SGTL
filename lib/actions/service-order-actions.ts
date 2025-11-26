@@ -71,7 +71,6 @@ export async function createServiceOrder(
 
         tecnicoAsignadoId: data.tecnicoAsignadoId,
         tecnicoAsignadoNombre: "", // Should be fetched from staff data
-        sucursal: data.sucursal,
 
         costoDiagnostico: data.costoDiagnostico,
         costoReparacion: 0,
@@ -235,10 +234,10 @@ export async function approveRepair(
         return { success: false, error: "Orden no encontrada" }
     }
 
-    if (order.estado !== "Pendiente aprobación") {
+    if (order.estado !== "Esperando aprobación") {
         return {
             success: false,
-            error: "La orden debe estar en estado 'Pendiente aprobación'",
+            error: "La orden debe estar en estado 'Esperando aprobación'",
         }
     }
 
@@ -255,7 +254,8 @@ export async function approveRepair(
 }
 
 /**
- * Request inventory items for a service order
+ * Request inventory items for a service order (DEPRECATED - simplified flow)
+ * In the new flow, technician directly adds materials used when completing repair
  */
 export async function requestInventory(
     orderId: string,
@@ -403,10 +403,10 @@ export async function deliverToClient(
         return { success: false, error: "Orden no encontrada" }
     }
 
-    if (order.estado !== "En recepción") {
+    if (order.estado !== "Lista para entrega") {
         return {
             success: false,
-            error: "La orden debe estar en estado 'En recepción'",
+            error: "La orden debe estar en estado 'Lista para entrega'",
         }
     }
 

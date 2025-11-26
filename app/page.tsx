@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import { AlertCircle, CheckCircle, Lock, Shield, Sparkles, User, FileText, Wrench } from 'lucide-react'
+import { AlertCircle, CheckCircle, Lock, Shield, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -93,13 +93,6 @@ export default function LoginPage() {
     } else {
       setErrors({ general: "Error al iniciar sesión. Verifica tus credenciales." })
     }
-  }
-
-  const handleAutofill = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-    setTouched({})
-    setErrors({})
   }
 
   const isFormValid = email && password && !errors.email && !errors.password
@@ -300,139 +293,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            <div className="mt-8 pt-6 border-t border-slate-800">
-              <div className="bg-gradient-to-br from-indigo-950/60 to-purple-950/40 border border-indigo-500/30 rounded-lg px-5 py-5">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-violet-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-indigo-200 mb-1">Demo rápida (solo lectura)</p>
-                    <p className="text-xs text-slate-400">
-                      Prueba el sistema con cualquiera de estas cuentas de demostración:
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {/* Administrador */}
-                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4 hover:border-indigo-500/40 transition-colors group">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
-                          <Shield className="h-4 w-4 text-indigo-400 stroke-[1.5]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <p className="text-sm font-semibold text-slate-200">Administrador</p>
-                            <span className="px-2 py-0.5 text-[10px] font-medium bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">
-                              ADMIN
-                            </span>
-                          </div>
-                          <div className="space-y-1.5">
-                            <p className="text-xs text-slate-400 truncate">
-                              <span className="text-slate-500">Email:</span>{" "}
-                              <code className="text-slate-300 font-mono">demo.admin@repairsuite.com</code>
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              <span className="text-slate-500">Contraseña:</span>{" "}
-                              <code className="text-slate-300 font-mono">admin123</code>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => handleAutofill("demo.admin@repairsuite.com", "admin123")}
-                        className="flex-shrink-0 h-8 px-3 bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-medium shadow-sm hover:shadow-md transition-all"
-                      >
-                        Autocompletar
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Recepción */}
-                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4 hover:border-blue-500/40 transition-colors group">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                          <FileText className="h-4 w-4 text-blue-400 stroke-[1.5]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <p className="text-sm font-semibold text-slate-200">Recepción</p>
-                            <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">
-                              FRONT
-                            </span>
-                          </div>
-                          <div className="space-y-1.5">
-                            <p className="text-xs text-slate-400 truncate">
-                              <span className="text-slate-500">Email:</span>{" "}
-                              <code className="text-slate-300 font-mono">demo.recepcion@repairsuite.com</code>
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              <span className="text-slate-500">Contraseña:</span>{" "}
-                              <code className="text-slate-300 font-mono">recep123</code>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => handleAutofill("demo.recepcion@repairsuite.com", "recep123")}
-                        className="flex-shrink-0 h-8 px-3 bg-blue-600/80 hover:bg-blue-600 text-white text-xs font-medium shadow-sm hover:shadow-md transition-all"
-                      >
-                        Autocompletar
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Técnico */}
-                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4 hover:border-purple-500/40 transition-colors group">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 h-9 w-9 rounded-lg bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                          <Wrench className="h-4 w-4 text-purple-400 stroke-[1.5]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <p className="text-sm font-semibold text-slate-200">Técnico</p>
-                            <span className="px-2 py-0.5 text-[10px] font-medium bg-purple-500/20 text-purple-300 rounded border border-purple-500/30">
-                              TECH
-                            </span>
-                          </div>
-                          <div className="space-y-1.5">
-                            <p className="text-xs text-slate-400 truncate">
-                              <span className="text-slate-500">Email:</span>{" "}
-                              <code className="text-slate-300 font-mono">demo.tecnico@repairsuite.com</code>
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              <span className="text-slate-500">Contraseña:</span>{" "}
-                              <code className="text-slate-300 font-mono">tech123</code>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => handleAutofill("demo.tecnico@repairsuite.com", "tech123")}
-                        className="flex-shrink-0 h-8 px-3 bg-purple-600/80 hover:bg-purple-600 text-white text-xs font-medium shadow-sm hover:shadow-md transition-all"
-                      >
-                        Autocompletar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-500 text-center mt-4 leading-relaxed">
-                  Estas cuentas son solo para pruebas de interfaz. No representan datos reales.
-                </p>
-              </div>
-            </div>
           </Card>
 
           <p className="text-center text-xs text-slate-600 mt-6">

@@ -13,15 +13,13 @@ type UserRole = "Administrador" | "Recepción" | "Técnico"
  */
 export const STATE_TRANSITIONS: Record<ServiceOrderState, ServiceOrderState[]> = {
     "Esperando diagnóstico": ["En diagnóstico", "Cancelada"],
-    "En diagnóstico": ["Diagnóstico completo", "Esperando diagnóstico", "Cancelada"],
-    "Diagnóstico completo": ["Pendiente aprobación", "Cancelada"],
-    "Pendiente aprobación": ["Asignado a técnico", "Cancelada"],
-    "Asignado a técnico": ["En reparación", "Cancelada"],
-    "En reparación": ["Reparación terminada", "Asignado a técnico", "Cancelada"],
-    "Reparación terminada": ["Esperando entrega"],
-    "Esperando entrega": ["En recepción"],
-    "En recepción": ["Entregado a cliente"],
-    "Entregado a cliente": [], // Final state
+    "En diagnóstico": ["Diagnóstico terminado", "Esperando diagnóstico", "Cancelada"],
+    "Diagnóstico terminado": ["Esperando aprobación", "Cancelada"],
+    "Esperando aprobación": ["En reparación", "Cancelada"],
+    "En reparación": ["Reparación terminada", "Cancelada"],
+    "Reparación terminada": ["Lista para entrega"],
+    "Lista para entrega": ["Pagado y entregado"],
+    "Pagado y entregado": [], // Final state
     "Cancelada": [], // Final state
 }
 
@@ -35,27 +33,23 @@ export const STATE_TRANSITION_PERMISSIONS: Record<
 > = {
     // Technician transitions
     "Esperando diagnóstico -> En diagnóstico": ["Técnico", "Administrador"],
-    "En diagnóstico -> Diagnóstico completo": ["Técnico", "Administrador"],
+    "En diagnóstico -> Diagnóstico terminado": ["Técnico", "Administrador"],
     "En diagnóstico -> Esperando diagnóstico": ["Técnico", "Administrador"], // Backtrack
-    "Asignado a técnico -> En reparación": ["Técnico", "Administrador"],
     "En reparación -> Reparación terminada": ["Técnico", "Administrador"],
-    "En reparación -> Asignado a técnico": ["Técnico", "Administrador"], // Backtrack
 
     // Receptionist transitions
-    "Diagnóstico completo -> Pendiente aprobación": ["Recepción", "Administrador"],
-    "Pendiente aprobación -> Asignado a técnico": ["Recepción", "Administrador"],
-    "Esperando entrega -> En recepción": ["Recepción", "Administrador"],
-    "En recepción -> Entregado a cliente": ["Recepción", "Administrador"],
+    "Diagnóstico terminado -> Esperando aprobación": ["Recepción", "Administrador"],
+    "Esperando aprobación -> En reparación": ["Recepción", "Administrador"],
+    "Lista para entrega -> Pagado y entregado": ["Recepción", "Administrador"],
 
     // Automatic transitions (system)
-    "Reparación terminada -> Esperando entrega": ["Técnico", "Recepción", "Administrador"],
+    "Reparación terminada -> Lista para entrega": ["Técnico", "Recepción", "Administrador"],
 
     // Cancellation (any role can cancel)
     "Esperando diagnóstico -> Cancelada": ["Recepción", "Técnico", "Administrador"],
     "En diagnóstico -> Cancelada": ["Recepción", "Técnico", "Administrador"],
-    "Diagnóstico completo -> Cancelada": ["Recepción", "Administrador"],
-    "Pendiente aprobación -> Cancelada": ["Recepción", "Administrador"],
-    "Asignado a técnico -> Cancelada": ["Recepción", "Administrador"],
+    "Diagnóstico terminado -> Cancelada": ["Recepción", "Administrador"],
+    "Esperando aprobación -> Cancelada": ["Recepción", "Administrador"],
     "En reparación -> Cancelada": ["Recepción", "Administrador"],
 }
 
@@ -75,67 +69,55 @@ export const STATE_METADATA: Record<
         label: "Esperando diagnóstico",
         color: "blue",
         icon: "clock",
-        description: "La orden fue creada y está esperando que el técnico inicie el diagnóstico",
+        description: "Orden creada por recepción, diagnóstico pagado ($150), técnico asignado",
     },
     "En diagnóstico": {
         label: "En diagnóstico",
         color: "purple",
         icon: "search",
-        description: "El técnico está revisando el equipo para determinar el problema",
+        description: "Técnico está revisando el equipo",
     },
-    "Diagnóstico completo": {
-        label: "Diagnóstico completo",
+    "Diagnóstico terminado": {
+        label: "Diagnóstico terminado",
         color: "indigo",
         icon: "check-circle",
-        description: "El diagnóstico está completo, esperando contactar al cliente",
+        description: "Técnico completó diagnóstico y agregó cotización, listo para que recepción contacte al cliente",
     },
-    "Pendiente aprobación": {
-        label: "Pendiente aprobación",
+    "Esperando aprobación": {
+        label: "Esperando aprobación",
         color: "yellow",
         icon: "alert-circle",
-        description: "Esperando que el cliente apruebe la reparación",
-    },
-    "Asignado a técnico": {
-        label: "Asignado a técnico",
-        color: "cyan",
-        icon: "user-check",
-        description: "La reparación fue aprobada y asignada al técnico",
+        description: "Recepción contacta al cliente para aprobar reparación",
     },
     "En reparación": {
         label: "En reparación",
         color: "orange",
         icon: "wrench",
-        description: "El técnico está realizando la reparación",
+        description: "Cliente aprobó, técnico está reparando",
     },
     "Reparación terminada": {
         label: "Reparación terminada",
         color: "lime",
         icon: "check",
-        description: "La reparación está completa",
+        description: "Técnico terminó, registró piezas usadas",
     },
-    "Esperando entrega": {
-        label: "Esperando entrega",
+    "Lista para entrega": {
+        label: "Lista para entrega",
         color: "teal",
         icon: "package",
-        description: "El equipo está en almacén esperando ser entregado",
+        description: "En recepción, esperando que cliente recoja",
     },
-    "En recepción": {
-        label: "En recepción",
-        color: "sky",
-        icon: "inbox",
-        description: "El equipo está en recepción esperando al cliente",
-    },
-    "Entregado a cliente": {
-        label: "Entregado a cliente",
+    "Pagado y entregado": {
+        label: "Pagado y entregado",
         color: "green",
         icon: "check-circle-2",
-        description: "El equipo fue entregado al cliente",
+        description: "Cliente pagó y recogió su equipo (completado)",
     },
     "Cancelada": {
         label: "Cancelada",
         color: "red",
         icon: "x-circle",
-        description: "La orden de servicio fue cancelada",
+        description: "Orden de servicio cancelada",
     },
 }
 
@@ -204,22 +186,19 @@ export function validateStateTransition(
 
     // Specific validation rules
     switch (newState) {
-        case "Diagnóstico completo":
+        case "Esperando aprobación":
             if (!orderData.diagnostico) {
-                return "Debe completar el diagnóstico antes de cambiar el estado"
+                return "Debe completar el diagnóstico con detalles y cotización antes de contactar al cliente"
             }
             break
 
-        case "Asignado a técnico":
+        case "En reparación":
             if (!orderData.clienteAprobado) {
                 return "El cliente debe aprobar la reparación primero"
             }
-            if (!orderData.tecnicoAsignadoId) {
-                return "Debe asignar un técnico"
-            }
             break
 
-        case "Entregado a cliente":
+        case "Pagado y entregado":
             if (orderData.totalPagado !== undefined && orderData.costoReparacion !== undefined) {
                 const totalEsperado = orderData.costoReparacion + 150 // Diagnosis cost
                 if (orderData.totalPagado < totalEsperado) {
@@ -241,7 +220,7 @@ export function getAutomaticNextState(
 ): ServiceOrderState | null {
     switch (currentState) {
         case "Reparación terminada":
-            return "Esperando entrega"
+            return "Lista para entrega"
         default:
             return null
     }

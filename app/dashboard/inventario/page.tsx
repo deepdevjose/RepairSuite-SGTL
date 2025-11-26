@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import Link from "next/link"
+import { useState, useMemo, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
 import { StockBadge } from "@/components/inventory/stock-badge"
 import { ProductThumbnail } from "@/components/inventory/product-thumbnail"
+import { ProductDetailsDialog } from "@/components/inventory/product-details-dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +18,6 @@ import {
   Minus,
   ArrowLeftRight,
   Settings,
-  History,
   ShoppingCart,
   Eye,
   AlertTriangle,
@@ -26,28 +25,76 @@ import {
   Lock,
   Package,
 } from "lucide-react"
-import { mockInventoryItems, getAllCategories } from "@/lib/data/inventory-mock"
+import { getAllCategories } from "@/lib/data/inventory-mock"
 import type { InventoryFilters, ProductCategory } from "@/lib/types/inventory"
 import {
   getStockStatus,
   calculateAvailableStock,
   searchProducts,
   filterByStockStatus,
-  filterByBranch,
   getProductsByCategory,
   getLowStockProducts,
   getCriticalStockProducts,
   formatRelativeTime,
 } from "@/lib/utils/inventory-helpers"
 
+interface Producto {
+  id: string
+  sku: string
+  nombre: string
+  descripcion?: string
+  categoria: string
+  tipo: string
+  marca?: string
+  modelo?: string
+  compatibilidad?: string
+  especificaciones?: string
+  ubicacion?: string
+  precioCompra: number
+  precioVenta: number
+  stockActual: number
+  stockReservado: number
+  stockMinimo: number
+  proveedorId?: string
+  activo: boolean
+  createdAt: string
+  updatedAt: string
+  proveedor?: {
+    id: string
+    nombre: string
+    telefono?: string
+    email?: string
+  }
+}
+
 export default function InventarioPage() {
   const { hasPermission, user } = useAuth()
+  const [productos, setProductos] = useState<Producto[]>([])
+  const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<InventoryFilters>({
     searchTerm: "",
-    sucursal: "all",
     estado: "all",
     categoria: "all",
   })
+  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+
+  useEffect(() => {
+    fetchProductos()
+  }, [])
+
+  const fetchProductos = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/productos')
+      const data = await response.json()
+      setProductos(data)
+    } catch (error) {
+      console.error('Error al cargar productos:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!hasPermission("inventario")) {
     return (
@@ -62,33 +109,58 @@ export default function InventarioPage() {
 
   // Apply all filters
   const filteredProducts = useMemo(() => {
-    let products = [...mockInventoryItems]
+    let products = [...productos]
 
-    // Search
-    products = searchProducts(products, filters.searchTerm)
-
-    // Filter by branch
-    products = filterByBranch(products, filters.sucursal)
+    // Search by SKU, nombre, marca
+    if (filters.searchTerm) {
+      const term = filters.searchTerm.toLowerCase()
+      products = products.filter(p => 
+        p.sku.toLowerCase().includes(term) ||
+        p.nombre.toLowerCase().includes(term) ||
+        p.marca?.toLowerCase().includes(term)
+      )
+    }
 
     // Filter by status
-    products = filterByStockStatus(products, filters.estado)
+    if (filters.estado !== "all") {
+      products = products.filter(p => {
+        const status = getStockStatus(p.stockActual - p.stockReservado, p.stockMinimo)
+        return status === filters.estado
+      })
+    }
 
     // Filter by category
-    products = getProductsByCategory(products, filters.categoria)
+    if (filters.categoria !== "all") {
+      products = products.filter(p => p.categoria === filters.categoria)
+    }
 
     return products
-  }, [filters])
+  }, [productos, filters])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const lowStock = getLowStockProducts(mockInventoryItems)
-    const criticalStock = getCriticalStockProducts(mockInventoryItems)
-    const okStock = mockInventoryItems.filter((p) => {
-      const status = getStockStatus(p.stockTotal, p.stockMinimo)
+    const lowStock = productos.filter(p => {
+      const availableStock = p.stockActual - p.stockReservado
+      const status = getStockStatus(availableStock, p.stockMinimo)
+      return status === "Bajo"
+    })
+    
+    const criticalStock = productos.filter(p => {
+      const availableStock = p.stockActual - p.stockReservado
+      const status = getStockStatus(availableStock, p.stockMinimo)
+      return status === "Crítico"
+    })
+    
+    const okStock = productos.filter(p => {
+      const availableStock = p.stockActual - p.stockReservado
+      const status = getStockStatus(availableStock, p.stockMinimo)
       return status === "OK"
     })
-    const totalReserved = mockInventoryItems.reduce((sum, p) => sum + p.stockReservado, 0)
-    const mostUsed = [...mockInventoryItems]
+    
+    const totalReserved = productos.reduce((sum, p) => sum + p.stockReservado, 0)
+    
+    const mostUsed = [...productos]
+      .filter(p => p.stockReservado > 0)
       .sort((a, b) => b.stockReservado - a.stockReservado)
       .slice(0, 3)
 
@@ -99,7 +171,7 @@ export default function InventarioPage() {
       totalReserved,
       mostUsed,
     }
-  }, [])
+  }, [productos])
 
   return (
     <>
@@ -206,26 +278,6 @@ export default function InventarioPage() {
 
               {/* Filters */}
               <div className="flex flex-wrap items-center gap-2">
-                <Select value={filters.sucursal} onValueChange={(value: any) => setFilters({ ...filters, sucursal: value })}>
-                  <SelectTrigger className="h-9 w-[140px] bg-slate-800/40 border-slate-700 text-slate-300 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700">
-                    <SelectItem value="all" className="text-slate-300 text-xs">
-                      Todas las sedes
-                    </SelectItem>
-                    <SelectItem value="sedeA" className="text-slate-300 text-xs">
-                      Sede A
-                    </SelectItem>
-                    <SelectItem value="sedeB" className="text-slate-300 text-xs">
-                      Sede B
-                    </SelectItem>
-                    <SelectItem value="sedeC" className="text-slate-300 text-xs">
-                      Sede C
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
                 <Select value={filters.estado} onValueChange={(value: any) => setFilters({ ...filters, estado: value })}>
                   <SelectTrigger className="h-9 w-[120px] bg-slate-800/40 border-slate-700 text-slate-300 text-xs">
                     <SelectValue />
@@ -327,15 +379,6 @@ export default function InventarioPage() {
                       Total
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-center">
-                      Sede A
-                    </TableHead>
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-center">
-                      Sede B
-                    </TableHead>
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-center">
-                      Sede C
-                    </TableHead>
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-center">
                       Reservado
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-center">
@@ -345,7 +388,7 @@ export default function InventarioPage() {
                       Estado
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Último Mov.
+                      Ubicación
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-right">
                       Acciones
@@ -353,125 +396,128 @@ export default function InventarioPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product, index) => {
-                    const status = getStockStatus(product.stockTotal, product.stockMinimo)
-                    const disponible = calculateAvailableStock(product.stockTotal, product.stockReservado)
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-slate-400 py-8">
+                        Cargando productos...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-slate-400 py-8">
+                        No se encontraron productos
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredProducts.map((product, index) => {
+                      const disponible = product.stockActual - product.stockReservado
+                      const status = getStockStatus(disponible, product.stockMinimo)
 
-                    return (
-                      <TableRow
-                        key={product.id}
-                        className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150 group"
-                        style={{
-                          animation: "fadeInUp 0.3s ease-out forwards",
-                          animationDelay: `${400 + index * 30}ms`,
-                          opacity: 0,
-                        }}
-                      >
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-3">
-                            <ProductThumbnail categoria={product.categoria} imagen={product.imagen} nombre={product.nombre} />
-                            <div>
-                              <div className="text-[13px] font-medium text-slate-200">{product.nombre}</div>
-                              <div className="text-[11px] text-slate-500">{product.categoria}</div>
+                      return (
+                        <TableRow
+                          key={product.id}
+                          className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150 group"
+                          style={{
+                            animation: "fadeInUp 0.3s ease-out forwards",
+                            animationDelay: `${400 + index * 30}ms`,
+                            opacity: 0,
+                          }}
+                        >
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                              <ProductThumbnail 
+                                categoria={product.categoria} 
+                                imagen={undefined}
+                                nombre={product.nombre} 
+                              />
+                              <div>
+                                <div className="text-[13px] font-medium text-slate-200">{product.nombre}</div>
+                                <div className="text-[11px] text-slate-500">
+                                  {product.marca ? `${product.marca} - ` : ''}{product.categoria}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-[12px] text-indigo-400">{product.sku}</TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-[13px] font-semibold text-slate-200">{product.stockTotal}</span>
-                        </TableCell>
-                        <TableCell className="text-center text-[13px] text-slate-400 tabular-nums">
-                          {product.stockPorSucursal.sedeA}
-                        </TableCell>
-                        <TableCell className="text-center text-[13px] text-slate-400 tabular-nums">
-                          {product.stockPorSucursal.sedeB}
-                        </TableCell>
-                        <TableCell className="text-center text-[13px] text-slate-400 tabular-nums">
-                          {product.stockPorSucursal.sedeC}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {product.stockReservado > 0 ? (
-                            <span className="text-[13px] font-medium text-purple-400">{product.stockReservado}</span>
-                          ) : (
-                            <span className="text-[13px] text-slate-600">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-[13px] font-semibold text-green-400">{disponible}</span>
-                        </TableCell>
-                        <TableCell>
-                          <StockBadge status={status} />
-                        </TableCell>
-                        <TableCell className="text-[12px] text-slate-500">{formatRelativeTime(product.ultimoMovimiento)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-1">
-                            {!isReadOnly && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
-                                  title="Ajuste rápido"
-                                  onClick={() => {
-                                    console.log('[Inventario] Ajuste rápido para:', product.sku)
-                                    alert(`Ajuste rápido para ${product.nombre} (${product.sku})`)
-                                  }}
-                                >
-                                  <Settings className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
-                                  title="Transferir"
-                                  onClick={() => {
-                                    console.log('[Inventario] Transferir producto:', product.sku)
-                                    alert(`Transferir ${product.nombre} (${product.sku})`)
-                                  }}
-                                >
-                                  <ArrowLeftRight className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
-                                  title="Generar orden de compra"
-                                  onClick={() => {
-                                    console.log('[Inventario] Generar orden de compra:', product.sku)
-                                    alert(`Generar orden de compra para ${product.nombre} (${product.sku})`)
-                                  }}
-                                >
-                                  <ShoppingCart className="h-3.5 w-3.5" />
-                                </Button>
-                              </>
+                          </TableCell>
+                          <TableCell className="font-mono text-[12px] text-indigo-400">{product.sku}</TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-[13px] font-semibold text-slate-200">{product.stockActual}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {product.stockReservado > 0 ? (
+                              <span className="text-[13px] font-medium text-purple-400">{product.stockReservado}</span>
+                            ) : (
+                              <span className="text-[13px] text-slate-600">—</span>
                             )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                              title="Ver historial"
-                              onClick={() => {
-                                console.log('[Inventario] Ver historial:', product.sku)
-                                alert(`Ver historial de ${product.nombre} (${product.sku})`)
-                              }}
-                            >
-                              <History className="h-3.5 w-3.5" />
-                            </Button>
-                            <Link href={`/dashboard/inventario/${product.sku}`}>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-[13px] font-semibold text-green-400">{disponible}</span>
+                          </TableCell>
+                          <TableCell>
+                            <StockBadge status={status} />
+                          </TableCell>
+                          <TableCell className="text-[12px] text-slate-500">
+                            {product.ubicacion || 'Sin ubicación'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end gap-1">
+                              {!isReadOnly && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
+                                    title="Ajuste rápido"
+                                    onClick={() => {
+                                      console.log('[Inventario] Ajuste rápido para:', product.sku)
+                                      alert(`Ajuste rápido para ${product.nombre} (${product.sku})`)
+                                    }}
+                                  >
+                                    <Settings className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                    title="Transferir"
+                                    onClick={() => {
+                                      console.log('[Inventario] Transferir producto:', product.sku)
+                                      alert(`Transferir ${product.nombre} (${product.sku})`)
+                                    }}
+                                  >
+                                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
+                                    title="Generar orden de compra"
+                                    onClick={() => {
+                                      console.log('[Inventario] Generar orden de compra:', product.sku)
+                                      alert(`Generar orden de compra para ${product.nombre} (${product.sku})`)
+                                    }}
+                                  >
+                                    <ShoppingCart className="h-3.5 w-3.5" />
+                                  </Button>
+                                </>
+                              )}
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
                                 title="Ver detalles"
+                                onClick={() => {
+                                  setSelectedProduct(product)
+                                  setIsDetailsOpen(true)
+                                }}
                               >
                                 <Eye className="h-3.5 w-3.5" />
                               </Button>
-                            </Link>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -498,6 +544,13 @@ export default function InventarioPage() {
           </Card>
         </div>
       </main>
+
+      {/* Product Details Modal */}
+      <ProductDetailsDialog
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+        product={selectedProduct}
+      />
     </>
   )
 }

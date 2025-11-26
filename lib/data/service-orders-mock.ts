@@ -13,7 +13,9 @@ import type {
  * Sample data for testing the complete workflow
  */
 
-export const mockServiceOrders: ServiceOrder[] = [
+// Datos limpios - conectar a base de datos real
+export const mockServiceOrders: ServiceOrder[] = []
+    // Los datos se cargarán desde la base de datos
     {
         id: "so-001",
         folio: "RS-OS-1024",
@@ -35,7 +37,6 @@ export const mockServiceOrders: ServiceOrder[] = [
 
         tecnicoAsignadoId: "tech-002",
         tecnicoAsignadoNombre: "Carlos Gómez",
-        sucursal: "Sede A",
 
         diagnostico: {
             problema: "Pantalla LCD completamente rota, bisagras izquierda y derecha fracturadas, cable flex de pantalla dañado",
@@ -114,24 +115,17 @@ export const mockServiceOrders: ServiceOrder[] = [
                 id: "hist-004",
                 fecha: "2025-01-15T13:00:00Z",
                 estadoAnterior: "Diagnóstico completo",
-                estadoNuevo: "Pendiente aprobación",
+                estadoNuevo: "Esperando aprobación",
                 usuario: "María González (Recepción)",
-                notas: "Cliente contactado, esperando respuesta",
+                notas: "Cliente contactado",
             },
             {
                 id: "hist-005",
                 fecha: "2025-01-15T14:00:00Z",
-                estadoAnterior: "Pendiente aprobación",
-                estadoNuevo: "Asignado a técnico",
+                estadoAnterior: "Esperando aprobación",
+                estadoNuevo: "En reparación",
                 usuario: "María González (Recepción)",
                 notas: "Cliente aprobó la reparación",
-            },
-            {
-                id: "hist-006",
-                fecha: "2025-01-15T14:30:00Z",
-                estadoAnterior: "Asignado a técnico",
-                estadoNuevo: "En reparación",
-                usuario: "Carlos Gómez (Técnico)",
             },
         ],
 
@@ -155,12 +149,11 @@ export const mockServiceOrders: ServiceOrder[] = [
         equipoModelo: 'MacBook Pro 13"',
 
         problemaReportado: "La batería se descarga muy rápido, solo dura 1 hora",
-        estado: "Esperando entrega",
+        estado: "Lista para entrega",
         prioridad: "Normal",
 
         tecnicoAsignadoId: "tech-001",
         tecnicoAsignadoNombre: "Ana Martínez",
-        sucursal: "Sede A",
 
         diagnostico: {
             problema: "Batería degradada al 45% de capacidad original, ciclos de carga: 1,247",
@@ -242,36 +235,29 @@ export const mockServiceOrders: ServiceOrder[] = [
                 id: "hist-010",
                 fecha: "2025-01-14T12:00:00Z",
                 estadoAnterior: "Diagnóstico completo",
-                estadoNuevo: "Pendiente aprobación",
+                estadoNuevo: "Esperando aprobación",
                 usuario: "María González (Recepción)",
             },
             {
                 id: "hist-011",
                 fecha: "2025-01-14T13:00:00Z",
-                estadoAnterior: "Pendiente aprobación",
-                estadoNuevo: "Asignado a técnico",
+                estadoAnterior: "Esperando aprobación",
+                estadoNuevo: "En reparación",
                 usuario: "María González (Recepción)",
                 notas: "Cliente aprobó, pago recibido",
             },
             {
                 id: "hist-012",
                 fecha: "2025-01-14T14:00:00Z",
-                estadoAnterior: "Asignado a técnico",
-                estadoNuevo: "En reparación",
-                usuario: "Ana Martínez (Técnico)",
-            },
-            {
-                id: "hist-013",
-                fecha: "2025-01-15T10:00:00Z",
                 estadoAnterior: "En reparación",
                 estadoNuevo: "Reparación terminada",
                 usuario: "Ana Martínez (Técnico)",
             },
             {
-                id: "hist-014",
-                fecha: "2025-01-15T10:15:00Z",
+                id: "hist-013",
+                fecha: "2025-01-15T10:00:00Z",
                 estadoAnterior: "Reparación terminada",
-                estadoNuevo: "Esperando entrega",
+                estadoNuevo: "Lista para entrega",
                 usuario: "Sistema",
                 notas: "Transición automática",
             },
@@ -302,7 +288,6 @@ export const mockServiceOrders: ServiceOrder[] = [
 
         tecnicoAsignadoId: "tech-003",
         tecnicoAsignadoNombre: "Luis Torres",
-        sucursal: "Sede B",
 
         costoDiagnostico: 150,
         costoReparacion: 0,
@@ -356,12 +341,11 @@ export const mockServiceOrders: ServiceOrder[] = [
         equipoModelo: "ThinkPad T480",
 
         problemaReportado: "Se apaga sola después de 10 minutos de uso, se calienta mucho",
-        estado: "Pendiente aprobación",
+        estado: "Esperando aprobación",
         prioridad: "Normal",
 
         tecnicoAsignadoId: "tech-002",
         tecnicoAsignadoNombre: "Carlos Gómez",
-        sucursal: "Sede A",
 
         diagnostico: {
             problema: "Placa madre con corto circuito en regulador de voltaje, RAM con errores de memoria",
@@ -414,7 +398,7 @@ export const mockServiceOrders: ServiceOrder[] = [
                 id: "hist-020",
                 fecha: "2025-01-14T18:00:00Z",
                 estadoAnterior: "Diagnóstico completo",
-                estadoNuevo: "Pendiente aprobación",
+                estadoNuevo: "Esperando aprobación",
                 usuario: "María González (Recepción)",
                 notas: "Cliente contactado, esperando decisión sobre reparación costosa",
             },
@@ -438,7 +422,6 @@ export function getServiceOrderSummaries(): ServiceOrderSummary[] {
         equipoMarca: order.equipoMarca,
         estado: order.estado,
         tecnicoAsignadoNombre: order.tecnicoAsignadoNombre,
-        sucursal: order.sucursal,
         totalEstimado: order.costoDiagnostico + order.costoReparacion,
         ultimaActualizacion: order.ultimaActualizacion,
         esGarantia: order.esGarantia,

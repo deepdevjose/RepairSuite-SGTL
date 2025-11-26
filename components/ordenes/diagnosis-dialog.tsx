@@ -195,8 +195,8 @@ export function DiagnosisDialog({
                     {/* Info Box */}
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                         <p className="text-sm text-blue-300">
-                            <strong>Nota:</strong> Una vez completado el diagnóstico, la orden cambiará a estado "Diagnóstico completo"
-                            y se notificará a recepción para contactar al cliente.
+                            <strong>Nota:</strong> Una vez completado el diagnóstico y cotización, la orden cambiará a estado "Diagnóstico terminado"
+                            y se notificará a recepción para que contacte al cliente con la cotización.
                         </p>
                     </div>
                 </div>

@@ -70,25 +70,36 @@ const rolePermissions = {
         "garantias"
     ]
 };
+// JLaboratories users database
+const JLAB_USERS = [
+    {
+        email: "admin@jlaboratories.com",
+        password: "JoseAdmin",
+        name: "Jose Manuel Cortes Ceron",
+        role: "Administrador"
+    },
+    {
+        email: "jose.tecnico@jlaboratories.com",
+        password: "JoseTech",
+        name: "Jose Manuel Cortes Ceron",
+        role: "Técnico"
+    },
+    {
+        email: "kevis.salas@jlaboratories.com",
+        password: "KevinTech",
+        name: "Kevis Salas Jimenez",
+        role: "Técnico"
+    },
+    {
+        email: "adriana.ceron@jlaboratories.com",
+        password: "Adri123",
+        name: "Adriana Ceron Madrigal",
+        role: "Recepción"
+    }
+];
 const getRoleFromEmail = (email)=>{
-    // Check for specific demo emails first
-    if (email === "demo.admin@repairsuite.com") {
-        return "Administrador";
-    }
-    if (email === "demo.recepcion@repairsuite.com") {
-        return "Recepción";
-    }
-    if (email === "demo.tecnico@repairsuite.com") {
-        return "Técnico";
-    }
-    // Fallback to pattern matching for other emails
-    if (email.includes("admin") || email.includes("director") || email.includes("gerente")) {
-        return "Administrador";
-    }
-    if (email.includes("recepcion") || email.includes("reception") || email.includes("front")) {
-        return "Recepción";
-    }
-    return "Técnico";
+    const user = JLAB_USERS.find((u)=>u.email === email);
+    return user?.role || "Técnico";
 };
 function AuthProvider({ children }) {
     const [user, setUser] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
@@ -103,14 +114,13 @@ function AuthProvider({ children }) {
         setIsLoading(false);
     }, []);
     const login = async (email, password)=>{
-        // Simulate login - in real app, this would be an API call
-        if (email && password.length >= 6) {
-            const role = getRoleFromEmail(email);
+        // Validate against JLaboratories user database
+        const user = JLAB_USERS.find((u)=>u.email === email && u.password === password);
+        if (user) {
             const userData = {
-                email,
-                role,
-                name: email.split("@")[0],
-                sucursal: "Sede A"
+                email: user.email,
+                role: user.role,
+                name: user.name
             };
             setUser(userData);
             localStorage.setItem("repairsuite_user", JSON.stringify(userData));
@@ -138,7 +148,7 @@ function AuthProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/auth-context.tsx",
-        lineNumber: 110,
+        lineNumber: 120,
         columnNumber: 5
     }, this);
 }

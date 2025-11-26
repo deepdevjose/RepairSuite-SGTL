@@ -18,65 +18,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Search, Plus, History, FileText, ShieldCheck, Pencil, Upload, X, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 
-const mockEquipments = [
-  {
-    id: 1,
-    cliente: "Juan Pérez García",
-    marca: "HP",
-    modelo: "Pavilion 15",
-    numero_serie: "HP123456789",
-    ultima_orden: "OS-2024-0245",
-    fecha_ultima_orden: "2024-12-15",
-    estado_orden: "En proceso",
-    tecnico: "Carlos Martínez",
-    garantia: "Activa",
-    fecha_expira_garantia: "2025-06-15",
-  },
-  {
-    id: 2,
-    cliente: "María González López",
-    marca: "Apple",
-    modelo: 'MacBook Pro 13"',
-    numero_serie: "MBP987654321",
-    ultima_orden: "OS-2024-0198",
-    fecha_ultima_orden: "2024-11-20",
-    estado_orden: "Completado",
-    tecnico: "Ana Rodríguez",
-    garantia: "Activa",
-    fecha_expira_garantia: "2025-08-20",
-  },
-  {
-    id: 3,
-    cliente: "Pedro Ramírez Sánchez",
-    marca: "Dell",
-    modelo: "XPS 15",
-    numero_serie: "DELL456789123",
-    ultima_orden: "OS-2024-0301",
-    fecha_ultima_orden: "2024-12-18",
-    estado_orden: "Diagnóstico",
-    tecnico: "Luis Hernández",
-    garantia: "Expirada",
-    fecha_expira_garantia: "2024-05-10",
-  },
-  {
-    id: 4,
-    cliente: "Ana Martínez Cruz",
-    marca: "Lenovo",
-    modelo: "ThinkPad X1",
-    numero_serie: "LEN789456123",
-    ultima_orden: "OS-2024-0287",
-    fecha_ultima_orden: "2024-12-10",
-    estado_orden: "En espera de aprobación",
-    tecnico: "Carlos Martínez",
-    garantia: "Activa",
-    fecha_expira_garantia: "2025-03-10",
-  },
-]
+const mockEquipments: any[] = []
 
 const accessoriesList = ["Cargador", "Mouse", "Estuche", "Base de enfriamiento", "Batería adicional", "Cable HDMI"]
 
 export default function EquiposPage() {
   const { hasPermission } = useAuth()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
@@ -291,16 +239,20 @@ export default function EquiposPage() {
                     className="pl-10 bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
-                <Button
-                  onClick={() => {
-                    setIsFormOpen(true)
-                    resetForm()
-                  }}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Registrar equipo
-                </Button>
+                
+                {/* Botón Registrar equipo - Solo para Admin y Recepción */}
+                {user?.role !== "Técnico" && (
+                  <Button
+                    onClick={() => {
+                      setIsFormOpen(true)
+                      resetForm()
+                    }}
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Registrar equipo
+                  </Button>
+                )}
               </div>
 
               {/* Filters */}
@@ -372,15 +324,16 @@ export default function EquiposPage() {
                     <TableHead className="text-slate-400 font-semibold">Número de serie</TableHead>
                     <TableHead className="text-slate-400 font-semibold">Última OS</TableHead>
                     <TableHead className="text-slate-400 font-semibold">Estado actual</TableHead>
-                    <TableHead className="text-slate-400 font-semibold">Técnico asignado</TableHead>
+                    {user?.role !== "Técnico" && (
+                      <TableHead className="text-slate-400 font-semibold">Técnico asignado</TableHead>
+                    )}
                     <TableHead className="text-slate-400 font-semibold">Garantía</TableHead>
-                    <TableHead className="text-slate-400 font-semibold">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredEquipments.length === 0 ? (
                     <TableRow className="border-slate-800">
-                      <TableCell colSpan={8} className="text-center text-slate-400 py-12">
+                      <TableCell colSpan={user?.role === "Técnico" ? 6 : 7} className="text-center text-slate-400 py-12">
                         No se encontraron equipos
                       </TableCell>
                     </TableRow>
@@ -407,7 +360,9 @@ export default function EquiposPage() {
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(equipment.estado_orden)}</TableCell>
-                        <TableCell className="text-slate-300">{equipment.tecnico}</TableCell>
+                        {user?.role !== "Técnico" && (
+                          <TableCell className="text-slate-300">{equipment.tecnico}</TableCell>
+                        )}
                         <TableCell>
                           <div className="space-y-0.5">
                             <Badge
@@ -423,43 +378,6 @@ export default function EquiposPage() {
                               {equipment.garantia === "Activa" ? "Expira: " : "Expiró: "}
                               {equipment.fecha_expira_garantia}
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
-                              title="Ver historial"
-                            >
-                              <History className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
-                              title="Crear orden de servicio"
-                              onClick={() => handleCreateOS(equipment.id)}
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-green-400 hover:text-green-300 hover:bg-green-500/10"
-                              title="Ver garantía"
-                            >
-                              <ShieldCheck className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-slate-400 hover:text-slate-300 hover:bg-slate-500/10"
-                              title="Editar equipo"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

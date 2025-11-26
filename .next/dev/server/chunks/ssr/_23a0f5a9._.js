@@ -863,6 +863,8 @@ function DashboardHeader({ title }) {
     const [searchQuery, setSearchQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [showSearchResults, setShowSearchResults] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [notificationsOpen, setNotificationsOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [notifications, setNotifications] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
     const searchResults = searchQuery.length > 0 ? [
         {
             type: "Orden",
@@ -890,37 +892,64 @@ function DashboardHeader({ title }) {
             subtitle: "15 órdenes activas"
         }
     ].filter((item)=>item.label.toLowerCase().includes(searchQuery.toLowerCase())) : [];
-    const notifications = [
-        {
-            id: 1,
-            title: "Orden lista para entrega",
-            description: "RS-OS-1023 - MacBook Pro 13\" completada",
-            time: "Hace 5 min",
-            unread: true
-        },
-        {
-            id: 2,
-            title: "Inventario crítico",
-            description: "RAM DDR4 8GB bajo stock mínimo",
-            time: "Hace 15 min",
-            unread: true
-        },
-        {
-            id: 3,
-            title: "Nueva orden aprobada",
-            description: "RS-OS-1021 aprobada por cliente",
-            time: "Hace 1 hora",
-            unread: false
-        },
-        {
-            id: 4,
-            title: "Garantía por vencer",
-            description: "12 garantías vencen en 7 días",
-            time: "Hace 2 horas",
-            unread: false
+    // Obtener notificaciones de la base de datos
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const fetchNotifications = async ()=>{
+            if (!user?.id) return;
+            try {
+                setLoading(true);
+                const response = await fetch(`/api/notificaciones?usuarioId=${user.id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setNotifications(data);
+                }
+            } catch (error) {
+                console.error("Error al cargar notificaciones:", error);
+            } finally{
+                setLoading(false);
+            }
+        };
+        fetchNotifications();
+        // Actualizar notificaciones cada 30 segundos
+        const interval = setInterval(fetchNotifications, 30000);
+        return ()=>clearInterval(interval);
+    }, [
+        user?.id
+    ]);
+    const marcarComoLeida = async (notificationId)=>{
+        try {
+            const response = await fetch(`/api/notificaciones/${notificationId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    leida: true
+                })
+            });
+            if (response.ok) {
+                setNotifications((prev)=>prev.map((n)=>n.id === notificationId ? {
+                            ...n,
+                            leida: true
+                        } : n));
+            }
+        } catch (error) {
+            console.error("Error al marcar notificación como leída:", error);
         }
-    ];
-    const unreadCount = notifications.filter((n)=>n.unread).length;
+    };
+    const getTimeAgo = (dateString)=>{
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return "Hace un momento";
+        if (diffMins < 60) return `Hace ${diffMins} min`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+    };
+    const unreadCount = notifications.filter((n)=>!n.leida).length;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("header", {
@@ -936,7 +965,7 @@ function DashboardHeader({ title }) {
                                         className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 79,
+                                        lineNumber: 119,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -949,7 +978,7 @@ function DashboardHeader({ title }) {
                                         className: "pl-10 pr-8 h-9 bg-slate-800/40 backdrop-blur-sm border-white/5 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-500/50 transition-all duration-200"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 80,
+                                        lineNumber: 120,
                                         columnNumber: 13
                                     }, this),
                                     searchQuery && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -962,18 +991,18 @@ function DashboardHeader({ title }) {
                                             className: "h-3.5 w-3.5"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 97,
+                                            lineNumber: 137,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 90,
+                                        lineNumber: 130,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 78,
+                                lineNumber: 118,
                                 columnNumber: 11
                             }, this),
                             showSearchResults && searchResults.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -991,7 +1020,7 @@ function DashboardHeader({ title }) {
                                                 children: result.type
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 113,
+                                                lineNumber: 153,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1002,7 +1031,7 @@ function DashboardHeader({ title }) {
                                                         children: result.label
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 120,
+                                                        lineNumber: 160,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1010,30 +1039,30 @@ function DashboardHeader({ title }) {
                                                         children: result.subtitle
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 121,
+                                                        lineNumber: 161,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 119,
+                                                lineNumber: 159,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, index, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 105,
+                                        lineNumber: 145,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 103,
+                                lineNumber: 143,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard-header.tsx",
-                        lineNumber: 77,
+                        lineNumber: 117,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1049,18 +1078,18 @@ function DashboardHeader({ title }) {
                                                 className: "h-3.5 w-3.5 mr-1.5 text-slate-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 133,
+                                                lineNumber: 173,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 134,
+                                                lineNumber: 174,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 132,
+                                        lineNumber: 172,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1072,7 +1101,7 @@ function DashboardHeader({ title }) {
                                                 children: "Sede A"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 137,
+                                                lineNumber: 177,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1081,7 +1110,7 @@ function DashboardHeader({ title }) {
                                                 children: "Sede B"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 140,
+                                                lineNumber: 180,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1090,19 +1119,19 @@ function DashboardHeader({ title }) {
                                                 children: "Sede C"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 143,
+                                                lineNumber: 183,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 136,
+                                        lineNumber: 176,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 131,
+                                lineNumber: 171,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1115,7 +1144,7 @@ function DashboardHeader({ title }) {
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 155,
+                                        lineNumber: 195,
                                         columnNumber: 13
                                     }, this),
                                     unreadCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1123,13 +1152,13 @@ function DashboardHeader({ title }) {
                                         children: unreadCount
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 157,
+                                        lineNumber: 197,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 149,
+                                lineNumber: 189,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DropdownMenu"], {
@@ -1147,12 +1176,12 @@ function DashboardHeader({ title }) {
                                                         children: user?.name.charAt(0).toUpperCase()
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 170,
+                                                        lineNumber: 210,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 169,
+                                                    lineNumber: 209,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1163,7 +1192,7 @@ function DashboardHeader({ title }) {
                                                             children: user?.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/dashboard-header.tsx",
-                                                            lineNumber: 175,
+                                                            lineNumber: 215,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1171,31 +1200,31 @@ function DashboardHeader({ title }) {
                                                             children: user?.role
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/dashboard-header.tsx",
-                                                            lineNumber: 176,
+                                                            lineNumber: 216,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 174,
+                                                    lineNumber: 214,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-3.5 w-3.5 text-slate-500 hidden lg:block"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 178,
+                                                    lineNumber: 218,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 165,
+                                            lineNumber: 205,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 164,
+                                        lineNumber: 204,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DropdownMenuContent"], {
@@ -1207,14 +1236,14 @@ function DashboardHeader({ title }) {
                                                 children: "Mi cuenta"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 182,
+                                                lineNumber: 222,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DropdownMenuSeparator"], {
                                                 className: "bg-white/5"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 183,
+                                                lineNumber: 223,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DropdownMenuItem"], {
@@ -1224,21 +1253,21 @@ function DashboardHeader({ title }) {
                                                         className: "mr-2 h-4 w-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 185,
+                                                        lineNumber: 225,
                                                         columnNumber: 17
                                                     }, this),
                                                     "Perfil"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 184,
+                                                lineNumber: 224,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DropdownMenuSeparator"], {
                                                 className: "bg-white/5"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 188,
+                                                lineNumber: 228,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DropdownMenuItem"], {
@@ -1249,38 +1278,38 @@ function DashboardHeader({ title }) {
                                                         className: "mr-2 h-4 w-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 193,
+                                                        lineNumber: 233,
                                                         columnNumber: 17
                                                     }, this),
                                                     "Cerrar sesión"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 189,
+                                                lineNumber: 229,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 181,
+                                        lineNumber: 221,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 163,
+                                lineNumber: 203,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard-header.tsx",
-                        lineNumber: 130,
+                        lineNumber: 170,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/dashboard-header.tsx",
-                lineNumber: 76,
+                lineNumber: 116,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Sheet"], {
@@ -1296,7 +1325,7 @@ function DashboardHeader({ title }) {
                                     children: "Notificaciones"
                                 }, void 0, false, {
                                     fileName: "[project]/components/dashboard-header.tsx",
-                                    lineNumber: 204,
+                                    lineNumber: 244,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SheetDescription"], {
@@ -1309,80 +1338,95 @@ function DashboardHeader({ title }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/dashboard-header.tsx",
-                                    lineNumber: 205,
+                                    lineNumber: 245,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/dashboard-header.tsx",
-                            lineNumber: 203,
+                            lineNumber: 243,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "mt-6 space-y-3",
-                            children: notifications.map((notification)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: `p-4 rounded-lg border transition-all duration-200 hover:bg-white/5 cursor-pointer ${notification.unread ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-white/5"}`,
+                            children: loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-slate-400 text-sm text-center py-8",
+                                children: "Cargando notificaciones..."
+                            }, void 0, false, {
+                                fileName: "[project]/components/dashboard-header.tsx",
+                                lineNumber: 251,
+                                columnNumber: 15
+                            }, this) : notifications.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-slate-400 text-sm text-center py-8",
+                                children: "No tienes notificaciones"
+                            }, void 0, false, {
+                                fileName: "[project]/components/dashboard-header.tsx",
+                                lineNumber: 253,
+                                columnNumber: 15
+                            }, this) : notifications.map((notification)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: `p-4 rounded-lg border transition-all duration-200 hover:bg-white/5 cursor-pointer ${!notification.leida ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-white/5"}`,
+                                    onClick: ()=>marcarComoLeida(notification.id),
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex items-start justify-between gap-2 mb-1",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
                                                     className: "text-sm font-semibold text-slate-200",
-                                                    children: notification.title
+                                                    children: notification.titulo
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 220,
-                                                    columnNumber: 19
+                                                    lineNumber: 266,
+                                                    columnNumber: 21
                                                 }, this),
-                                                notification.unread && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                !notification.leida && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "h-2 w-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 222,
-                                                    columnNumber: 21
+                                                    lineNumber: 268,
+                                                    columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 219,
-                                            columnNumber: 17
+                                            lineNumber: 265,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-xs text-slate-400 mb-2",
-                                            children: notification.description
+                                            children: notification.descripcion
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 225,
-                                            columnNumber: 17
+                                            lineNumber: 271,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-[10px] text-slate-500",
-                                            children: notification.time
+                                            children: getTimeAgo(notification.createdAt)
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 226,
-                                            columnNumber: 17
+                                            lineNumber: 272,
+                                            columnNumber: 19
                                         }, this)
                                     ]
                                 }, notification.id, true, {
                                     fileName: "[project]/components/dashboard-header.tsx",
-                                    lineNumber: 211,
-                                    columnNumber: 15
+                                    lineNumber: 256,
+                                    columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/components/dashboard-header.tsx",
-                            lineNumber: 209,
+                            lineNumber: 249,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/dashboard-header.tsx",
-                    lineNumber: 202,
+                    lineNumber: 242,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/dashboard-header.tsx",
-                lineNumber: 201,
+                lineNumber: 241,
                 columnNumber: 7
             }, this)
         ]
@@ -3404,344 +3448,9 @@ __turbopack_context__.s([
     "mockUsers",
     ()=>mockUsers
 ]);
-var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/utils/permission-templates.ts [app-ssr] (ecmascript)");
-;
-const mockEmployees = [
-    {
-        id: "emp-001",
-        nombre: "Carlos",
-        apellidos: "Gómez Martínez",
-        nombreCompleto: "Carlos Gómez Martínez",
-        rolOperativo: "Técnico",
-        sucursalAsignada: "Sede A",
-        telefono: "+52 55 1234 5678",
-        correoInterno: "carlos.gomez@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2023-01-15T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 9:00-18:00",
-        especialidades: [
-            "Hardware",
-            "Software",
-            "Gaming"
-        ],
-        tieneUsuario: true,
-        usuarioId: "user-001",
-        avatar: "/avatars/carlos.jpg",
-        ordenesAtendidas: 145,
-        ordenesCompletadas: 138,
-        tasaDevolucion: 2.1,
-        calificacionPromedio: 4.8
-    },
-    {
-        id: "emp-002",
-        nombre: "Ana",
-        apellidos: "Martínez López",
-        nombreCompleto: "Ana Martínez López",
-        rolOperativo: "Recepción",
-        sucursalAsignada: "Sede A",
-        telefono: "+52 55 2345 6789",
-        correoInterno: "ana.martinez@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2023-02-01T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 8:00-17:00",
-        especialidades: [
-            "General"
-        ],
-        tieneUsuario: true,
-        usuarioId: "user-002",
-        avatar: "/avatars/ana.jpg"
-    },
-    {
-        id: "emp-003",
-        nombre: "Luis",
-        apellidos: "Torres Ramírez",
-        nombreCompleto: "Luis Torres Ramírez",
-        rolOperativo: "Técnico",
-        sucursalAsignada: "Sede B",
-        telefono: "+52 55 3456 7890",
-        correoInterno: "luis.torres@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2023-03-10T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 10:00-19:00",
-        especialidades: [
-            "Apple",
-            "Hardware"
-        ],
-        tieneUsuario: true,
-        usuarioId: "user-003",
-        avatar: "/avatars/luis.jpg",
-        ordenesAtendidas: 98,
-        ordenesCompletadas: 92,
-        tasaDevolucion: 3.2,
-        calificacionPromedio: 4.6
-    },
-    {
-        id: "emp-004",
-        nombre: "María",
-        apellidos: "González Pérez",
-        nombreCompleto: "María González Pérez",
-        rolOperativo: "Administrador",
-        sucursalAsignada: "Sede A",
-        telefono: "+52 55 4567 8901",
-        correoInterno: "maria.gonzalez@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2022-11-01T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 9:00-18:00",
-        especialidades: [
-            "General"
-        ],
-        tieneUsuario: true,
-        usuarioId: "user-004",
-        avatar: "/avatars/maria.jpg"
-    },
-    {
-        id: "emp-005",
-        nombre: "Roberto",
-        apellidos: "Silva Hernández",
-        nombreCompleto: "Roberto Silva Hernández",
-        rolOperativo: "Técnico",
-        sucursalAsignada: "Sede C",
-        telefono: "+52 55 5678 9012",
-        correoInterno: "roberto.silva@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2023-04-20T00:00:00Z",
-        horarioTrabajo: "Lun-Sab 9:00-18:00",
-        especialidades: [
-            "Redes",
-            "Servidores",
-            "Hardware"
-        ],
-        tieneUsuario: true,
-        usuarioId: "user-005",
-        avatar: "/avatars/roberto.jpg",
-        ordenesAtendidas: 76,
-        ordenesCompletadas: 71,
-        tasaDevolucion: 4.5,
-        calificacionPromedio: 4.5
-    },
-    {
-        id: "emp-006",
-        nombre: "Laura",
-        apellidos: "Díaz Morales",
-        nombreCompleto: "Laura Díaz Morales",
-        rolOperativo: "Recepción",
-        sucursalAsignada: "Sede B",
-        telefono: "+52 55 6789 0123",
-        correoInterno: "laura.diaz@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2023-05-15T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 8:00-17:00",
-        especialidades: [
-            "General"
-        ],
-        tieneUsuario: true,
-        usuarioId: "user-006",
-        avatar: "/avatars/laura.jpg"
-    },
-    {
-        id: "emp-007",
-        nombre: "Pedro",
-        apellidos: "Ramírez Castro",
-        nombreCompleto: "Pedro Ramírez Castro",
-        rolOperativo: "Técnico",
-        sucursalAsignada: "Sede A",
-        telefono: "+52 55 7890 1234",
-        correoInterno: "pedro.ramirez@repairsuite.com",
-        estado: "Vacaciones",
-        fechaAlta: "2023-06-01T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 9:00-18:00",
-        especialidades: [
-            "Software",
-            "Gaming"
-        ],
-        tieneUsuario: false,
-        avatar: "/avatars/pedro.jpg",
-        ordenesAtendidas: 54,
-        ordenesCompletadas: 50,
-        tasaDevolucion: 5.1,
-        calificacionPromedio: 4.3
-    },
-    {
-        id: "emp-008",
-        nombre: "Carmen",
-        apellidos: "Rodríguez Vega",
-        nombreCompleto: "Carmen Rodríguez Vega",
-        rolOperativo: "Gerente",
-        sucursalAsignada: "Sede B",
-        telefono: "+52 55 8901 2345",
-        correoInterno: "carmen.rodriguez@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2022-10-01T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 9:00-18:00",
-        especialidades: [
-            "General"
-        ],
-        tieneUsuario: false,
-        avatar: "/avatars/carmen.jpg"
-    },
-    {
-        id: "emp-009",
-        nombre: "Jorge",
-        apellidos: "Fernández Ruiz",
-        nombreCompleto: "Jorge Fernández Ruiz",
-        rolOperativo: "Auxiliar",
-        sucursalAsignada: "Sede C",
-        telefono: "+52 55 9012 3456",
-        correoInterno: "jorge.fernandez@repairsuite.com",
-        estado: "Activo",
-        fechaAlta: "2024-01-10T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 10:00-19:00",
-        especialidades: [
-            "General"
-        ],
-        tieneUsuario: false,
-        avatar: "/avatars/jorge.jpg"
-    },
-    {
-        id: "emp-010",
-        nombre: "Patricia",
-        apellidos: "Sánchez Ortiz",
-        nombreCompleto: "Patricia Sánchez Ortiz",
-        rolOperativo: "Técnico",
-        sucursalAsignada: "Sede A",
-        telefono: "+52 55 0123 4567",
-        correoInterno: "patricia.sanchez@repairsuite.com",
-        estado: "Suspendido",
-        fechaAlta: "2023-07-01T00:00:00Z",
-        horarioTrabajo: "Lun-Vie 9:00-18:00",
-        especialidades: [
-            "Apple",
-            "Software"
-        ],
-        tieneUsuario: false,
-        avatar: "/avatars/patricia.jpg",
-        ordenesAtendidas: 32,
-        ordenesCompletadas: 28,
-        tasaDevolucion: 8.2,
-        calificacionPromedio: 3.9
-    }
-];
-const mockUsers = [
-    {
-        id: "user-001",
-        empleadoId: "emp-001",
-        correoLogin: "carlos.gomez@repairsuite.com",
-        rolSistema: "Técnico",
-        permisos: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TECNICO_PERMISSIONS"],
-        activo: true,
-        ultimoAcceso: "2025-01-20T16:30:00Z",
-        fechaCreacion: "2023-01-15T00:00:00Z",
-        requiereCambioPassword: false
-    },
-    {
-        id: "user-002",
-        empleadoId: "emp-002",
-        correoLogin: "ana.martinez@repairsuite.com",
-        rolSistema: "Recepción",
-        permisos: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["RECEPCION_PERMISSIONS"],
-        activo: true,
-        ultimoAcceso: "2025-01-20T17:45:00Z",
-        fechaCreacion: "2023-02-01T00:00:00Z",
-        requiereCambioPassword: false
-    },
-    {
-        id: "user-003",
-        empleadoId: "emp-003",
-        correoLogin: "luis.torres@repairsuite.com",
-        rolSistema: "Técnico",
-        permisos: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TECNICO_PERMISSIONS"],
-        activo: true,
-        ultimoAcceso: "2025-01-20T15:20:00Z",
-        fechaCreacion: "2023-03-10T00:00:00Z",
-        requiereCambioPassword: false
-    },
-    {
-        id: "user-004",
-        empleadoId: "emp-004",
-        correoLogin: "maria.gonzalez@repairsuite.com",
-        rolSistema: "Administrador",
-        permisos: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ADMIN_PERMISSIONS"],
-        activo: true,
-        ultimoAcceso: "2025-01-20T18:00:00Z",
-        fechaCreacion: "2022-11-01T00:00:00Z",
-        requiereCambioPassword: false
-    },
-    {
-        id: "user-005",
-        empleadoId: "emp-005",
-        correoLogin: "roberto.silva@repairsuite.com",
-        rolSistema: "Técnico",
-        permisos: {
-            ...__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TECNICO_PERMISSIONS"],
-            verCostos: true
-        },
-        activo: true,
-        ultimoAcceso: "2025-01-20T14:10:00Z",
-        fechaCreacion: "2023-04-20T00:00:00Z",
-        requiereCambioPassword: false
-    },
-    {
-        id: "user-006",
-        empleadoId: "emp-006",
-        correoLogin: "laura.diaz@repairsuite.com",
-        rolSistema: "Solo Lectura",
-        permisos: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2f$permission$2d$templates$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SOLO_LECTURA_PERMISSIONS"],
-        activo: true,
-        ultimoAcceso: "2025-01-19T16:30:00Z",
-        fechaCreacion: "2023-05-15T00:00:00Z",
-        requiereCambioPassword: true
-    }
-];
-const mockEmployeeMetrics = [
-    {
-        empleadoId: "emp-001",
-        periodo: "2025-01",
-        ordenesAtendidas: 23,
-        ordenesCompletadas: 21,
-        ordenesEnProceso: 2,
-        tiempoPromedioReparacion: 4.2,
-        tasaDevolucion: 2.1,
-        ingresosGenerados: 45800,
-        calificacionPromedio: 4.8,
-        especialidadMasUsada: "Hardware"
-    },
-    {
-        empleadoId: "emp-003",
-        periodo: "2025-01",
-        ordenesAtendidas: 18,
-        ordenesCompletadas: 17,
-        ordenesEnProceso: 1,
-        tiempoPromedioReparacion: 5.1,
-        tasaDevolucion: 3.2,
-        ingresosGenerados: 38200,
-        calificacionPromedio: 4.6,
-        especialidadMasUsada: "Apple"
-    },
-    {
-        empleadoId: "emp-005",
-        periodo: "2025-01",
-        ordenesAtendidas: 15,
-        ordenesCompletadas: 14,
-        ordenesEnProceso: 1,
-        tiempoPromedioReparacion: 6.3,
-        tasaDevolucion: 4.5,
-        ingresosGenerados: 32100,
-        calificacionPromedio: 4.5,
-        especialidadMasUsada: "Redes"
-    },
-    {
-        empleadoId: "emp-007",
-        periodo: "2025-01",
-        ordenesAtendidas: 12,
-        ordenesCompletadas: 11,
-        ordenesEnProceso: 1,
-        tiempoPromedioReparacion: 5.8,
-        tasaDevolucion: 5.1,
-        ingresosGenerados: 24500,
-        calificacionPromedio: 4.3,
-        especialidadMasUsada: "Software"
-    }
-];
+const mockEmployees = [];
+const mockUsers = [];
+const mockEmployeeMetrics = [];
 function getEmployeeById(id) {
     return mockEmployees.find((e)=>e.id === id);
 }

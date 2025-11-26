@@ -969,6 +969,8 @@ function DashboardHeader({ title }) {
     const [searchQuery, setSearchQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [showSearchResults, setShowSearchResults] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [notificationsOpen, setNotificationsOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [notifications, setNotifications] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     const searchResults = searchQuery.length > 0 ? [
         {
             type: "Orden",
@@ -996,37 +998,70 @@ function DashboardHeader({ title }) {
             subtitle: "15 órdenes activas"
         }
     ].filter((item)=>item.label.toLowerCase().includes(searchQuery.toLowerCase())) : [];
-    const notifications = [
-        {
-            id: 1,
-            title: "Orden lista para entrega",
-            description: "RS-OS-1023 - MacBook Pro 13\" completada",
-            time: "Hace 5 min",
-            unread: true
-        },
-        {
-            id: 2,
-            title: "Inventario crítico",
-            description: "RAM DDR4 8GB bajo stock mínimo",
-            time: "Hace 15 min",
-            unread: true
-        },
-        {
-            id: 3,
-            title: "Nueva orden aprobada",
-            description: "RS-OS-1021 aprobada por cliente",
-            time: "Hace 1 hora",
-            unread: false
-        },
-        {
-            id: 4,
-            title: "Garantía por vencer",
-            description: "12 garantías vencen en 7 días",
-            time: "Hace 2 horas",
-            unread: false
+    // Obtener notificaciones de la base de datos
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "DashboardHeader.useEffect": ()=>{
+            const fetchNotifications = {
+                "DashboardHeader.useEffect.fetchNotifications": async ()=>{
+                    if (!user?.id) return;
+                    try {
+                        setLoading(true);
+                        const response = await fetch(`/api/notificaciones?usuarioId=${user.id}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            setNotifications(data);
+                        }
+                    } catch (error) {
+                        console.error("Error al cargar notificaciones:", error);
+                    } finally{
+                        setLoading(false);
+                    }
+                }
+            }["DashboardHeader.useEffect.fetchNotifications"];
+            fetchNotifications();
+            // Actualizar notificaciones cada 30 segundos
+            const interval = setInterval(fetchNotifications, 30000);
+            return ({
+                "DashboardHeader.useEffect": ()=>clearInterval(interval)
+            })["DashboardHeader.useEffect"];
         }
-    ];
-    const unreadCount = notifications.filter((n)=>n.unread).length;
+    }["DashboardHeader.useEffect"], [
+        user?.id
+    ]);
+    const marcarComoLeida = async (notificationId)=>{
+        try {
+            const response = await fetch(`/api/notificaciones/${notificationId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    leida: true
+                })
+            });
+            if (response.ok) {
+                setNotifications((prev)=>prev.map((n)=>n.id === notificationId ? {
+                            ...n,
+                            leida: true
+                        } : n));
+            }
+        } catch (error) {
+            console.error("Error al marcar notificación como leída:", error);
+        }
+    };
+    const getTimeAgo = (dateString)=>{
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return "Hace un momento";
+        if (diffMins < 60) return `Hace ${diffMins} min`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+    };
+    const unreadCount = notifications.filter((n)=>!n.leida).length;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("header", {
@@ -1042,7 +1077,7 @@ function DashboardHeader({ title }) {
                                         className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 79,
+                                        lineNumber: 119,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1055,7 +1090,7 @@ function DashboardHeader({ title }) {
                                         className: "pl-10 pr-8 h-9 bg-slate-800/40 backdrop-blur-sm border-white/5 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-500/50 transition-all duration-200"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 80,
+                                        lineNumber: 120,
                                         columnNumber: 13
                                     }, this),
                                     searchQuery && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1068,18 +1103,18 @@ function DashboardHeader({ title }) {
                                             className: "h-3.5 w-3.5"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 97,
+                                            lineNumber: 137,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 90,
+                                        lineNumber: 130,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 78,
+                                lineNumber: 118,
                                 columnNumber: 11
                             }, this),
                             showSearchResults && searchResults.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1097,7 +1132,7 @@ function DashboardHeader({ title }) {
                                                 children: result.type
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 113,
+                                                lineNumber: 153,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1108,7 +1143,7 @@ function DashboardHeader({ title }) {
                                                         children: result.label
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 120,
+                                                        lineNumber: 160,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1116,30 +1151,30 @@ function DashboardHeader({ title }) {
                                                         children: result.subtitle
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 121,
+                                                        lineNumber: 161,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 119,
+                                                lineNumber: 159,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, index, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 105,
+                                        lineNumber: 145,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 103,
+                                lineNumber: 143,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard-header.tsx",
-                        lineNumber: 77,
+                        lineNumber: 117,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1155,18 +1190,18 @@ function DashboardHeader({ title }) {
                                                 className: "h-3.5 w-3.5 mr-1.5 text-slate-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 133,
+                                                lineNumber: 173,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 134,
+                                                lineNumber: 174,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 132,
+                                        lineNumber: 172,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1178,7 +1213,7 @@ function DashboardHeader({ title }) {
                                                 children: "Sede A"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 137,
+                                                lineNumber: 177,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1187,7 +1222,7 @@ function DashboardHeader({ title }) {
                                                 children: "Sede B"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 140,
+                                                lineNumber: 180,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1196,19 +1231,19 @@ function DashboardHeader({ title }) {
                                                 children: "Sede C"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 143,
+                                                lineNumber: 183,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 136,
+                                        lineNumber: 176,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 131,
+                                lineNumber: 171,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1221,7 +1256,7 @@ function DashboardHeader({ title }) {
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 155,
+                                        lineNumber: 195,
                                         columnNumber: 13
                                     }, this),
                                     unreadCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1229,13 +1264,13 @@ function DashboardHeader({ title }) {
                                         children: unreadCount
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 157,
+                                        lineNumber: 197,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 149,
+                                lineNumber: 189,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenu"], {
@@ -1253,12 +1288,12 @@ function DashboardHeader({ title }) {
                                                         children: user?.name.charAt(0).toUpperCase()
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 170,
+                                                        lineNumber: 210,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 169,
+                                                    lineNumber: 209,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1269,7 +1304,7 @@ function DashboardHeader({ title }) {
                                                             children: user?.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/dashboard-header.tsx",
-                                                            lineNumber: 175,
+                                                            lineNumber: 215,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1277,31 +1312,31 @@ function DashboardHeader({ title }) {
                                                             children: user?.role
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/dashboard-header.tsx",
-                                                            lineNumber: 176,
+                                                            lineNumber: 216,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 174,
+                                                    lineNumber: 214,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-3.5 w-3.5 text-slate-500 hidden lg:block"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 178,
+                                                    lineNumber: 218,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 165,
+                                            lineNumber: 205,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 164,
+                                        lineNumber: 204,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuContent"], {
@@ -1313,14 +1348,14 @@ function DashboardHeader({ title }) {
                                                 children: "Mi cuenta"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 182,
+                                                lineNumber: 222,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuSeparator"], {
                                                 className: "bg-white/5"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 183,
+                                                lineNumber: 223,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuItem"], {
@@ -1330,21 +1365,21 @@ function DashboardHeader({ title }) {
                                                         className: "mr-2 h-4 w-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 185,
+                                                        lineNumber: 225,
                                                         columnNumber: 17
                                                     }, this),
                                                     "Perfil"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 184,
+                                                lineNumber: 224,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuSeparator"], {
                                                 className: "bg-white/5"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 188,
+                                                lineNumber: 228,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuItem"], {
@@ -1355,38 +1390,38 @@ function DashboardHeader({ title }) {
                                                         className: "mr-2 h-4 w-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard-header.tsx",
-                                                        lineNumber: 193,
+                                                        lineNumber: 233,
                                                         columnNumber: 17
                                                     }, this),
                                                     "Cerrar sesión"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard-header.tsx",
-                                                lineNumber: 189,
+                                                lineNumber: 229,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard-header.tsx",
-                                        lineNumber: 181,
+                                        lineNumber: 221,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard-header.tsx",
-                                lineNumber: 163,
+                                lineNumber: 203,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard-header.tsx",
-                        lineNumber: 130,
+                        lineNumber: 170,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/dashboard-header.tsx",
-                lineNumber: 76,
+                lineNumber: 116,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Sheet"], {
@@ -1402,7 +1437,7 @@ function DashboardHeader({ title }) {
                                     children: "Notificaciones"
                                 }, void 0, false, {
                                     fileName: "[project]/components/dashboard-header.tsx",
-                                    lineNumber: 204,
+                                    lineNumber: 244,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SheetDescription"], {
@@ -1415,86 +1450,101 @@ function DashboardHeader({ title }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/dashboard-header.tsx",
-                                    lineNumber: 205,
+                                    lineNumber: 245,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/dashboard-header.tsx",
-                            lineNumber: 203,
+                            lineNumber: 243,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "mt-6 space-y-3",
-                            children: notifications.map((notification)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: `p-4 rounded-lg border transition-all duration-200 hover:bg-white/5 cursor-pointer ${notification.unread ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-white/5"}`,
+                            children: loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-slate-400 text-sm text-center py-8",
+                                children: "Cargando notificaciones..."
+                            }, void 0, false, {
+                                fileName: "[project]/components/dashboard-header.tsx",
+                                lineNumber: 251,
+                                columnNumber: 15
+                            }, this) : notifications.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-slate-400 text-sm text-center py-8",
+                                children: "No tienes notificaciones"
+                            }, void 0, false, {
+                                fileName: "[project]/components/dashboard-header.tsx",
+                                lineNumber: 253,
+                                columnNumber: 15
+                            }, this) : notifications.map((notification)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: `p-4 rounded-lg border transition-all duration-200 hover:bg-white/5 cursor-pointer ${!notification.leida ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-white/5"}`,
+                                    onClick: ()=>marcarComoLeida(notification.id),
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex items-start justify-between gap-2 mb-1",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
                                                     className: "text-sm font-semibold text-slate-200",
-                                                    children: notification.title
+                                                    children: notification.titulo
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 220,
-                                                    columnNumber: 19
+                                                    lineNumber: 266,
+                                                    columnNumber: 21
                                                 }, this),
-                                                notification.unread && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                !notification.leida && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "h-2 w-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/dashboard-header.tsx",
-                                                    lineNumber: 222,
-                                                    columnNumber: 21
+                                                    lineNumber: 268,
+                                                    columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 219,
-                                            columnNumber: 17
+                                            lineNumber: 265,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-xs text-slate-400 mb-2",
-                                            children: notification.description
+                                            children: notification.descripcion
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 225,
-                                            columnNumber: 17
+                                            lineNumber: 271,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-[10px] text-slate-500",
-                                            children: notification.time
+                                            children: getTimeAgo(notification.createdAt)
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard-header.tsx",
-                                            lineNumber: 226,
-                                            columnNumber: 17
+                                            lineNumber: 272,
+                                            columnNumber: 19
                                         }, this)
                                     ]
                                 }, notification.id, true, {
                                     fileName: "[project]/components/dashboard-header.tsx",
-                                    lineNumber: 211,
-                                    columnNumber: 15
+                                    lineNumber: 256,
+                                    columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/components/dashboard-header.tsx",
-                            lineNumber: 209,
+                            lineNumber: 249,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/dashboard-header.tsx",
-                    lineNumber: 202,
+                    lineNumber: 242,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/dashboard-header.tsx",
-                lineNumber: 201,
+                lineNumber: 241,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true);
 }
-_s(DashboardHeader, "JGEJmBb3E2G/M3tT5H/5uoKRe/s=", false, function() {
+_s(DashboardHeader, "qhNxohHZcn39V97SuvLdx/eCx6w=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"]
     ];
@@ -1741,548 +1791,10 @@ __turbopack_context__.s([
     "mockTransferOrders",
     ()=>mockTransferOrders
 ]);
-const mockInventoryItems = [
-    {
-        id: "inv-001",
-        sku: "RAM-DDR4-8GB-2666",
-        nombre: "Memoria RAM DDR4 8GB 2666MHz",
-        categoria: "RAM",
-        marca: "Kingston",
-        compatibilidad: "DDR4 SODIMM",
-        especificaciones: "8GB DDR4 2666MHz CL19 1.2V",
-        stockTotal: 15,
-        stockPorSucursal: {
-            sedeA: 8,
-            sedeB: 5,
-            sedeC: 2
-        },
-        stockReservado: 3,
-        stockMinimo: 5,
-        precioVenta: 850.0,
-        costoProveedor: 620.0,
-        ubicacion: "Estante A-1",
-        ultimoMovimiento: "2025-01-15T10:30:00Z",
-        activo: true
-    },
-    {
-        id: "inv-002",
-        sku: "SSD-256GB-SATA",
-        nombre: "SSD 256GB SATA III",
-        categoria: "SSD",
-        marca: "Samsung",
-        compatibilidad: "2.5\" SATA III",
-        especificaciones: "256GB SATA III 6Gb/s, 550MB/s lectura",
-        stockTotal: 2,
-        stockPorSucursal: {
-            sedeA: 1,
-            sedeB: 1,
-            sedeC: 0
-        },
-        stockReservado: 1,
-        stockMinimo: 4,
-        precioVenta: 1250.0,
-        costoProveedor: 890.0,
-        ubicacion: "Estante A-2",
-        ultimoMovimiento: "2025-01-14T14:20:00Z",
-        activo: true
-    },
-    {
-        id: "inv-003",
-        sku: "SSD-512GB-NVME",
-        nombre: "SSD 512GB NVMe M.2",
-        categoria: "SSD",
-        marca: "WD Black",
-        compatibilidad: "M.2 2280 NVMe PCIe Gen3",
-        especificaciones: "512GB NVMe PCIe Gen3 x4, 3400MB/s lectura",
-        stockTotal: 0,
-        stockPorSucursal: {
-            sedeA: 0,
-            sedeB: 0,
-            sedeC: 0
-        },
-        stockReservado: 0,
-        stockMinimo: 3,
-        precioVenta: 2100.0,
-        costoProveedor: 1580.0,
-        ubicacion: "Estante A-3",
-        ultimoMovimiento: "2025-01-10T09:15:00Z",
-        activo: true
-    },
-    {
-        id: "inv-004",
-        sku: "HDD-1TB-7200",
-        nombre: "Disco Duro 1TB 7200RPM",
-        categoria: "HDD",
-        marca: "Seagate",
-        compatibilidad: "2.5\" SATA III",
-        especificaciones: "1TB 7200RPM 128MB Cache",
-        stockTotal: 8,
-        stockPorSucursal: {
-            sedeA: 3,
-            sedeB: 3,
-            sedeC: 2
-        },
-        stockReservado: 2,
-        stockMinimo: 3,
-        precioVenta: 980.0,
-        costoProveedor: 720.0,
-        ubicacion: "Estante A-4",
-        ultimoMovimiento: "2025-01-16T11:45:00Z",
-        activo: true
-    },
-    {
-        id: "inv-005",
-        sku: "BATT-HP-PAVILION",
-        nombre: "Batería HP Pavilion 15",
-        categoria: "Batería",
-        marca: "HP Original",
-        compatibilidad: "HP Pavilion 15-au, 15-aw",
-        especificaciones: "41Wh 3 celdas Li-ion",
-        stockTotal: 12,
-        stockPorSucursal: {
-            sedeA: 6,
-            sedeB: 4,
-            sedeC: 2
-        },
-        stockReservado: 1,
-        stockMinimo: 5,
-        precioVenta: 1450.0,
-        costoProveedor: 1050.0,
-        ubicacion: "Estante B-1",
-        ultimoMovimiento: "2025-01-17T08:30:00Z",
-        activo: true
-    },
-    {
-        id: "inv-006",
-        sku: "BATT-DELL-INSPIRON",
-        nombre: "Batería Dell Inspiron",
-        categoria: "Batería",
-        marca: "Dell Original",
-        compatibilidad: "Dell Inspiron 15 3000/5000",
-        especificaciones: "42Wh 3 celdas Li-ion",
-        stockTotal: 3,
-        stockPorSucursal: {
-            sedeA: 2,
-            sedeB: 1,
-            sedeC: 0
-        },
-        stockReservado: 2,
-        stockMinimo: 4,
-        precioVenta: 1380.0,
-        costoProveedor: 980.0,
-        ubicacion: "Estante B-2",
-        ultimoMovimiento: "2025-01-13T15:20:00Z",
-        activo: true
-    },
-    {
-        id: "inv-007",
-        sku: "PANT-15.6-FHD",
-        nombre: "Pantalla 15.6\" FHD",
-        categoria: "Pantalla",
-        marca: "BOE",
-        compatibilidad: "Universal 15.6\" 30 pines",
-        especificaciones: "1920x1080 IPS LED Slim",
-        stockTotal: 5,
-        stockPorSucursal: {
-            sedeA: 3,
-            sedeB: 2,
-            sedeC: 0
-        },
-        stockReservado: 1,
-        stockMinimo: 2,
-        precioVenta: 2800.0,
-        costoProveedor: 2100.0,
-        ubicacion: "Estante C-1",
-        ultimoMovimiento: "2025-01-12T10:00:00Z",
-        activo: true
-    },
-    {
-        id: "inv-008",
-        sku: "TECL-HP-SPANISH",
-        nombre: "Teclado HP Español",
-        categoria: "Teclado",
-        marca: "HP Original",
-        compatibilidad: "HP Pavilion 15-au, 15-aw",
-        especificaciones: "Español Latino con marco",
-        stockTotal: 7,
-        stockPorSucursal: {
-            sedeA: 4,
-            sedeB: 2,
-            sedeC: 1
-        },
-        stockReservado: 0,
-        stockMinimo: 3,
-        precioVenta: 650.0,
-        costoProveedor: 450.0,
-        ubicacion: "Estante D-1",
-        ultimoMovimiento: "2025-01-11T13:30:00Z",
-        activo: true
-    },
-    {
-        id: "inv-009",
-        sku: "CARG-HP-65W",
-        nombre: "Cargador HP 65W",
-        categoria: "Cargador",
-        marca: "HP Compatible",
-        compatibilidad: "HP 4.5mm x 3.0mm",
-        especificaciones: "19.5V 3.33A 65W",
-        stockTotal: 18,
-        stockPorSucursal: {
-            sedeA: 8,
-            sedeB: 6,
-            sedeC: 4
-        },
-        stockReservado: 2,
-        stockMinimo: 8,
-        precioVenta: 450.0,
-        costoProveedor: 280.0,
-        ubicacion: "Estante E-1",
-        ultimoMovimiento: "2025-01-18T09:00:00Z",
-        activo: true
-    },
-    {
-        id: "inv-010",
-        sku: "CARG-DELL-65W",
-        nombre: "Cargador Dell 65W",
-        categoria: "Cargador",
-        marca: "Dell Compatible",
-        compatibilidad: "Dell 7.4mm x 5.0mm",
-        especificaciones: "19.5V 3.34A 65W",
-        stockTotal: 14,
-        stockPorSucursal: {
-            sedeA: 6,
-            sedeB: 5,
-            sedeC: 3
-        },
-        stockReservado: 1,
-        stockMinimo: 8,
-        precioVenta: 480.0,
-        costoProveedor: 300.0,
-        ubicacion: "Estante E-2",
-        ultimoMovimiento: "2025-01-17T16:45:00Z",
-        activo: true
-    },
-    {
-        id: "inv-011",
-        sku: "RAM-DDR4-16GB-3200",
-        nombre: "Memoria RAM DDR4 16GB 3200MHz",
-        categoria: "RAM",
-        marca: "Crucial",
-        compatibilidad: "DDR4 SODIMM",
-        especificaciones: "16GB DDR4 3200MHz CL22 1.2V",
-        stockTotal: 6,
-        stockPorSucursal: {
-            sedeA: 3,
-            sedeB: 2,
-            sedeC: 1
-        },
-        stockReservado: 1,
-        stockMinimo: 4,
-        precioVenta: 1650.0,
-        costoProveedor: 1200.0,
-        ubicacion: "Estante A-1",
-        ultimoMovimiento: "2025-01-16T14:20:00Z",
-        activo: true
-    },
-    {
-        id: "inv-012",
-        sku: "SRV-LIMPIEZA",
-        nombre: "Servicio de Limpieza Profunda",
-        categoria: "Servicio",
-        especificaciones: "Limpieza interna completa + pasta térmica",
-        stockTotal: 999,
-        stockPorSucursal: {
-            sedeA: 333,
-            sedeB: 333,
-            sedeC: 333
-        },
-        stockReservado: 0,
-        stockMinimo: 0,
-        precioVenta: 350.0,
-        costoProveedor: 0,
-        ubicacion: "Servicio",
-        ultimoMovimiento: "2025-01-18T12:00:00Z",
-        activo: true
-    },
-    {
-        id: "inv-013",
-        sku: "SRV-DIAGNOSTICO",
-        nombre: "Servicio de Diagnóstico",
-        categoria: "Servicio",
-        especificaciones: "Diagnóstico completo de hardware y software",
-        stockTotal: 999,
-        stockPorSucursal: {
-            sedeA: 333,
-            sedeB: 333,
-            sedeC: 333
-        },
-        stockReservado: 5,
-        stockMinimo: 0,
-        precioVenta: 200.0,
-        costoProveedor: 0,
-        ubicacion: "Servicio",
-        ultimoMovimiento: "2025-01-18T10:30:00Z",
-        activo: true
-    },
-    {
-        id: "inv-014",
-        sku: "BATT-MACBOOK-A1502",
-        nombre: "Batería MacBook Pro 13\" A1502",
-        categoria: "Batería",
-        marca: "Compatible",
-        compatibilidad: "MacBook Pro 13\" 2013-2015",
-        especificaciones: "74.9Wh Li-Polymer",
-        stockTotal: 1,
-        stockPorSucursal: {
-            sedeA: 1,
-            sedeB: 0,
-            sedeC: 0
-        },
-        stockReservado: 1,
-        stockMinimo: 2,
-        precioVenta: 2800.0,
-        costoProveedor: 2100.0,
-        ubicacion: "Estante B-3",
-        ultimoMovimiento: "2025-01-09T11:15:00Z",
-        activo: true
-    },
-    {
-        id: "inv-015",
-        sku: "HDD-2TB-5400",
-        nombre: "Disco Duro 2TB 5400RPM",
-        categoria: "HDD",
-        marca: "WD Blue",
-        compatibilidad: "2.5\" SATA III",
-        especificaciones: "2TB 5400RPM 128MB Cache",
-        stockTotal: 4,
-        stockPorSucursal: {
-            sedeA: 2,
-            sedeB: 1,
-            sedeC: 1
-        },
-        stockReservado: 0,
-        stockMinimo: 2,
-        precioVenta: 1450.0,
-        costoProveedor: 1080.0,
-        ubicacion: "Estante A-5",
-        ultimoMovimiento: "2025-01-15T09:30:00Z",
-        activo: true
-    }
-];
-const mockInventoryMovements = [
-    {
-        id: "mov-001",
-        sku: "RAM-DDR4-8GB-2666",
-        tipo: "Entrada",
-        cantidad: 10,
-        fecha: "2025-01-10T09:00:00Z",
-        usuario: "Ana Martínez",
-        sucursal: "Sede A",
-        proveedor: "TechDistributor MX",
-        costoUnitario: 620.0,
-        factura: "FAC-2025-0045",
-        lote: "LOT-RAM-0110",
-        notas: "Compra mensual de RAM"
-    },
-    {
-        id: "mov-002",
-        sku: "RAM-DDR4-8GB-2666",
-        tipo: "Salida",
-        cantidad: 2,
-        fecha: "2025-01-12T14:30:00Z",
-        usuario: "Carlos Gómez",
-        sucursal: "Sede A",
-        ordenServicioId: "RS-OS-1024",
-        notas: "Upgrade para cliente Juan Pérez"
-    },
-    {
-        id: "mov-003",
-        sku: "SSD-256GB-SATA",
-        tipo: "Reserva OS",
-        cantidad: 1,
-        fecha: "2025-01-14T10:15:00Z",
-        usuario: "Luis Torres",
-        sucursal: "Sede B",
-        ordenServicioId: "RS-OS-1028",
-        notas: "Reservado para reparación pendiente"
-    },
-    {
-        id: "mov-004",
-        sku: "BATT-HP-PAVILION",
-        tipo: "Transferencia",
-        cantidad: 2,
-        fecha: "2025-01-13T11:00:00Z",
-        usuario: "Ana Martínez",
-        sucursal: "Sede A",
-        sucursalDestino: "Sede B",
-        notas: "Transferencia por baja demanda en Sede A"
-    },
-    {
-        id: "mov-005",
-        sku: "SSD-512GB-NVME",
-        tipo: "Salida",
-        cantidad: 3,
-        fecha: "2025-01-10T15:45:00Z",
-        usuario: "Carlos Gómez",
-        sucursal: "Sede A",
-        ordenServicioId: "RS-OS-1015",
-        notas: "Venta de upgrades"
-    },
-    {
-        id: "mov-006",
-        sku: "CARG-HP-65W",
-        tipo: "Entrada",
-        cantidad: 15,
-        fecha: "2025-01-08T10:00:00Z",
-        usuario: "Ana Martínez",
-        sucursal: "Sede A",
-        proveedor: "Importadora Tech",
-        costoUnitario: 280.0,
-        factura: "FAC-2025-0038",
-        notas: "Reposición de stock"
-    },
-    {
-        id: "mov-007",
-        sku: "PANT-15.6-FHD",
-        tipo: "Salida",
-        cantidad: 1,
-        fecha: "2025-01-12T16:20:00Z",
-        usuario: "Luis Torres",
-        sucursal: "Sede A",
-        ordenServicioId: "RS-OS-1025",
-        notas: "Reemplazo de pantalla dañada"
-    },
-    {
-        id: "mov-008",
-        sku: "HDD-1TB-7200",
-        tipo: "Ajuste",
-        cantidad: -1,
-        fecha: "2025-01-11T09:30:00Z",
-        usuario: "Ana Martínez",
-        sucursal: "Sede B",
-        notas: "Ajuste por inventario físico - unidad dañada"
-    },
-    {
-        id: "mov-009",
-        sku: "BATT-DELL-INSPIRON",
-        tipo: "Entrada",
-        cantidad: 5,
-        fecha: "2025-01-09T14:00:00Z",
-        usuario: "Ana Martínez",
-        sucursal: "Sede A",
-        proveedor: "Dell Parts Supplier",
-        costoUnitario: 980.0,
-        factura: "FAC-2025-0041",
-        lote: "LOT-BATT-0109"
-    },
-    {
-        id: "mov-010",
-        sku: "RAM-DDR4-16GB-3200",
-        tipo: "Reserva OS",
-        cantidad: 1,
-        fecha: "2025-01-16T11:00:00Z",
-        usuario: "Carlos Gómez",
-        sucursal: "Sede A",
-        ordenServicioId: "RS-OS-1030",
-        notas: "Reservado para upgrade gaming"
-    }
-];
-const mockStockReservations = [
-    {
-        id: "res-001",
-        sku: "RAM-DDR4-8GB-2666",
-        ordenServicioId: "RS-OS-1024",
-        folioOS: "RS-OS-1024",
-        cliente: "Juan Pérez",
-        cantidadReservada: 2,
-        sucursal: "Sede A",
-        fechaReserva: "2025-01-15T10:00:00Z",
-        fechaEstimadaUso: "2025-01-20T10:00:00Z",
-        estado: "Activa",
-        usuario: "Carlos Gómez"
-    },
-    {
-        id: "res-002",
-        sku: "SSD-256GB-SATA",
-        ordenServicioId: "RS-OS-1028",
-        folioOS: "RS-OS-1028",
-        cliente: "María González",
-        cantidadReservada: 1,
-        sucursal: "Sede B",
-        fechaReserva: "2025-01-14T10:15:00Z",
-        fechaEstimadaUso: "2025-01-19T14:00:00Z",
-        estado: "Activa",
-        usuario: "Luis Torres"
-    },
-    {
-        id: "res-003",
-        sku: "BATT-DELL-INSPIRON",
-        ordenServicioId: "RS-OS-1029",
-        folioOS: "RS-OS-1029",
-        cliente: "Pedro Ramírez",
-        cantidadReservada: 1,
-        sucursal: "Sede A",
-        fechaReserva: "2025-01-16T09:30:00Z",
-        fechaEstimadaUso: "2025-01-21T11:00:00Z",
-        estado: "Activa",
-        usuario: "Ana Martínez"
-    },
-    {
-        id: "res-004",
-        sku: "BATT-MACBOOK-A1502",
-        ordenServicioId: "RS-OS-1031",
-        folioOS: "RS-OS-1031",
-        cliente: "Laura Sánchez",
-        cantidadReservada: 1,
-        sucursal: "Sede A",
-        fechaReserva: "2025-01-17T15:00:00Z",
-        fechaEstimadaUso: "2025-01-22T10:00:00Z",
-        estado: "Activa",
-        usuario: "Carlos Gómez"
-    },
-    {
-        id: "res-005",
-        sku: "HDD-1TB-7200",
-        ordenServicioId: "RS-OS-1026",
-        folioOS: "RS-OS-1026",
-        cliente: "Roberto Silva",
-        cantidadReservada: 1,
-        sucursal: "Sede C",
-        fechaReserva: "2025-01-13T12:00:00Z",
-        fechaEstimadaUso: "2025-01-18T16:00:00Z",
-        estado: "Activa",
-        usuario: "Luis Torres"
-    }
-];
-const mockTransferOrders = [
-    {
-        id: "trans-001",
-        sku: "BATT-HP-PAVILION",
-        cantidad: 2,
-        sucursalOrigen: "Sede A",
-        sucursalDestino: "Sede B",
-        estado: "Recibida",
-        usuarioSolicita: "Ana Martínez",
-        usuarioRecibe: "Luis Torres",
-        fechaSolicitud: "2025-01-13T09:00:00Z",
-        fechaEnvio: "2025-01-13T11:00:00Z",
-        fechaRecepcion: "2025-01-13T15:30:00Z",
-        notas: "Transferencia por baja demanda"
-    },
-    {
-        id: "trans-002",
-        sku: "RAM-DDR4-8GB-2666",
-        cantidad: 3,
-        sucursalOrigen: "Sede A",
-        sucursalDestino: "Sede C",
-        estado: "En tránsito",
-        usuarioSolicita: "Carlos Gómez",
-        fechaSolicitud: "2025-01-17T10:00:00Z",
-        fechaEnvio: "2025-01-17T14:00:00Z",
-        fechaEstimadaLlegada: "2025-01-19T10:00:00Z",
-        notas: "Reposición de stock en Sede C"
-    }
-];
+const mockInventoryItems = [];
+const mockInventoryMovements = [];
+const mockStockReservations = [];
+const mockTransferOrders = [];
 function getProductBySku(sku) {
     return mockInventoryItems.find((item)=>item.sku === sku);
 }
@@ -2317,8 +1829,6 @@ __turbopack_context__.s([
     ()=>calculateAvailableStock,
     "calculateInventoryValue",
     ()=>calculateInventoryValue,
-    "filterByBranch",
-    ()=>filterByBranch,
     "filterByStockStatus",
     ()=>filterByStockStatus,
     "formatCurrency",
@@ -2341,8 +1851,6 @@ __turbopack_context__.s([
     ()=>getProductsByCategory,
     "getProductsNeedingReorder",
     ()=>getProductsNeedingReorder,
-    "getStockByBranch",
-    ()=>getStockByBranch,
     "getStockStatus",
     ()=>getStockStatus,
     "searchProducts",
@@ -2355,9 +1863,6 @@ function getStockStatus(stockActual, stockMinimo) {
 }
 function calculateAvailableStock(stockTotal, stockReservado) {
     return Math.max(0, stockTotal - stockReservado);
-}
-function getStockByBranch(stockPorSucursal, sucursal) {
-    return stockPorSucursal[sucursal];
 }
 function formatMovementType(tipo) {
     const types = {
@@ -2397,12 +1902,6 @@ function filterByStockStatus(products, status) {
     return products.filter((p)=>{
         const productStatus = getStockStatus(p.stockTotal, p.stockMinimo);
         return productStatus === status;
-    });
-}
-function filterByBranch(products, sucursal) {
-    if (sucursal === "all") return products;
-    return products.filter((p)=>{
-        return p.stockPorSucursal[sucursal] > 0;
     });
 }
 function searchProducts(products, searchTerm) {
@@ -4814,703 +4313,11 @@ __turbopack_context__.s([
     "mockSuppliers",
     ()=>mockSuppliers
 ]);
-const mockSuppliers = [
-    {
-        id: "sup-001",
-        nombreComercial: "TechDistributor MX",
-        rfc: "TDM850623ABC",
-        contactoPrincipal: "Roberto Méndez",
-        telefono: "+52 55 1234 5678",
-        email: "ventas@techdistributor.mx",
-        direccion: "Av. Insurgentes Sur 1234, CDMX",
-        sitioWeb: "https://techdistributor.mx",
-        tiempoEntregaEstandarDias: 3,
-        condicionesPago: "30 días",
-        notas: "Proveedor principal de RAM y SSD",
-        activo: true,
-        productosCount: 15,
-        ultimaCompra: "2025-01-15T10:00:00Z",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "sup-002",
-        nombreComercial: "Importadora Tech",
-        rfc: "ITE920415XYZ",
-        contactoPrincipal: "Ana Rodríguez",
-        telefono: "+52 55 8765 4321",
-        email: "compras@importadoratech.com",
-        direccion: "Calz. Tlalpan 890, CDMX",
-        sitioWeb: "https://importadoratech.com",
-        tiempoEntregaEstandarDias: 5,
-        condicionesPago: "15 días",
-        notas: "Especialista en baterías y cargadores",
-        activo: true,
-        productosCount: 12,
-        ultimaCompra: "2025-01-18T14:30:00Z",
-        fechaCreacion: "2024-02-15T00:00:00Z"
-    },
-    {
-        id: "sup-003",
-        nombreComercial: "Dell Parts Supplier",
-        contactoPrincipal: "Carlos Gómez",
-        telefono: "+52 55 5555 1234",
-        email: "info@dellparts.mx",
-        tiempoEntregaEstandarDias: 7,
-        condicionesPago: "Contado",
-        notas: "Refacciones originales Dell",
-        activo: true,
-        productosCount: 8,
-        ultimaCompra: "2025-01-12T09:00:00Z",
-        fechaCreacion: "2024-03-20T00:00:00Z"
-    },
-    {
-        id: "sup-004",
-        nombreComercial: "HP Authorized Distributor",
-        contactoPrincipal: "María López",
-        telefono: "+52 55 9876 5432",
-        email: "ventas@hpdist.mx",
-        tiempoEntregaEstandarDias: 4,
-        condicionesPago: "20 días",
-        activo: true,
-        productosCount: 10,
-        ultimaCompra: "2025-01-16T11:20:00Z",
-        fechaCreacion: "2024-04-05T00:00:00Z"
-    }
-];
-const mockServices = [
-    {
-        id: "srv-001",
-        sku: "SRV-DIAG-GENERAL",
-        tipo: "Servicio",
-        nombre: "Diagnóstico General Completo",
-        descripcion: "Diagnóstico exhaustivo de hardware y software para identificar fallas",
-        categoria: "Diagnóstico",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: false,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Reporte detallado de fallas encontradas"
-        },
-        tiempoEstimadoMinutos: 180,
-        nivelComplejidad: "Básico",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Realizar pruebas de CPU, RAM, disco, batería y puertos. Documentar todas las fallas.",
-        materialesNecesarios: [],
-        precioBase: 200.0,
-        garantiaDias: 0,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One",
-            "Tablet"
-        ],
-        activo: true,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-002",
-        sku: "SRV-LIMP-PROFUNDA",
-        tipo: "Servicio",
-        nombre: "Limpieza Profunda con Pasta Térmica",
-        descripcion: "Limpieza interna completa y cambio de pasta térmica",
-        categoria: "Mantenimiento",
-        desglose: {
-            incluyeLimpieza: true,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: false,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Cambio de pasta térmica, limpieza de ventiladores"
-        },
-        tiempoEstimadoMinutos: 120,
-        nivelComplejidad: "Intermedio",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Desarmar completamente, limpiar con aire comprimido, aplicar pasta térmica Arctic MX-4",
-        materialesNecesarios: [
-            {
-                inventarioSKU: "PASTA-TERMICA",
-                nombre: "Pasta térmica Arctic MX-4",
-                cantidadNecesaria: 1,
-                costoUnitario: 50.0
-            }
-        ],
-        precioBase: 350.0,
-        garantiaDias: 7,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One"
-        ],
-        activo: true,
-        creadoPor: "Carlos Gómez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-003",
-        sku: "SRV-FORMAT-INSTALL",
-        tipo: "Servicio",
-        nombre: "Formateo e Instalación de Sistema Operativo",
-        descripcion: "Formateo completo, instalación de Windows/Linux y drivers",
-        categoria: "Software",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: true,
-            incluyeDrivers: true,
-            incluyePruebasHardware: false,
-            incluyeRespaldo: true,
-            incluyeOptimizacion: true,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Instalación de antivirus, navegadores y Office básico"
-        },
-        tiempoEstimadoMinutos: 240,
-        nivelComplejidad: "Básico",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Respaldar datos importantes, formatear, instalar SO, drivers y software básico",
-        materialesNecesarios: [],
-        precioBase: 450.0,
-        garantiaDias: 15,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One"
-        ],
-        activo: true,
-        creadoPor: "Luis Torres",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-004",
-        sku: "SRV-CAMBIO-PANTALLA",
-        tipo: "Servicio",
-        nombre: "Cambio de Pantalla",
-        descripcion: "Reemplazo de pantalla dañada (pantalla no incluida)",
-        categoria: "Reparación",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: false,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Prueba de funcionamiento de pantalla nueva"
-        },
-        tiempoEstimadoMinutos: 120,
-        nivelComplejidad: "Avanzado",
-        requiereDiagnostico: true,
-        instruccionesTecnico: "Verificar compatibilidad de pantalla, desarmar con cuidado, conectar y probar",
-        materialesNecesarios: [],
-        precioBase: 400.0,
-        garantiaDias: 30,
-        equiposCompatibles: [
-            "Laptop",
-            "All-in-One",
-            "Tablet"
-        ],
-        activo: true,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-005",
-        sku: "SRV-CAMBIO-BATERIA",
-        tipo: "Servicio",
-        nombre: "Cambio de Batería",
-        descripcion: "Reemplazo de batería (batería no incluida)",
-        categoria: "Reparación",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: false,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Calibración de batería nueva"
-        },
-        tiempoEstimadoMinutos: 60,
-        nivelComplejidad: "Intermedio",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Verificar compatibilidad, desconectar batería vieja, instalar nueva y calibrar",
-        materialesNecesarios: [],
-        precioBase: 250.0,
-        garantiaDias: 90,
-        equiposCompatibles: [
-            "Laptop",
-            "Tablet"
-        ],
-        activo: true,
-        creadoPor: "Carlos Gómez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-006",
-        sku: "SRV-UPGRADE-RAM",
-        tipo: "Servicio",
-        nombre: "Upgrade de Memoria RAM",
-        descripcion: "Instalación de memoria RAM adicional (RAM no incluida)",
-        categoria: "Upgrade",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: true,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Pruebas de estabilidad de RAM"
-        },
-        tiempoEstimadoMinutos: 45,
-        nivelComplejidad: "Básico",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Verificar compatibilidad, instalar RAM, probar con MemTest86",
-        materialesNecesarios: [],
-        precioBase: 150.0,
-        garantiaDias: 30,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One"
-        ],
-        activo: true,
-        creadoPor: "Luis Torres",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-007",
-        sku: "SRV-UPGRADE-SSD",
-        tipo: "Servicio",
-        nombre: "Upgrade a SSD con Clonación",
-        descripcion: "Reemplazo de HDD por SSD incluyendo clonación de datos (SSD no incluido)",
-        categoria: "Upgrade",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: true,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: true,
-            incluyeOptimizacion: true,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Clonación de disco, optimización de SSD"
-        },
-        tiempoEstimadoMinutos: 180,
-        nivelComplejidad: "Intermedio",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Clonar disco con Macrium Reflect, instalar SSD, optimizar configuración",
-        materialesNecesarias: [],
-        precioBase: 500.0,
-        garantiaDias: 30,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One"
-        ],
-        activo: true,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-008",
-        sku: "SRV-RECUPERACION-DATOS",
-        tipo: "Servicio",
-        nombre: "Recuperación de Datos",
-        descripcion: "Recuperación de archivos de disco dañado o formateado",
-        categoria: "Datos",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: false,
-            incluyeRespaldo: true,
-            incluyeOptimizacion: false,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Entrega de datos en USB o disco externo"
-        },
-        tiempoEstimadoMinutos: 480,
-        nivelComplejidad: "Experto",
-        requiereDiagnostico: true,
-        instruccionesTecnico: "Usar software de recuperación profesional, no garantizar 100% de recuperación",
-        materialesNecesarios: [],
-        precioBase: 800.0,
-        garantiaDias: 0,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One"
-        ],
-        activo: true,
-        creadoPor: "Carlos Gómez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-009",
-        sku: "SRV-ELIMINACION-VIRUS",
-        tipo: "Servicio",
-        nombre: "Eliminación de Virus y Malware",
-        descripcion: "Limpieza completa de virus, malware y adware",
-        categoria: "Seguridad",
-        desglose: {
-            incluyeLimpieza: false,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: false,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: true,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Instalación de antivirus, configuración de seguridad"
-        },
-        tiempoEstimadoMinutos: 120,
-        nivelComplejidad: "Intermedio",
-        requiereDiagnostico: false,
-        instruccionesTecnico: "Usar Malwarebytes, AdwCleaner, CCleaner. Instalar antivirus actualizado",
-        materialesNecesarios: [],
-        precioBase: 300.0,
-        garantiaDias: 7,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop",
-            "All-in-One"
-        ],
-        activo: true,
-        creadoPor: "Luis Torres",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "srv-010",
-        sku: "SRV-REPARACION-MOTHERBOARD",
-        tipo: "Servicio",
-        nombre: "Reparación de Motherboard",
-        descripcion: "Diagnóstico y reparación de fallas en motherboard",
-        categoria: "Reparación",
-        desglose: {
-            incluyeLimpieza: true,
-            incluyeFormateo: false,
-            incluyeDrivers: false,
-            incluyePruebasHardware: true,
-            incluyeRespaldo: false,
-            incluyeOptimizacion: false,
-            incluyeActualizacionBIOS: false,
-            otrosIncluidos: "Reballing si es necesario"
-        },
-        tiempoEstimadoMinutos: 2880,
-        nivelComplejidad: "Experto",
-        requiereDiagnostico: true,
-        instruccionesTecnico: "Requiere equipo especializado. Solo para técnicos certificados",
-        materialesNecesarios: [],
-        precioBase: 1500.0,
-        garantiaDias: 60,
-        equiposCompatibles: [
-            "Laptop",
-            "Desktop"
-        ],
-        activo: true,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    }
-];
-const mockParts = [
-    {
-        id: "prt-001",
-        sku: "RAM-DDR4-8GB-2666",
-        tipo: "Refacción",
-        nombre: "Memoria RAM DDR4 8GB 2666MHz",
-        descripcion: "Memoria RAM DDR4 8GB 2666MHz SODIMM para laptop",
-        marca: "Kingston",
-        modelo: "KVR26S19S8/8",
-        compatibilidad: {
-            marcas: [
-                "HP",
-                "Dell",
-                "Lenovo",
-                "Asus",
-                "Acer"
-            ],
-            modelos: [
-                "Universal DDR4 SODIMM"
-            ],
-            descripcion: "Compatible con la mayoría de laptops con DDR4"
-        },
-        especificaciones: "8GB DDR4 2666MHz CL19 1.2V SODIMM",
-        proveedor: mockSuppliers[0],
-        codigoProveedor: "KVR26S19S8/8",
-        costoProveedor: 620.0,
-        precioVenta: 850.0,
-        margen: 27.06,
-        tiempoEntregaProveedorDias: 3,
-        inventarioSKU: "RAM-DDR4-8GB-2666",
-        stockMinimo: 5,
-        stockMaximo: 20,
-        garantiaClienteDias: 90,
-        garantiaProveedorDias: 365,
-        activo: true,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "prt-002",
-        sku: "SSD-256GB-SATA",
-        tipo: "Refacción",
-        nombre: "SSD 256GB SATA III",
-        descripcion: "Disco de estado sólido 256GB SATA III 2.5\"",
-        marca: "Samsung",
-        modelo: "870 EVO 256GB",
-        compatibilidad: {
-            marcas: [
-                "Universal"
-            ],
-            modelos: [
-                "2.5\" SATA III"
-            ],
-            descripcion: "Compatible con cualquier equipo con bahía SATA 2.5\""
-        },
-        especificaciones: "256GB SATA III 6Gb/s, 550MB/s lectura, 520MB/s escritura",
-        proveedor: mockSuppliers[0],
-        codigoProveedor: "MZ-77E256B/AM",
-        costoProveedor: 890.0,
-        precioVenta: 1250.0,
-        margen: 28.8,
-        tiempoEntregaProveedorDias: 3,
-        inventarioSKU: "SSD-256GB-SATA",
-        stockMinimo: 4,
-        stockMaximo: 15,
-        garantiaClienteDias: 180,
-        garantiaProveedorDias: 1825,
-        activo: true,
-        creadoPor: "Carlos Gómez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "prt-003",
-        sku: "BATT-HP-PAVILION",
-        tipo: "Refacción",
-        nombre: "Batería HP Pavilion 15",
-        descripcion: "Batería original HP para Pavilion 15",
-        marca: "HP Original",
-        modelo: "HS04",
-        compatibilidad: {
-            marcas: [
-                "HP"
-            ],
-            modelos: [
-                "Pavilion 15-au",
-                "Pavilion 15-aw",
-                "Pavilion 14-al"
-            ],
-            descripcion: "Compatible con HP Pavilion 15 series 2016-2018"
-        },
-        especificaciones: "41Wh 3 celdas Li-ion 14.8V",
-        proveedor: mockSuppliers[3],
-        codigoProveedor: "HS04041-CL",
-        costoProveedor: 1050.0,
-        precioVenta: 1450.0,
-        margen: 27.59,
-        tiempoEntregaProveedorDias: 4,
-        inventarioSKU: "BATT-HP-PAVILION",
-        stockMinimo: 5,
-        stockMaximo: 15,
-        garantiaClienteDias: 90,
-        garantiaProveedorDias: 180,
-        activo: true,
-        creadoPor: "Luis Torres",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "prt-004",
-        sku: "BATT-DELL-INSPIRON",
-        tipo: "Refacción",
-        nombre: "Batería Dell Inspiron",
-        descripcion: "Batería original Dell para Inspiron 15 3000/5000",
-        marca: "Dell Original",
-        modelo: "WDX0R",
-        compatibilidad: {
-            marcas: [
-                "Dell"
-            ],
-            modelos: [
-                "Inspiron 15 3000",
-                "Inspiron 15 5000",
-                "Inspiron 13 5000"
-            ],
-            descripcion: "Compatible con Dell Inspiron series 2017-2019"
-        },
-        especificaciones: "42Wh 3 celdas Li-ion 11.4V",
-        proveedor: mockSuppliers[2],
-        codigoProveedor: "WDX0R-42WH",
-        costoProveedor: 980.0,
-        precioVenta: 1380.0,
-        margen: 28.99,
-        tiempoEntregaProveedorDias: 7,
-        inventarioSKU: "BATT-DELL-INSPIRON",
-        stockMinimo: 4,
-        stockMaximo: 12,
-        garantiaClienteDias: 90,
-        garantiaProveedorDias: 180,
-        activo: true,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "prt-005",
-        sku: "PANT-15.6-FHD",
-        tipo: "Refacción",
-        nombre: "Pantalla 15.6\" FHD",
-        descripcion: "Pantalla LED 15.6\" Full HD IPS",
-        marca: "BOE",
-        modelo: "NV156FHM-N61",
-        compatibilidad: {
-            marcas: [
-                "Universal"
-            ],
-            modelos: [
-                "15.6\" 30 pines eDP"
-            ],
-            descripcion: "Compatible con la mayoría de laptops 15.6\" con conector 30 pines"
-        },
-        especificaciones: "1920x1080 IPS LED Slim 30 pines eDP",
-        proveedor: mockSuppliers[0],
-        codigoProveedor: "NV156FHM-N61",
-        costoProveedor: 2100.0,
-        precioVenta: 2800.0,
-        margen: 25.0,
-        tiempoEntregaProveedorDias: 3,
-        inventarioSKU: "PANT-15.6-FHD",
-        stockMinimo: 2,
-        stockMaximo: 8,
-        garantiaClienteDias: 30,
-        garantiaProveedorDias: 90,
-        activo: true,
-        creadoPor: "Carlos Gómez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    }
-];
-const mockPackages = [
-    {
-        id: "pkg-001",
-        sku: "PAQ-BASICO",
-        tipo: "Paquete",
-        nombre: "Paquete Mantenimiento Básico",
-        descripcion: "Limpieza profunda + diagnóstico + optimización",
-        serviciosIncluidos: [
-            {
-                servicioSKU: "SRV-DIAG-GENERAL",
-                nombre: "Diagnóstico General Completo",
-                precioIndividual: 200.0
-            },
-            {
-                servicioSKU: "SRV-LIMP-PROFUNDA",
-                nombre: "Limpieza Profunda con Pasta Térmica",
-                precioIndividual: 350.0
-            }
-        ],
-        precioIndividualTotal: 550.0,
-        precioPaquete: 450.0,
-        ahorro: 100.0,
-        porcentajeDescuento: 18.18,
-        tiempoEstimadoTotalMinutos: 300,
-        garantiaDias: 7,
-        activo: true,
-        popularidad: 45,
-        creadoPor: "Ana Martínez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "pkg-002",
-        sku: "PAQ-COMPLETO",
-        tipo: "Paquete",
-        nombre: "Paquete Mantenimiento Completo",
-        descripcion: "Limpieza + formateo + instalación + optimización completa",
-        serviciosIncluidos: [
-            {
-                servicioSKU: "SRV-LIMP-PROFUNDA",
-                nombre: "Limpieza Profunda con Pasta Térmica",
-                precioIndividual: 350.0
-            },
-            {
-                servicioSKU: "SRV-FORMAT-INSTALL",
-                nombre: "Formateo e Instalación de Sistema Operativo",
-                precioIndividual: 450.0
-            },
-            {
-                servicioSKU: "SRV-ELIMINACION-VIRUS",
-                nombre: "Eliminación de Virus y Malware",
-                precioIndividual: 300.0
-            }
-        ],
-        precioIndividualTotal: 1100.0,
-        precioPaquete: 850.0,
-        ahorro: 250.0,
-        porcentajeDescuento: 22.73,
-        tiempoEstimadoTotalMinutos: 480,
-        garantiaDias: 15,
-        activo: true,
-        popularidad: 32,
-        creadoPor: "Carlos Gómez",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    },
-    {
-        id: "pkg-003",
-        sku: "PAQ-UPGRADE-PRO",
-        tipo: "Paquete",
-        nombre: "Paquete Upgrade Profesional",
-        descripcion: "Upgrade a SSD + RAM + limpieza + optimización",
-        serviciosIncluidos: [
-            {
-                servicioSKU: "SRV-UPGRADE-SSD",
-                nombre: "Upgrade a SSD con Clonación",
-                precioIndividual: 500.0
-            },
-            {
-                servicioSKU: "SRV-UPGRADE-RAM",
-                nombre: "Upgrade de Memoria RAM",
-                precioIndividual: 150.0
-            },
-            {
-                servicioSKU: "SRV-LIMP-PROFUNDA",
-                nombre: "Limpieza Profunda con Pasta Térmica",
-                precioIndividual: 350.0
-            }
-        ],
-        precioIndividualTotal: 1000.0,
-        precioPaquete: 800.0,
-        ahorro: 200.0,
-        porcentajeDescuento: 20.0,
-        tiempoEstimadoTotalMinutos: 405,
-        garantiaDias: 30,
-        activo: true,
-        popularidad: 28,
-        creadoPor: "Luis Torres",
-        fechaCreacion: "2024-01-10T00:00:00Z"
-    }
-];
-const mockPriceHistory = [
-    {
-        id: "ph-001",
-        catalogoSKU: "SRV-DIAG-GENERAL",
-        campoModificado: "precioBase",
-        valorAnterior: 150.0,
-        valorNuevo: 200.0,
-        motivo: "Ajuste por inflación",
-        usuario: "Ana Martínez",
-        fecha: "2024-12-01T10:00:00Z"
-    },
-    {
-        id: "ph-002",
-        catalogoSKU: "RAM-DDR4-8GB-2666",
-        campoModificado: "precioVenta",
-        valorAnterior: 800.0,
-        valorNuevo: 850.0,
-        motivo: "Aumento de costo de proveedor",
-        usuario: "Carlos Gómez",
-        fecha: "2025-01-05T14:30:00Z"
-    }
-];
+const mockSuppliers = [];
+const mockServices = [];
+const mockParts = [];
+const mockPackages = [];
+const mockPriceHistory = [];
 function getAllCatalogItems() {
     return [
         ...mockServices,

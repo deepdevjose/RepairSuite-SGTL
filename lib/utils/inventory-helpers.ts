@@ -1,4 +1,4 @@
-import type { InventoryItem, StockStatus, ProductCategory, StockByBranch } from "@/lib/types/inventory"
+import type { InventoryItem, StockStatus, ProductCategory } from "@/lib/types/inventory"
 
 /**
  * Determine stock status based on current stock and minimum threshold
@@ -14,16 +14,6 @@ export function getStockStatus(stockActual: number, stockMinimo: number): StockS
  */
 export function calculateAvailableStock(stockTotal: number, stockReservado: number): number {
     return Math.max(0, stockTotal - stockReservado)
-}
-
-/**
- * Get stock for a specific branch
- */
-export function getStockByBranch(
-    stockPorSucursal: StockByBranch,
-    sucursal: "sedeA" | "sedeB" | "sedeC"
-): number {
-    return stockPorSucursal[sucursal]
 }
 
 /**
@@ -94,20 +84,6 @@ export function filterByStockStatus(
     return products.filter((p) => {
         const productStatus = getStockStatus(p.stockTotal, p.stockMinimo)
         return productStatus === status
-    })
-}
-
-/**
- * Filter products by branch
- */
-export function filterByBranch(
-    products: InventoryItem[],
-    sucursal: "all" | "sedeA" | "sedeB" | "sedeC"
-): InventoryItem[] {
-    if (sucursal === "all") return products
-
-    return products.filter((p) => {
-        return p.stockPorSucursal[sucursal] > 0
     })
 }
 

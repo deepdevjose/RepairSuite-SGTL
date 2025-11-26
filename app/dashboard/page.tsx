@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Card } from "@/components/ui/card"
 import { BadgeStatus } from "@/components/badge-status"
@@ -33,110 +34,17 @@ import { NewClientDialog } from "@/components/dashboard/new-client-dialog"
 import { NewSaleDialog } from "@/components/dashboard/new-sale-dialog"
 import { OrderDetailsDialog } from "@/components/dashboard/order-details-dialog"
 
-const chartData = [
-  { name: "En diagnóstico", value: 12, mantenimiento: 4, reparacion: 5, upgrade: 3 },
-  { name: "En espera", value: 8, mantenimiento: 2, reparacion: 4, upgrade: 2 },
-  { name: "En proceso", value: 24, mantenimiento: 8, reparacion: 12, upgrade: 4 },
-  { name: "Listo", value: 15, mantenimiento: 5, reparacion: 7, upgrade: 3 },
-  { name: "Completada", value: 42, mantenimiento: 15, reparacion: 20, upgrade: 7 },
-]
+const chartData: any[] = []
 
-const recentOrders = [
-  {
-    folio: "RS-OS-1024",
-    cliente: "Juan Pérez",
-    equipo: "HP Pavilion 15",
-    estado: "En proceso",
-    tecnico: "Carlos Gómez",
-    sucursal: "Sede A",
-    fecha: "2025-01-10",
-    importe: 1250.0,
-    tiempoReparacion: "2.5 hrs",
-  },
-  {
-    folio: "RS-OS-1023",
-    cliente: "María González",
-    equipo: 'MacBook Pro 13"',
-    estado: "Listo para entrega",
-    tecnico: "Ana Martínez",
-    sucursal: "Sede A",
-    fecha: "2025-01-09",
-    importe: 3400.0,
-    tiempoReparacion: "4 hrs",
-  },
-  {
-    folio: "RS-OS-1022",
-    cliente: "Pedro Ramírez",
-    equipo: "Dell XPS 15",
-    estado: "En diagnóstico",
-    tecnico: "Luis Torres",
-    sucursal: "Sede B",
-    fecha: "2025-01-09",
-    importe: 890.0,
-    tiempoReparacion: "0.5 hrs",
-  },
-  {
-    folio: "RS-OS-1021",
-    cliente: "Ana López",
-    equipo: "Lenovo ThinkPad",
-    estado: "En espera de aprobación",
-    tecnico: "Carlos Gómez",
-    sucursal: "Sede A",
-    fecha: "2025-01-08",
-    importe: 2100.0,
-    tiempoReparacion: "1 hr",
-  },
-  {
-    folio: "RS-OS-1020",
-    cliente: "Roberto Silva",
-    equipo: "Asus ROG",
-    estado: "En proceso",
-    tecnico: "Ana Martínez",
-    sucursal: "Sede C",
-    fecha: "2025-01-08",
-    importe: 1850.0,
-    tiempoReparacion: "3 hrs",
-  },
-]
+const recentOrders: any[] = []
 
-const topTechnicians = [
-  {
-    id: "tech-001",
-    nombre: "Ana Martínez",
-    ordenesCompletadas: 42,
-    calificacion: 4.9,
-    ingresosGenerados: 89500,
-    avatar: "AM",
-  },
-  {
-    id: "tech-002",
-    nombre: "Carlos Gómez",
-    ordenesCompletadas: 38,
-    calificacion: 4.8,
-    ingresosGenerados: 76200,
-    avatar: "CG",
-  },
-  {
-    id: "tech-003",
-    nombre: "Luis Torres",
-    ordenesCompletadas: 35,
-    calificacion: 4.7,
-    ingresosGenerados: 68900,
-    avatar: "LT",
-  },
-]
+const topTechnicians: any[] = []
 
-const recentActivity = [
-  { id: 1, tipo: "orden", mensaje: "Orden RS-OS-1024 completada", tiempo: "hace 15 min", icon: CheckCircle2, color: "text-green-400" },
-  { id: 2, tipo: "pago", mensaje: "Pago de $3,400 recibido", tiempo: "hace 1 hora", icon: DollarSign, color: "text-emerald-400" },
-  { id: 3, tipo: "cliente", mensaje: "Nuevo cliente: María González", tiempo: "hace 2 horas", icon: UserPlus, color: "text-blue-400" },
-  { id: 4, tipo: "alerta", mensaje: "Inventario crítico: Pantallas LCD", tiempo: "hace 3 horas", icon: AlertTriangle, color: "text-amber-400" },
-  { id: 5, tipo: "orden", mensaje: "Orden RS-OS-1023 lista para entrega", tiempo: "hace 4 horas", icon: Bell, color: "text-indigo-400" },
-]
+const recentActivity: any[] = []
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [selectedBranch, setSelectedBranch] = useState<string>("all")
+  const { user } = useAuth()
   const [dateFilter, setDateFilter] = useState<string>("30")
   const [technicianFilter, setTechnicianFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -178,10 +86,9 @@ export default function DashboardPage() {
                     <ClipboardList className="h-4 w-4 text-indigo-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">59</div>
-                <div className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
-                  <TrendingUp className="h-3 w-3" />
-                  +12% vs mes anterior
+                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
+                <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                  Sin datos
                 </div>
               </div>
             </Card>
@@ -195,7 +102,7 @@ export default function DashboardPage() {
                     <Wrench className="h-4 w-4 text-blue-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">12</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
                 <div className="text-xs text-slate-500 font-medium">Requieren atención</div>
               </div>
             </Card>
@@ -209,7 +116,7 @@ export default function DashboardPage() {
                     <Activity className="h-4 w-4 text-purple-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">24</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
                 <div className="text-xs text-slate-500 font-medium">En reparación</div>
               </div>
             </Card>
@@ -223,7 +130,7 @@ export default function DashboardPage() {
                     <CheckCircle2 className="h-4 w-4 text-green-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">15</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
                 <div className="text-xs text-slate-500 font-medium">Notificar clientes</div>
               </div>
             </Card>
@@ -240,10 +147,9 @@ export default function DashboardPage() {
                     <DollarSign className="h-4 w-4 text-emerald-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">$125.4K</div>
-                <div className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
-                  <TrendingUp className="h-3 w-3" />
-                  +18% vs mes anterior
+                <div className="text-4xl font-bold text-slate-100 mb-2">$0</div>
+                <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                  Sin datos
                 </div>
               </div>
             </Card>
@@ -257,7 +163,7 @@ export default function DashboardPage() {
                     <ShoppingCart className="h-4 w-4 text-cyan-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">$2,125</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">$0</div>
                 <div className="text-xs text-slate-500 font-medium">Por orden de servicio</div>
               </div>
             </Card>
@@ -271,10 +177,9 @@ export default function DashboardPage() {
                     <TrendingUp className="h-4 w-4 text-violet-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">87%</div>
-                <div className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
-                  <TrendingUp className="h-3 w-3" />
-                  +5% vs mes anterior
+                <div className="text-4xl font-bold text-slate-100 mb-2">0%</div>
+                <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                  Sin datos
                 </div>
               </div>
             </Card>
@@ -288,7 +193,7 @@ export default function DashboardPage() {
                     <Clock className="h-4 w-4 text-amber-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">$45.2K</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">$0</div>
                 <div className="text-xs text-slate-500 font-medium">Pendiente de pago</div>
               </div>
             </Card>
@@ -296,43 +201,81 @@ export default function DashboardPage() {
 
           {/* Acciones Rápidas y Alertas */}
           <div className="grid gap-4 md:grid-cols-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-            {/* Acciones Rápidas */}
-            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
-              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-indigo-400" />
-                Acciones Rápidas
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  onClick={() => setIsNewOrderOpen(true)}
-                  className="h-20 flex-col gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 hover:text-indigo-200"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span className="text-sm">Nueva OS</span>
-                </Button>
-                <Button
-                  onClick={() => setIsPaymentOpen(true)}
-                  className="h-20 flex-col gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 hover:text-emerald-200"
-                >
-                  <DollarSign className="h-5 w-5" />
-                  <span className="text-sm">Registrar Pago</span>
-                </Button>
-                <Button
-                  onClick={() => setIsNewClientOpen(true)}
-                  className="h-20 flex-col gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-300 hover:text-blue-200"
-                >
-                  <UserPlus className="h-5 w-5" />
-                  <span className="text-sm">Nuevo Cliente</span>
-                </Button>
-                <Button
-                  onClick={() => setIsNewSaleOpen(true)}
-                  className="h-20 flex-col gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 hover:text-purple-200"
-                >
-                  <ShoppingBag className="h-5 w-5" />
-                  <span className="text-sm">Nueva Venta</span>
-                </Button>
-              </div>
-            </Card>
+            {/* Acciones Rápidas - Solo para Admin y Recepción */}
+            {user?.role !== "Técnico" && (
+              <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-indigo-400" />
+                  Acciones Rápidas
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={() => setIsNewOrderOpen(true)}
+                    className="h-20 flex-col gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 hover:text-indigo-200"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="text-sm">Nueva OS</span>
+                  </Button>
+                  <Button
+                    onClick={() => setIsPaymentOpen(true)}
+                    className="h-20 flex-col gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 hover:text-emerald-200"
+                  >
+                    <DollarSign className="h-5 w-5" />
+                    <span className="text-sm">Registrar Pago</span>
+                  </Button>
+                  <Button
+                    onClick={() => setIsNewClientOpen(true)}
+                    className="h-20 flex-col gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-300 hover:text-blue-200"
+                  >
+                    <UserPlus className="h-5 w-5" />
+                    <span className="text-sm">Nuevo Cliente</span>
+                  </Button>
+                  <Button
+                    onClick={() => setIsNewSaleOpen(true)}
+                    className="h-20 flex-col gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 hover:text-purple-200"
+                  >
+                    <ShoppingBag className="h-5 w-5" />
+                    <span className="text-sm">Nueva Venta</span>
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Notificaciones de Órdenes Asignadas - Solo para Técnicos */}
+            {user?.role === "Técnico" && (
+              <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-indigo-400" />
+                  Órdenes Asignadas Recientemente
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-start gap-3">
+                    <Bell className="h-5 w-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-indigo-300">Nueva orden: RS-OS-1024</p>
+                      <p className="text-xs text-indigo-400/80">HP Pavilion 15 - Juan Pérez</p>
+                      <p className="text-xs text-slate-500 mt-1">Hace 15 minutos</p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-start gap-3">
+                    <Wrench className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-300">Nueva orden: RS-OS-1022</p>
+                      <p className="text-xs text-blue-400/80">Dell XPS 15 - Pedro Ramírez</p>
+                      <p className="text-xs text-slate-500 mt-1">Hace 2 horas</p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-purple-300">Cotización aprobada: RS-OS-1018</p>
+                      <p className="text-xs text-purple-400/80">MacBook Pro - Ana López</p>
+                      <p className="text-xs text-slate-500 mt-1">Hace 4 horas</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {/* Alertas */}
             <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
@@ -344,22 +287,22 @@ export default function DashboardPage() {
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
                   <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-red-300">5 órdenes retrasadas</p>
-                    <p className="text-xs text-red-400/80">Más de 7 días sin actualización</p>
+                    <p className="text-sm font-medium text-red-300">0 órdenes retrasadas</p>
+                    <p className="text-xs text-red-400/80">Sin alertas</p>
                   </div>
                 </div>
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
                   <Clock className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-amber-300">8 cotizaciones sin respuesta</p>
-                    <p className="text-xs text-amber-400/80">Más de 3 días esperando</p>
+                    <p className="text-sm font-medium text-amber-300">0 cotizaciones sin respuesta</p>
+                    <p className="text-xs text-amber-400/80">Sin pendientes</p>
                   </div>
                 </div>
                 <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-green-300">12 equipos listos</p>
-                    <p className="text-xs text-green-400/80">Notificar a clientes</p>
+                    <p className="text-sm font-medium text-green-300">0 equipos listos</p>
+                    <p className="text-xs text-green-400/80">Sin notificaciones</p>
                   </div>
                 </div>
               </div>
@@ -437,130 +380,112 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Gráfico de Órdenes por Estado */}
-          <Card
-            className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 animate-fade-in-up hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-200"
-            style={{ animationDelay: "300ms" }}
-          >
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                  Órdenes por estado
-                  <span className="text-xs font-normal text-slate-500">(últimos {dateFilter} días)</span>
-                </h3>
+          {/* Gráfico de Órdenes por Estado - Solo visible para Admin y Técnico */}
+          {user?.role !== "Recepción" && (
+            <Card
+              className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 animate-fade-in-up hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-200"
+              style={{ animationDelay: "300ms" }}
+            >
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                    Órdenes por estado
+                    <span className="text-xs font-normal text-slate-500">(últimos {dateFilter} días)</span>
+                  </h3>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="h-8 w-[100px] bg-slate-800/40 border-white/5 text-slate-300 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-white/10">
+                      <SelectItem value="7" className="text-slate-300 text-xs">
+                        7 días
+                      </SelectItem>
+                      <SelectItem value="30" className="text-slate-300 text-xs">
+                        30 días
+                      </SelectItem>
+                      <SelectItem value="90" className="text-slate-300 text-xs">
+                        90 días
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
+                    <SelectTrigger className="h-8 w-[140px] bg-slate-800/40 border-white/5 text-slate-300 text-xs">
+                      <SelectValue placeholder="Técnico" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-white/10">
+                      <SelectItem value="all" className="text-slate-300 text-xs">
+                        Todos los técnicos
+                      </SelectItem>
+                      <SelectItem value="carlos" className="text-slate-300 text-xs">
+                        Carlos Gómez
+                      </SelectItem>
+                      <SelectItem value="ana" className="text-slate-300 text-xs">
+                        Ana Martínez
+                      </SelectItem>
+                      <SelectItem value="luis" className="text-slate-300 text-xs">
+                        Luis Torres
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="h-8 w-[100px] bg-slate-800/40 border-white/5 text-slate-300 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-white/10">
-                    <SelectItem value="7" className="text-slate-300 text-xs">
-                      7 días
-                    </SelectItem>
-                    <SelectItem value="30" className="text-slate-300 text-xs">
-                      30 días
-                    </SelectItem>
-                    <SelectItem value="90" className="text-slate-300 text-xs">
-                      90 días
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
-                  <SelectTrigger className="h-8 w-[140px] bg-slate-800/40 border-white/5 text-slate-300 text-xs">
-                    <SelectValue placeholder="Técnico" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-white/10">
-                    <SelectItem value="all" className="text-slate-300 text-xs">
-                      Todos los técnicos
-                    </SelectItem>
-                    <SelectItem value="carlos" className="text-slate-300 text-xs">
-                      Carlos Gómez
-                    </SelectItem>
-                    <SelectItem value="ana" className="text-slate-300 text-xs">
-                      Ana Martínez
-                    </SelectItem>
-                    <SelectItem value="luis" className="text-slate-300 text-xs">
-                      Luis Torres
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                  <SelectTrigger className="h-8 w-[120px] bg-slate-800/40 border-white/5 text-slate-300 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-white/10">
-                    <SelectItem value="all" className="text-slate-300 text-xs">
-                      Todas las sedes
-                    </SelectItem>
-                    <SelectItem value="sede-a" className="text-slate-300 text-xs">
-                      Sede A
-                    </SelectItem>
-                    <SelectItem value="sede-b" className="text-slate-300 text-xs">
-                      Sede B
-                    </SelectItem>
-                    <SelectItem value="sede-c" className="text-slate-300 text-xs">
-                      Sede C
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <defs>
+                      <linearGradient id="mantenimientoGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0.6} />
+                      </linearGradient>
+                      <linearGradient id="reparacionGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.6} />
+                      </linearGradient>
+                      <linearGradient id="upgradeGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.6} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.5} />
+                    <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} stroke="#334155" strokeOpacity={0.3} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 11 }} stroke="#334155" strokeOpacity={0.3} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "12px",
+                        color: "#f1f5f9",
+                        boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
+                        fontSize: "12px",
+                      }}
+                      cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }}
+                      iconType="circle"
+                      formatter={(value) => (
+                        <span className="text-slate-400">
+                          {value === "mantenimiento"
+                            ? "Mantenimiento"
+                            : value === "reparacion"
+                              ? "Reparación"
+                              : "Upgrade"}
+                        </span>
+                      )}
+                    />
+                    <Bar dataKey="mantenimiento" fill="url(#mantenimientoGradient)" radius={[4, 4, 0, 0]} stackId="a" />
+                    <Bar dataKey="reparacion" fill="url(#reparacionGradient)" radius={[4, 4, 0, 0]} stackId="a" />
+                    <Bar dataKey="upgrade" fill="url(#upgradeGradient)" radius={[4, 4, 0, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            </div>
-
-            <div className="h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <defs>
-                    <linearGradient id="mantenimientoGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0.6} />
-                    </linearGradient>
-                    <linearGradient id="reparacionGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.6} />
-                    </linearGradient>
-                    <linearGradient id="upgradeGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.6} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.5} />
-                  <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} stroke="#334155" strokeOpacity={0.3} />
-                  <YAxis tick={{ fill: "#64748b", fontSize: 11 }} stroke="#334155" strokeOpacity={0.3} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0f172a",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      color: "#f1f5f9",
-                      boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
-                      fontSize: "12px",
-                    }}
-                    cursor={{ fill: "rgba(255,255,255,0.05)" }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }}
-                    iconType="circle"
-                    formatter={(value) => (
-                      <span className="text-slate-400">
-                        {value === "mantenimiento"
-                          ? "Mantenimiento"
-                          : value === "reparacion"
-                            ? "Reparación"
-                            : "Upgrade"}
-                      </span>
-                    )}
-                  />
-                  <Bar dataKey="mantenimiento" fill="url(#mantenimientoGradient)" radius={[4, 4, 0, 0]} stackId="a" />
-                  <Bar dataKey="reparacion" fill="url(#reparacionGradient)" radius={[4, 4, 0, 0]} stackId="a" />
-                  <Bar dataKey="upgrade" fill="url(#upgradeGradient)" radius={[4, 4, 0, 0]} stackId="a" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+            </Card>
+          )}
 
           {/* Tabla de Órdenes Recientes */}
           <Card
@@ -569,7 +494,9 @@ export default function DashboardPage() {
           >
             <div className="p-6 border-b border-white/5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h3 className="text-lg font-semibold text-slate-100">Órdenes recientes</h3>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  {user?.role === "Técnico" ? "Mis Órdenes Asignadas" : "Órdenes recientes"}
+                </h3>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
@@ -586,8 +513,8 @@ export default function DashboardPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setStatusFilter("diagnostico")}
-                    className={`h-7 text-xs ${statusFilter === "diagnostico"
+                    onClick={() => setStatusFilter("En diagnóstico")}
+                    className={`h-7 text-xs ${statusFilter === "En diagnóstico"
                       ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
                       : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
                       }`}
@@ -597,8 +524,8 @@ export default function DashboardPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setStatusFilter("proceso")}
-                    className={`h-7 text-xs ${statusFilter === "proceso"
+                    onClick={() => setStatusFilter("En proceso")}
+                    className={`h-7 text-xs ${statusFilter === "En proceso"
                       ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
                       : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
                       }`}
@@ -608,8 +535,8 @@ export default function DashboardPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setStatusFilter("listo")}
-                    className={`h-7 text-xs ${statusFilter === "listo"
+                    onClick={() => setStatusFilter("Listo para entrega")}
+                    className={`h-7 text-xs ${statusFilter === "Listo para entrega"
                       ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
                       : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
                       }`}
@@ -619,8 +546,8 @@ export default function DashboardPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setStatusFilter("aprobacion")}
-                    className={`h-7 text-xs ${statusFilter === "aprobacion"
+                    onClick={() => setStatusFilter("En espera de aprobación")}
+                    className={`h-7 text-xs ${statusFilter === "En espera de aprobación"
                       ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
                       : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
                       }`}
@@ -645,12 +572,11 @@ export default function DashboardPage() {
                   <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                     Estado
                   </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Técnico
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Sucursal
-                  </TableHead>
+                  {user?.role !== "Técnico" && (
+                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+                      Técnico
+                    </TableHead>
+                  )}
                   <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-right">
                     Importe
                   </TableHead>
@@ -666,7 +592,9 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentOrders.map((order) => (
+                {recentOrders
+                  .filter((order) => statusFilter === "all" || order.estado === statusFilter)
+                  .map((order) => (
                   <TableRow
                     key={order.folio}
                     className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150 group"
@@ -677,8 +605,9 @@ export default function DashboardPage() {
                     <TableCell>
                       <BadgeStatus status={order.estado} />
                     </TableCell>
-                    <TableCell className="text-slate-400 text-[13px]">{order.tecnico}</TableCell>
-                    <TableCell className="text-slate-400 text-[13px]">{order.sucursal}</TableCell>
+                    {user?.role !== "Técnico" && (
+                      <TableCell className="text-slate-400 text-[13px]">{order.tecnico}</TableCell>
+                    )}
                     <TableCell className="text-slate-300 text-[13px] font-semibold text-right tabular-nums">
                       ${order.importe.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                     </TableCell>
@@ -711,7 +640,15 @@ export default function DashboardPage() {
       <PaymentDialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen} />
       <NewClientDialog open={isNewClientOpen} onOpenChange={setIsNewClientOpen} />
       <NewSaleDialog open={isNewSaleOpen} onOpenChange={setIsNewSaleOpen} />
-      <OrderDetailsDialog open={isOrderDetailsOpen} onOpenChange={setIsOrderDetailsOpen} order={selectedOrder} />
+      <OrderDetailsDialog 
+        open={isOrderDetailsOpen} 
+        onOpenChange={setIsOrderDetailsOpen} 
+        order={selectedOrder}
+        onStatusChange={(newStatus) => {
+          console.log(`Estado cambiado a: ${newStatus}`)
+          // Aquí se actualizaría el estado en la base de datos
+        }}
+      />
     </>
   )
 }

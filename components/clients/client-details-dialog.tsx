@@ -19,24 +19,28 @@ import {
   Wrench
 } from 'lucide-react'
 
-interface Equipment {
-  id: number
-  marca: string
-  modelo: string
-  serie: string
-}
-
 interface Client {
-  id: number
-  nombre: string
+  id: string
+  nombre1: string
+  nombre2: string | null
+  apellidoPaterno: string
+  apellidoMaterno: string | null
   telefono: string
-  correo: string
-  fecha_registro: string
-  num_equipos: number
-  ultimo_servicio: string | null
-  ordenes_activas: number
-  es_recurrente: boolean
-  equipos: Equipment[]
+  email: string | null
+  calle: string | null
+  numero: string | null
+  colonia: string | null
+  municipio: string | null
+  estado: string | null
+  pais: string
+  sexo: string | null
+  edad: number | null
+  rfc: string | null
+  tipoCliente: string | null
+  notas: string | null
+  activo: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 interface ClientDetailsDialogProps {
@@ -48,6 +52,17 @@ interface ClientDetailsDialogProps {
 export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetailsDialogProps) {
   if (!client) return null
 
+  const nombreCompleto = `${client.nombre1}${client.nombre2 ? ' ' + client.nombre2 : ''} ${client.apellidoPaterno}${client.apellidoMaterno ? ' ' + client.apellidoMaterno : ''}`
+  const direccionCompleta = [client.calle, client.numero, client.colonia, client.municipio, client.estado, client.pais]
+    .filter(Boolean)
+    .join(', ')
+
+  const tipoClienteLabel = {
+    'publico_general': 'Público General',
+    'empresa': 'Empresa',
+    'recurrente': 'Recurrente'
+  }[client.tipoCliente || ''] || 'No especificado'
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -56,30 +71,73 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
             <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
               <User className="h-6 w-6 text-violet-400" />
             </div>
-            {client.nombre}
+            {nombreCompleto}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
           {/* Client Status Badges */}
           <div className="flex flex-wrap gap-2">
-            {client.es_recurrente && (
+            {client.tipoCliente === 'recurrente' && (
               <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20">
                 <Repeat className="h-3 w-3 mr-1" />
                 Cliente recurrente
               </Badge>
             )}
-            {client.ordenes_activas > 0 && (
-              <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20">
-                <ClipboardList className="h-3 w-3 mr-1" />
-                {client.ordenes_activas} {client.ordenes_activas === 1 ? 'orden activa' : 'órdenes activas'}
+            {client.tipoCliente === 'empresa' && (
+              <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20">
+                <Package className="h-3 w-3 mr-1" />
+                Empresa
               </Badge>
             )}
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20">
-              <Package className="h-3 w-3 mr-1" />
-              {client.num_equipos} {client.num_equipos === 1 ? 'equipo' : 'equipos'}
-            </Badge>
+            {client.activo ? (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20">
+                Activo
+              </Badge>
+            ) : (
+              <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20">
+                Inactivo
+              </Badge>
+            )}
           </div>
+
+          {/* Personal Information */}
+          <Card className="bg-slate-800/50 border-slate-700/50 p-5">
+            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+              <User className="h-5 w-5 text-violet-400" />
+              Información Personal
+            </h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-xs text-slate-500 font-medium">Nombre completo</p>
+                <p className="text-sm text-slate-200">{nombreCompleto}</p>
+              </div>
+              {client.sexo && (
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500 font-medium">Sexo</p>
+                  <p className="text-sm text-slate-200">
+                    {client.sexo === 'M' ? 'Masculino' : client.sexo === 'F' ? 'Femenino' : 'Otro'}
+                  </p>
+                </div>
+              )}
+              {client.edad && (
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500 font-medium">Edad</p>
+                  <p className="text-sm text-slate-200">{client.edad} años</p>
+                </div>
+              )}
+              {client.rfc && (
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500 font-medium">RFC</p>
+                  <p className="text-sm text-slate-200 font-mono">{client.rfc}</p>
+                </div>
+              )}
+              <div className="space-y-1">
+                <p className="text-xs text-slate-500 font-medium">Tipo de Cliente</p>
+                <p className="text-sm text-slate-200">{tipoClienteLabel}</p>
+              </div>
+            </div>
+          </Card>
 
           {/* Contact Information */}
           <Card className="bg-slate-800/50 border-slate-700/50 p-5">
@@ -99,88 +157,57 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                 <p className="text-xs text-slate-500 font-medium">Correo electrónico</p>
                 <p className="text-sm text-slate-200 flex items-center gap-2">
                   <Mail className="h-4 w-4 text-slate-400" />
-                  {client.correo}
+                  {client.email || '—'}
                 </p>
               </div>
+              {direccionCompleta && (
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-xs text-slate-500 font-medium">Dirección</p>
+                  <p className="text-sm text-slate-200 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-slate-400" />
+                    {direccionCompleta}
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
 
-          {/* Service History */}
+          {/* Additional Information */}
           <Card className="bg-slate-800/50 border-slate-700/50 p-5">
             <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-violet-400" />
-              Historial de servicio
+              Información adicional
             </h3>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1">
                 <p className="text-xs text-slate-500 font-medium">Fecha de registro</p>
-                <p className="text-sm text-slate-200">{client.fecha_registro}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs text-slate-500 font-medium">Último servicio</p>
                 <p className="text-sm text-slate-200">
-                  {client.ultimo_servicio || 'Sin servicios previos'}
+                  {new Date(client.createdAt).toLocaleDateString('es-MX', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-slate-500 font-medium">Órdenes activas</p>
-                <p className="text-sm text-slate-200">{client.ordenes_activas}</p>
+                <p className="text-xs text-slate-500 font-medium">Última actualización</p>
+                <p className="text-sm text-slate-200">
+                  {new Date(client.updatedAt).toLocaleDateString('es-MX', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
               </div>
+              {client.notas && (
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-xs text-slate-500 font-medium">Notas internas</p>
+                  <p className="text-sm text-slate-200 bg-slate-900/50 p-3 rounded-lg border border-slate-700/30">
+                    {client.notas}
+                  </p>
+                </div>
+              )}
             </div>
-          </Card>
-
-          {/* Equipment List */}
-          <Card className="bg-slate-800/50 border-slate-700/50 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                <Package className="h-5 w-5 text-violet-400" />
-                Equipos registrados
-              </h3>
-              <Badge className="bg-slate-700/50 text-slate-300">
-                {client.equipos.length} {client.equipos.length === 1 ? 'equipo' : 'equipos'}
-              </Badge>
-            </div>
-            
-            {client.equipos.length > 0 ? (
-              <div className="space-y-3">
-                {client.equipos.map((equipo) => (
-                  <div
-                    key={equipo.id}
-                    className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-violet-500/40 hover:bg-slate-900/70 transition-all group"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-slate-100 mb-2">
-                          {equipo.marca} {equipo.modelo}
-                        </p>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <p className="text-xs text-slate-500">Marca</p>
-                            <p className="text-xs text-slate-300">{equipo.marca}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500">Modelo</p>
-                            <p className="text-xs text-slate-300">{equipo.modelo}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500">Serie</p>
-                            <p className="text-xs text-slate-300 font-mono">{equipo.serie}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 font-mono bg-slate-800/50 px-2 py-1 rounded">
-                        #{equipo.id}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Package className="h-12 w-12 mx-auto mb-3 text-slate-600" />
-                <p className="text-sm text-slate-400">No hay equipos registrados</p>
-              </div>
-            )}
           </Card>
 
           {/* Action Buttons */}

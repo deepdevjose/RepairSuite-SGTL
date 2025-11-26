@@ -27,7 +27,6 @@ export interface Payment {
     notas?: string
     usuarioRegistro: string
     nombreUsuario: string
-    sucursal: string
 }
 
 // Sale concept item (service or part)
@@ -52,7 +51,6 @@ export interface SaleDetail {
     equipo: string
     equipoMarca?: string
     equipoModelo?: string
-    sucursal: string
     fechaCreacion: string
     fechaVencimiento?: string
     conceptos: SaleConceptItem[]
@@ -75,7 +73,6 @@ export interface SaleDetail {
 // Daily cash report
 export interface DailyCashReport {
     fecha: string
-    sucursal: string
     totalCobrado: number
     porMetodo: Record<PaymentMethod, number>
     numeroTransacciones: number
@@ -87,7 +84,6 @@ export interface DailyCashReport {
 export interface MonthlyReport {
     mes: string
     año: number
-    ingresosPorSucursal: Record<string, number>
     serviciosMasVendidos: Array<{ nombre: string; cantidad: number; total: number }>
     refaccionesMasUsadas: Array<{ nombre: string; cantidad: number; total: number }>
     tecnicosTopIngresos: Array<{ nombre: string; ingresos: number; ordenes: number }>
@@ -102,13 +98,11 @@ export interface AccountReceivable {
     saldo: number
     fechaCreacion: string
     diasVencido: number
-    sucursal: string
 }
 
 // Filters for sales
 export interface SalesFilters {
     searchTerm: string
-    sucursal: "all" | string
     estado: "all" | PaymentStatus
     fechaInicio?: string
     fechaFin?: string

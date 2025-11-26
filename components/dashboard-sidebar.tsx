@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { LayoutDashboard, Users, Laptop, ClipboardList, Package, BookOpen, Truck, UserCog, DollarSign, Shield, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, Laptop, ClipboardList, Package, BookOpen, Truck, UserCog, DollarSign, Shield, Settings, Leaf } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 
 interface NavItem {
@@ -39,6 +39,13 @@ const navItems: NavItem[] = [
   { title: "Ventas y Pagos", href: "/dashboard/ventas", icon: DollarSign, permission: "ventas", section: "Operación" },
   { title: "Garantías", href: "/dashboard/garantias", icon: Shield, permission: "garantias", section: "Operación" },
   { title: "Personal", href: "/dashboard/personal", icon: UserCog, permission: "personal", section: "Administración" },
+  {
+    title: "JLabEco",
+    href: "/dashboard/jlabeco",
+    icon: Leaf,
+    permission: "configuracion",
+    section: "Administración",
+  },
   {
     title: "Configuración",
     href: "/dashboard/configuracion",

@@ -169,7 +169,6 @@ export interface PurchaseOrder {
     fechaRecepcion?: string
     notas?: string
     creadoPor: string
-    sucursalDestino: string
 }
 
 // Complete Part/Refacción Item

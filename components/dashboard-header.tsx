@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,11 +22,22 @@ interface DashboardHeaderProps {
   title: string
 }
 
+interface Notificacion {
+  id: string
+  titulo: string
+  descripcion: string
+  tipo: string
+  leida: boolean
+  createdAt: string
+}
+
 export function DashboardHeader({ title }: DashboardHeaderProps) {
   const { user, logout } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState<Notificacion[]>([])
+  const [loading, setLoading] = useState(true)
 
   const searchResults = searchQuery.length > 0
     ? [
@@ -38,38 +49,67 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
       ].filter((item) => item.label.toLowerCase().includes(searchQuery.toLowerCase()))
     : []
 
-  const notifications = [
-    {
-      id: 1,
-      title: "Orden lista para entrega",
-      description: "RS-OS-1023 - MacBook Pro 13\" completada",
-      time: "Hace 5 min",
-      unread: true,
-    },
-    {
-      id: 2,
-      title: "Inventario crítico",
-      description: "RAM DDR4 8GB bajo stock mínimo",
-      time: "Hace 15 min",
-      unread: true,
-    },
-    {
-      id: 3,
-      title: "Nueva orden aprobada",
-      description: "RS-OS-1021 aprobada por cliente",
-      time: "Hace 1 hora",
-      unread: false,
-    },
-    {
-      id: 4,
-      title: "Garantía por vencer",
-      description: "12 garantías vencen en 7 días",
-      time: "Hace 2 horas",
-      unread: false,
-    },
-  ]
+  // Obtener notificaciones de la base de datos
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user?.id) return
+      
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/notificaciones?usuarioId=${user.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setNotifications(data)
+        }
+      } catch (error) {
+        console.error("Error al cargar notificaciones:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const unreadCount = notifications.filter((n) => n.unread).length
+    fetchNotifications()
+    
+    // Actualizar notificaciones cada 30 segundos
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [user?.id])
+
+  const marcarComoLeida = async (notificationId: string) => {
+    try {
+      const response = await fetch(`/api/notificaciones/${notificationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leida: true })
+      })
+      
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.map(n => n.id === notificationId ? { ...n, leida: true } : n)
+        )
+      }
+    } catch (error) {
+      console.error("Error al marcar notificación como leída:", error)
+    }
+  }
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    
+    if (diffMins < 1) return "Hace un momento"
+    if (diffMins < 60) return `Hace ${diffMins} min`
+    
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`
+    
+    const diffDays = Math.floor(diffHours / 24)
+    return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`
+  }
+
+  const unreadCount = notifications.filter((n) => !n.leida).length
 
   return (
     <>
@@ -207,25 +247,32 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-3">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-4 rounded-lg border transition-all duration-200 hover:bg-white/5 cursor-pointer ${
-                  notification.unread
-                    ? "bg-indigo-500/5 border-indigo-500/20"
-                    : "bg-slate-900/50 border-white/5"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h4 className="text-sm font-semibold text-slate-200">{notification.title}</h4>
-                  {notification.unread && (
-                    <div className="h-2 w-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1" />
-                  )}
+            {loading ? (
+              <p className="text-slate-400 text-sm text-center py-8">Cargando notificaciones...</p>
+            ) : notifications.length === 0 ? (
+              <p className="text-slate-400 text-sm text-center py-8">No tienes notificaciones</p>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 rounded-lg border transition-all duration-200 hover:bg-white/5 cursor-pointer ${
+                    !notification.leida
+                      ? "bg-indigo-500/5 border-indigo-500/20"
+                      : "bg-slate-900/50 border-white/5"
+                  }`}
+                  onClick={() => marcarComoLeida(notification.id)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h4 className="text-sm font-semibold text-slate-200">{notification.titulo}</h4>
+                    {!notification.leida && (
+                      <div className="h-2 w-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1" />
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mb-2">{notification.descripcion}</p>
+                  <p className="text-[10px] text-slate-500">{getTimeAgo(notification.createdAt)}</p>
                 </div>
-                <p className="text-xs text-slate-400 mb-2">{notification.description}</p>
-                <p className="text-[10px] text-slate-500">{notification.time}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </SheetContent>
       </Sheet>

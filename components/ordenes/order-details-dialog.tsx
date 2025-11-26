@@ -1,10 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { OrderStateBadge } from "./order-state-badge"
+import { DiagnosisDialog } from "./diagnosis-dialog"
+import { RepairCompletionDialog } from "./repair-completion-dialog"
+import { PaymentDialog } from "../dashboard/payment-dialog"
 import type { ServiceOrder } from "@/lib/types/service-order"
 import {
     User,
@@ -17,17 +21,33 @@ import {
     Shield,
     Edit,
     Printer,
-    CreditCard
-} from 'lucide-react'
+    CreditCard,
+    CheckCircle,
+    AlertCircle,
+    PackageCheck,
+} from "lucide-react"
 
 interface OrderDetailsDialogProps {
     order: ServiceOrder | null
     open: boolean
     onOpenChange: (open: boolean) => void
+    userRole?: "Administrador" | "Recepción" | "Técnico"
 }
 
-export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDialogProps) {
+export function OrderDetailsDialog({ order, open, onOpenChange, userRole = "Recepción" }: OrderDetailsDialogProps) {
+    const [showDiagnosisDialog, setShowDiagnosisDialog] = useState(false)
+    const [showRepairDialog, setShowRepairDialog] = useState(false)
+    const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+
     if (!order) return null
+
+    // Determine available actions based on state and role
+    const canStartDiagnosis = order.estado === "Esperando diagnóstico" && userRole === "Técnico"
+    const canCompleteDiagnosisWithQuote = order.estado === "En diagnóstico" && userRole === "Técnico"
+    const canContactClient = order.estado === "Diagnóstico terminado" && (userRole === "Recepción" || userRole === "Administrador")
+    const canApproveRepair = order.estado === "Esperando aprobación" && (userRole === "Recepción" || userRole === "Administrador")
+    const canCompleteRepair = order.estado === "En reparación" && userRole === "Técnico"
+    const canDeliverToClient = order.estado === "Lista para entrega" && (userRole === "Recepción" || userRole === "Administrador")
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,21 +170,76 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-800/50">
-                        <Button
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
-                            onClick={() => {
-                                console.log('[OrderDetails] Editar orden:', order.folio)
-                            }}
-                        >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar orden
-                        </Button>
+                        {/* Technician Actions */}
+                        {canStartDiagnosis && (
+                            <Button
+                                className="bg-blue-600 hover:bg-blue-500"
+                                onClick={() => {
+                                    console.log('Cambiar estado a: En diagnóstico')
+                                    // Aquí iría la lógica para cambiar el estado
+                                }}
+                            >
+                                <Wrench className="h-4 w-4 mr-2" />
+                                Iniciar diagnóstico
+                            </Button>
+                        )}
+                        
+                        {canCompleteDiagnosisWithQuote && (
+                            <Button
+                                className="bg-indigo-600 hover:bg-indigo-500"
+                                onClick={() => setShowDiagnosisDialog(true)}
+                            >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Completar diagnóstico y cotización
+                            </Button>
+                        )}
+
+                        {canCompleteRepair && (
+                            <Button
+                                className="bg-lime-600 hover:bg-lime-500"
+                                onClick={() => setShowRepairDialog(true)}
+                            >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Terminar reparación
+                            </Button>
+                        )}
+
+                        {/* Reception Actions */}
+                        {canContactClient && (
+                            <Button
+                                className="bg-yellow-600 hover:bg-yellow-500"
+                                onClick={() => console.log("Contact client - change to waiting approval")}
+                            >
+                                <AlertCircle className="h-4 w-4 mr-2" />
+                                Contactar cliente (esperar aprobación)
+                            </Button>
+                        )}
+
+                        {canApproveRepair && (
+                            <Button
+                                className="bg-green-600 hover:bg-green-500"
+                                onClick={() => console.log("Client approved - start repair")}
+                            >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Cliente aprobó → Iniciar reparación
+                            </Button>
+                        )}
+
+                        {canDeliverToClient && (
+                            <Button
+                                className="bg-green-600 hover:bg-green-500"
+                                onClick={() => setShowPaymentDialog(true)}
+                            >
+                                <PackageCheck className="h-4 w-4 mr-2" />
+                                Entrega y pago final
+                            </Button>
+                        )}
+
+                        {/* Common Actions */}
                         <Button
                             variant="outline"
                             className="border-slate-700/50 text-slate-300 hover:bg-slate-800/50 hover:text-slate-100"
-                            onClick={() => {
-                                console.log('[OrderDetails] Agregar pago:', order.folio)
-                            }}
+                            onClick={() => setShowPaymentDialog(true)}
                         >
                             <CreditCard className="h-4 w-4 mr-2" />
                             Agregar pago
@@ -181,6 +256,28 @@ export function OrderDetailsDialog({ order, open, onOpenChange }: OrderDetailsDi
                         </Button>
                     </div>
                 </div>
+
+                {/* Dialogs */}
+                <DiagnosisDialog
+                    open={showDiagnosisDialog}
+                    onOpenChange={setShowDiagnosisDialog}
+                    ordenId={order.id}
+                    ordenFolio={order.folio}
+                />
+                <RepairCompletionDialog
+                    open={showRepairDialog}
+                    onOpenChange={setShowRepairDialog}
+                    ordenId={order.id}
+                    ordenFolio={order.folio}
+                />
+                <PaymentDialog
+                    open={showPaymentDialog}
+                    onOpenChange={setShowPaymentDialog}
+                    ordenId={order.id}
+                    ordenFolio={order.folio}
+                    montoTotal={order.costoDiagnostico + order.costoReparacion}
+                    montoPagado={order.totalPagado}
+                />
             </DialogContent>
         </Dialog>
     )

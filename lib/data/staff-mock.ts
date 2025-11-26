@@ -5,14 +5,16 @@ import { ADMIN_PERMISSIONS, RECEPCION_PERMISSIONS, TECNICO_PERMISSIONS, SOLO_LEC
 // EMPLOYEES
 // ============================================
 
-export const mockEmployees: Employee[] = [
+// Datos limpios - conectar a base de datos real
+export const mockEmployees: Employee[] = []
+/*
+    // Los datos se cargarán desde la base de datos
     {
         id: "emp-001",
         nombre: "Carlos",
         apellidos: "Gómez Martínez",
         nombreCompleto: "Carlos Gómez Martínez",
         rolOperativo: "Técnico",
-        sucursalAsignada: "Sede A",
         telefono: "+52 55 1234 5678",
         correoInterno: "carlos.gomez@repairsuite.com",
         estado: "Activo",
@@ -33,7 +35,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Martínez López",
         nombreCompleto: "Ana Martínez López",
         rolOperativo: "Recepción",
-        sucursalAsignada: "Sede A",
         telefono: "+52 55 2345 6789",
         correoInterno: "ana.martinez@repairsuite.com",
         estado: "Activo",
@@ -50,7 +51,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Torres Ramírez",
         nombreCompleto: "Luis Torres Ramírez",
         rolOperativo: "Técnico",
-        sucursalAsignada: "Sede B",
         telefono: "+52 55 3456 7890",
         correoInterno: "luis.torres@repairsuite.com",
         estado: "Activo",
@@ -71,7 +71,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "González Pérez",
         nombreCompleto: "María González Pérez",
         rolOperativo: "Administrador",
-        sucursalAsignada: "Sede A",
         telefono: "+52 55 4567 8901",
         correoInterno: "maria.gonzalez@repairsuite.com",
         estado: "Activo",
@@ -88,7 +87,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Silva Hernández",
         nombreCompleto: "Roberto Silva Hernández",
         rolOperativo: "Técnico",
-        sucursalAsignada: "Sede C",
         telefono: "+52 55 5678 9012",
         correoInterno: "roberto.silva@repairsuite.com",
         estado: "Activo",
@@ -109,7 +107,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Díaz Morales",
         nombreCompleto: "Laura Díaz Morales",
         rolOperativo: "Recepción",
-        sucursalAsignada: "Sede B",
         telefono: "+52 55 6789 0123",
         correoInterno: "laura.diaz@repairsuite.com",
         estado: "Activo",
@@ -126,7 +123,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Ramírez Castro",
         nombreCompleto: "Pedro Ramírez Castro",
         rolOperativo: "Técnico",
-        sucursalAsignada: "Sede A",
         telefono: "+52 55 7890 1234",
         correoInterno: "pedro.ramirez@repairsuite.com",
         estado: "Vacaciones",
@@ -146,7 +142,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Rodríguez Vega",
         nombreCompleto: "Carmen Rodríguez Vega",
         rolOperativo: "Gerente",
-        sucursalAsignada: "Sede B",
         telefono: "+52 55 8901 2345",
         correoInterno: "carmen.rodriguez@repairsuite.com",
         estado: "Activo",
@@ -162,7 +157,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Fernández Ruiz",
         nombreCompleto: "Jorge Fernández Ruiz",
         rolOperativo: "Auxiliar",
-        sucursalAsignada: "Sede C",
         telefono: "+52 55 9012 3456",
         correoInterno: "jorge.fernandez@repairsuite.com",
         estado: "Activo",
@@ -178,7 +172,6 @@ export const mockEmployees: Employee[] = [
         apellidos: "Sánchez Ortiz",
         nombreCompleto: "Patricia Sánchez Ortiz",
         rolOperativo: "Técnico",
-        sucursalAsignada: "Sede A",
         telefono: "+52 55 0123 4567",
         correoInterno: "patricia.sanchez@repairsuite.com",
         estado: "Suspendido",
@@ -192,13 +185,14 @@ export const mockEmployees: Employee[] = [
         tasaDevolucion: 8.2,
         calificacionPromedio: 3.9,
     },
-]
+*/
 
 // ============================================
 // USERS
 // ============================================
 
-export const mockUsers: User[] = [
+export const mockUsers: User[] = []
+/*
     {
         id: "user-001",
         empleadoId: "emp-001",
@@ -268,13 +262,14 @@ export const mockUsers: User[] = [
         fechaCreacion: "2023-05-15T00:00:00Z",
         requiereCambioPassword: true,
     },
-]
+*/
 
 // ============================================
 // EMPLOYEE METRICS
 // ============================================
 
-export const mockEmployeeMetrics: EmployeeMetrics[] = [
+export const mockEmployeeMetrics: EmployeeMetrics[] = []
+/*
     {
         empleadoId: "emp-001",
         periodo: "2025-01",
@@ -323,7 +318,7 @@ export const mockEmployeeMetrics: EmployeeMetrics[] = [
         calificacionPromedio: 4.3,
         especialidadMasUsada: "Software",
     },
-]
+*/
 
 // ============================================
 // HELPER FUNCTIONS

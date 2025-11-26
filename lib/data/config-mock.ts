@@ -1,4 +1,3 @@
-import type { SystemConfig, OrderStatus, Branch, NotificationTemplate } from "@/lib/types/config"
 
 // ============================================
 // DEFAULT ORDER STATUSES
@@ -144,12 +143,11 @@ export const DEFAULT_ORDER_STATUSES: OrderStatus[] = [
 ]
 
 // ============================================
-// DEFAULT BRANCHES
+// MOCK BRANCHES DATA (Commented - Ready for real API)
 // ============================================
 
-export const DEFAULT_BRANCHES: Branch[] = [
+/*
     {
-        id: "branch-001",
         nombre: "Sede A - Centro",
         direccion: {
             calle: "Av. Insurgentes Sur 1234",
@@ -167,7 +165,6 @@ export const DEFAULT_BRANCHES: Branch[] = [
         tieneInventario: true,
     },
     {
-        id: "branch-002",
         nombre: "Sede B - Norte",
         direccion: {
             calle: "Av. Politécnico 890",
@@ -185,7 +182,6 @@ export const DEFAULT_BRANCHES: Branch[] = [
         tieneInventario: true,
     },
     {
-        id: "branch-003",
         nombre: "Sede C - Sur",
         direccion: {
             calle: "Calz. Tlalpan 567",
@@ -203,20 +199,19 @@ export const DEFAULT_BRANCHES: Branch[] = [
         tieneInventario: true,
     },
 ]
+*/
 
 // ============================================
 // DEFAULT NOTIFICATION TEMPLATES
 // ============================================
 
 export const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
-    {
+/*    {
         id: "template-001",
         nombre: "OS Creada",
         tipo: "WhatsApp",
         evento: "OS Creada",
         mensaje:
-            "Hola {cliente}, hemos recibido tu {equipo}. Tu folio es: {folio}. Te mantendremos informado del proceso. Gracias por confiar en {sucursal}.",
-        variables: ["cliente", "equipo", "folio", "sucursal"],
         activo: true,
     },
     {
@@ -225,8 +220,6 @@ export const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
         tipo: "WhatsApp",
         evento: "Listo para entrega",
         mensaje:
-            "¡Buenas noticias {cliente}! Tu {equipo} está listo para ser recogido. Folio: {folio}. Horario: {sucursal}. ¡Te esperamos!",
-        variables: ["cliente", "equipo", "folio", "sucursal"],
         activo: true,
     },
     {
@@ -236,8 +229,6 @@ export const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
         evento: "Cotización",
         asunto: "Cotización para tu {equipo} - Folio {folio}",
         mensaje:
-            "Estimado/a {cliente},\n\nTe enviamos la cotización para la reparación de tu {equipo}.\n\nFolio: {folio}\nTotal: {total}\n\nPor favor confirma si deseas proceder con la reparación.\n\nSaludos,\n{sucursal}\n{telefono}",
-        variables: ["cliente", "equipo", "folio", "total", "sucursal", "telefono"],
         activo: true,
     },
     {
@@ -255,10 +246,9 @@ export const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
         tipo: "WhatsApp",
         evento: "Recordatorio",
         mensaje:
-            "Hola {cliente}, te recordamos que tienes un saldo pendiente en tu orden {folio}. Puedes pasar a {sucursal} para liquidarlo. ¡Gracias!",
-        variables: ["cliente", "folio", "sucursal"],
         activo: true,
     },
+*/
 ]
 
 // ============================================
@@ -275,11 +265,12 @@ export const mockSystemConfig: SystemConfig = {
     sitioWeb: "https://repairsuite.mx",
     logo: undefined,
 
-    // Branches
-    sucursales: DEFAULT_BRANCHES,
 
     // Order statuses
     estadosOS: DEFAULT_ORDER_STATUSES,
+
+    // Branches (empty - ready for real API)
+    sucursales: [],
 
     // Policies
     politicas: {
@@ -314,10 +305,6 @@ export const mockSystemConfig: SystemConfig = {
 
 export function getSystemConfig(): SystemConfig {
     return mockSystemConfig
-}
-
-export function getBranches(): Branch[] {
-    return mockSystemConfig.sucursales
 }
 
 export function getOrderStatuses(): OrderStatus[] {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
@@ -14,17 +14,80 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Eye, DollarSign, TrendingUp, Clock, AlertCircle } from "lucide-react"
-import { mockSales } from "@/lib/data/sales-mock"
 import { formatCurrency, formatDate } from "@/lib/utils/sales-helpers"
-import type { SaleDetail } from "@/lib/types/sales"
+
+interface Venta {
+  id: string
+  folio: string
+  cliente: {
+    nombre1: string
+    apellidoPaterno: string
+    telefono: string
+    email: string | null
+  }
+  ordenServicio: {
+    folio: string
+    equipo: {
+      marca: string
+      modelo: string
+    }
+  } | null
+  subtotal: number
+  descuento: number
+  impuestos: number
+  total: number
+  montoPagado: number
+  saldoPendiente: number
+  metodoPago: string
+  estadoPago: string
+  fechaVencimiento: string | null
+  createdAt: string
+  items: Array<{
+    cantidad: number
+    precioUnitario: number
+    costoUnitario: number
+    tipo: string
+    producto: {
+      nombre: string
+    }
+  }>
+  pagos: Array<{
+    monto: number
+    metodoPago: string
+    createdAt: string
+    usuario: {
+      nombre: string
+    }
+  }>
+}
 
 export default function VentasPage() {
   const { hasPermission, user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
-  const [sucursalFilter, setSucursalFilter] = useState("all")
   const [estadoFilter, setEstadoFilter] = useState("all")
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
-  const [selectedSale, setSelectedSale] = useState<SaleDetail | null>(null)
+  const [selectedSale, setSelectedSale] = useState<Venta | null>(null)
+  const [ventas, setVentas] = useState<Venta[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchVentas()
+  }, [])
+
+  const fetchVentas = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/ventas')
+      if (response.ok) {
+        const data = await response.json()
+        setVentas(data)
+      }
+    } catch (error) {
+      console.error('Error al obtener ventas:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!hasPermission("ventas")) {
     return (
@@ -40,31 +103,49 @@ export default function VentasPage() {
 
   // Filter sales
   const filteredSales = useMemo(() => {
-    return mockSales.filter((sale) => {
+    return ventas.filter((sale) => {
+      const clienteNombre = `${sale.cliente.nombre1} ${sale.cliente.apellidoPaterno}`.toLowerCase()
+      const equipoInfo = sale.ordenServicio 
+        ? `${sale.ordenServicio.equipo.marca} ${sale.ordenServicio.equipo.modelo}`.toLowerCase()
+        : ''
+      
       const matchesSearch =
-        sale.folioOS.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.equipo.toLowerCase().includes(searchTerm.toLowerCase())
+        sale.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        clienteNombre.includes(searchTerm.toLowerCase()) ||
+        equipoInfo.includes(searchTerm.toLowerCase())
 
-      const matchesSucursal = sucursalFilter === "all" || sale.sucursal === sucursalFilter
-      const matchesEstado = estadoFilter === "all" || sale.estado === estadoFilter
+      const matchesEstado = estadoFilter === "all" || sale.estadoPago === estadoFilter
 
-      return matchesSearch && matchesSucursal && matchesEstado
+      return matchesSearch && matchesEstado
     })
-  }, [searchTerm, sucursalFilter, estadoFilter])
+  }, [ventas, searchTerm, estadoFilter])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const cobrado = mockSales.reduce((sum, sale) => sum + sale.pagado, 0)
-    const porCobrar = mockSales.reduce((sum, sale) => sum + sale.saldo, 0)
-    const totalVentas = mockSales.reduce((sum, sale) => sum + sale.total, 0)
-    const utilidad = mockSales.reduce((sum, sale) => sum + (sale.utilidad || 0), 0)
+    const cobrado = ventas.reduce((sum, sale) => sum + Number(sale.montoPagado), 0)
+    const porCobrar = ventas.reduce((sum, sale) => sum + Number(sale.saldoPendiente), 0)
+    const totalVentas = ventas.reduce((sum, sale) => sum + Number(sale.total), 0)
+    
+    // Calcular utilidad (diferencia entre precio de venta y costo)
+    const utilidad = ventas.reduce((sum, sale) => {
+      const utilidadVenta = sale.items.reduce((itemSum, item) => {
+        const utilidadItem = (Number(item.precioUnitario) - Number(item.costoUnitario)) * item.cantidad
+        return itemSum + utilidadItem
+      }, 0)
+      return sum + utilidadVenta
+    }, 0)
 
     const hoy = new Date().toISOString().split("T")[0]
-    const pagosHoy = mockSales.filter((sale) => sale.ultimoPago?.fecha === hoy).length
+    const pagosHoy = ventas.reduce((count, sale) => {
+      const pagosDeHoy = sale.pagos.filter(p => p.createdAt.split('T')[0] === hoy).length
+      return count + pagosDeHoy
+    }, 0)
 
-    const vencidas = mockSales.filter((sale) => sale.saldo > 0 && sale.fechaVencimiento && sale.fechaVencimiento < hoy)
-      .length
+    const vencidas = ventas.filter((sale) => 
+      Number(sale.saldoPendiente) > 0 && 
+      sale.fechaVencimiento && 
+      sale.fechaVencimiento < hoy
+    ).length
 
     return {
       cobrado,
@@ -74,7 +155,7 @@ export default function VentasPage() {
       pagosHoy,
       vencidas,
     }
-  }, [])
+  }, [ventas])
 
   const handleOpenPaymentDialog = (sale: SaleDetail) => {
     setSelectedSale(sale)
@@ -126,7 +207,7 @@ export default function VentasPage() {
                   </div>
                 </div>
                 <div className="text-3xl font-bold text-slate-100 mb-1">{formatCurrency(stats.totalVentas)}</div>
-                <div className="text-xs text-slate-500 font-medium">{mockSales.length} órdenes</div>
+                <div className="text-xs text-slate-500 font-medium">{ventas.length} órdenes</div>
               </div>
             </Card>
 
@@ -192,26 +273,6 @@ export default function VentasPage() {
 
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <Select value={sucursalFilter} onValueChange={setSucursalFilter}>
-                    <SelectTrigger className="h-9 w-[140px] bg-slate-800/40 border-slate-700 text-slate-300 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-slate-300 text-xs">
-                        Todas las sucursales
-                      </SelectItem>
-                      <SelectItem value="Sede A" className="text-slate-300 text-xs">
-                        Sede A
-                      </SelectItem>
-                      <SelectItem value="Sede B" className="text-slate-300 text-xs">
-                        Sede B
-                      </SelectItem>
-                      <SelectItem value="Sede C" className="text-slate-300 text-xs">
-                        Sede C
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
                   <Select value={estadoFilter} onValueChange={setEstadoFilter}>
                     <SelectTrigger className="h-9 w-[140px] bg-slate-800/40 border-slate-700 text-slate-300 text-xs">
                       <SelectValue />
@@ -244,16 +305,13 @@ export default function VentasPage() {
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Folio OS
+                      Folio
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                       Cliente
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                       Equipo
-                    </TableHead>
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Sucursal
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                       Fecha
@@ -289,28 +347,33 @@ export default function VentasPage() {
                         opacity: 0,
                       }}
                     >
-                      <TableCell className="font-mono text-[12px] text-indigo-400">{sale.folioOS}</TableCell>
-                      <TableCell className="text-[13px]">{sale.cliente}</TableCell>
-                      <TableCell className="text-[12px] text-slate-400">{sale.equipo}</TableCell>
-                      <TableCell className="text-[12px] text-slate-400">{sale.sucursal}</TableCell>
-                      <TableCell className="text-[12px] text-slate-400">{formatDate(sale.fechaCreacion)}</TableCell>
+                      <TableCell className="font-mono text-[12px] text-indigo-400">
+                        {sale.ordenServicio?.folio || sale.folio}
+                      </TableCell>
+                      <TableCell className="text-[13px]">
+                        {`${sale.cliente.nombre1} ${sale.cliente.apellidoPaterno}`}
+                      </TableCell>
+                      <TableCell className="text-[12px] text-slate-400">
+                        {sale.ordenServicio ? `${sale.ordenServicio.equipo.marca} ${sale.ordenServicio.equipo.modelo}` : 'Venta directa'}
+                      </TableCell>
+                      <TableCell className="text-[12px] text-slate-400">{formatDate(sale.createdAt)}</TableCell>
                       <TableCell className="text-right text-[13px] font-semibold text-slate-200">
-                        {formatCurrency(sale.total)}
+                        {formatCurrency(Number(sale.total))}
                       </TableCell>
                       <TableCell className="text-right text-[13px] font-semibold text-green-400">
-                        {formatCurrency(sale.pagado)}
+                        {formatCurrency(Number(sale.montoPagado))}
                       </TableCell>
                       <TableCell className="text-right text-[13px] font-semibold text-yellow-400">
-                        {formatCurrency(sale.saldo)}
+                        {formatCurrency(Number(sale.saldoPendiente))}
                       </TableCell>
                       <TableCell>
-                        <PaymentStatusBadge estado={sale.estado} />
+                        <PaymentStatusBadge estado={sale.estadoPago} />
                       </TableCell>
                       <TableCell>
-                        {sale.ultimoPago ? (
+                        {sale.pagos && sale.pagos.length > 0 ? (
                           <div className="text-[11px]">
-                            <div className="text-slate-400">{formatDate(sale.ultimoPago.fecha)}</div>
-                            <PaymentMethodBadge metodo={sale.ultimoPago.metodo} />
+                            <div className="text-slate-400">{formatDate(sale.pagos[0].createdAt)}</div>
+                            <PaymentMethodBadge metodo={sale.pagos[0].metodoPago} />
                           </div>
                         ) : (
                           <span className="text-[11px] text-slate-600">—</span>
@@ -318,7 +381,7 @@ export default function VentasPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/dashboard/ventas/${sale.folioOS}`}>
+                          <Link href={`/dashboard/ventas/${sale.folio}`}>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -328,7 +391,7 @@ export default function VentasPage() {
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
                           </Link>
-                          {canRegisterPayment && sale.saldo > 0 && (
+                          {canRegisterPayment && Number(sale.saldoPendiente) > 0 && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -366,8 +429,8 @@ export default function VentasPage() {
         onOpenChange={setIsPaymentDialogOpen}
         sale={selectedSale}
         onPaymentRegistered={() => {
-          // Aquí se actualizaría la lista de ventas
-          console.log("Pago registrado exitosamente")
+          fetchVentas() // Refrescar lista de ventas
+          setIsPaymentDialogOpen(false)
         }}
       />
     </>

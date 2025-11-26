@@ -25,12 +25,6 @@ export type ProductCategory =
 
 export type SalidaType = "OS" | "Merma" | "Ajuste" | "Otro"
 
-export interface StockByBranch {
-  sedeA: number
-  sedeB: number
-  sedeC: number
-}
-
 export interface InventoryItem {
   id: string
   sku: string
@@ -41,7 +35,6 @@ export interface InventoryItem {
   especificaciones?: string
   imagen?: string
   stockTotal: number
-  stockPorSucursal: StockByBranch
   stockReservado: number
   stockMinimo: number
   precioVenta: number
@@ -58,8 +51,6 @@ export interface InventoryMovement {
   cantidad: number
   fecha: string // ISO date string
   usuario: string
-  sucursal: string
-  sucursalDestino?: string // Para transferencias
   ordenServicioId?: string // Para salidas/reservas vinculadas a OS
   proveedor?: string // Para entradas
   costoUnitario?: number // Para entradas
@@ -76,28 +67,13 @@ export interface StockReservation {
   folioOS: string
   cliente: string
   cantidadReservada: number
-  sucursal: string
   fechaReserva: string // ISO date string
   fechaEstimadaUso: string // ISO date string
   estado: "Activa" | "Utilizada" | "Liberada"
   usuario: string
 }
 
-export interface TransferOrder {
-  id: string
-  sku: string
-  cantidad: number
-  sucursalOrigen: string
-  sucursalDestino: string
-  estado: TransferStatus
-  usuarioSolicita: string
-  usuarioRecibe?: string
-  fechaSolicitud: string // ISO date string
-  fechaEnvio?: string // ISO date string
-  fechaRecepcion?: string // ISO date string
-  fechaEstimadaLlegada?: string // ISO date string
-  notas?: string
-}
+// TransferOrder interface removed - not needed for single location
 
 export interface PurchaseOrder {
   id: string
@@ -105,7 +81,6 @@ export interface PurchaseOrder {
   cantidadSolicitada: number
   proveedor: string
   costoEstimado: number
-  sucursalDestino: string
   estado: "Pendiente" | "Enviada" | "Recibida" | "Cancelada"
   fechaSolicitud: string // ISO date string
   fechaEstimadaEntrega?: string // ISO date string
@@ -125,7 +100,6 @@ export interface InventoryAlert {
 
 export interface InventoryFilters {
   searchTerm: string
-  sucursal: "all" | "sedeA" | "sedeB" | "sedeC"
   estado: "all" | "OK" | "Bajo" | "Crítico"
   categoria: "all" | ProductCategory
 }

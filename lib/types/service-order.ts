@@ -5,17 +5,15 @@
 
 // Service Order States
 export type ServiceOrderState =
-    | "Esperando diagnóstico"
-    | "En diagnóstico"
-    | "Diagnóstico completo"
-    | "Pendiente aprobación"
-    | "Asignado a técnico"
-    | "En reparación"
-    | "Reparación terminada"
-    | "Esperando entrega"
-    | "En recepción"
-    | "Entregado a cliente"
-    | "Cancelada"
+    | "Esperando diagnóstico"      // Recepcionista creó OS, cobró diagnóstico ($150), asignó técnico
+    | "En diagnóstico"             // Técnico está revisando el equipo
+    | "Diagnóstico terminado"      // Técnico completó diagnóstico y agregó cotización
+    | "Esperando aprobación"       // Recepción contacta cliente, esperando respuesta
+    | "En reparación"              // Cliente aprobó, técnico está reparando
+    | "Reparación terminada"       // Técnico terminó, puso piezas usadas
+    | "Lista para entrega"         // En recepción, esperando que cliente recoja
+    | "Pagado y entregado"         // Cliente pagó y recogió su equipo (estado final)
+    | "Cancelada"                  // Orden cancelada
 
 // Payment Types
 export type PaymentType = "Diagnóstico" | "Anticipo" | "Pago parcial" | "Pago final"
@@ -128,7 +126,6 @@ export interface ServiceOrder {
     // Assignment
     tecnicoAsignadoId?: string
     tecnicoAsignadoNombre?: string
-    sucursal: string
 
     // Diagnosis
     diagnostico?: DiagnosisResult
@@ -172,7 +169,6 @@ export interface ServiceOrderSummary {
     equipoMarca: string
     estado: ServiceOrderState
     tecnicoAsignadoNombre?: string
-    sucursal: string
     totalEstimado: number
     ultimaActualizacion: string
     esGarantia: boolean
@@ -194,7 +190,6 @@ export interface CreateServiceOrderDTO {
         metodo: PaymentMethod
         referencia?: string
     }
-    sucursal: string
     esGarantia: boolean
     notasInternas?: string
 }

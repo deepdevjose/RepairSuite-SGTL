@@ -14,10 +14,25 @@ interface PaymentDialogProps {
     onSave?: (payment: any) => void
 }
 
+interface OrdenServicio {
+    id: string
+    folio: string
+    cliente: {
+        nombre: string
+    }
+    montoTotal: number | null
+    saldoPendiente: number | null
+    estado: string
+}
+
 export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps) {
     const { toast } = useToast()
+    const [ordenes, setOrdenes] = useState<OrdenServicio[]>([])
+    const [loading, setLoading] = useState(false)
+    const [submitting, setSubmitting] = useState(false)
+    
     const [formData, setFormData] = useState({
-        folio: "",
+        ordenServicioId: "",
         monto: "",
         metodoPago: "",
         referencia: "",
@@ -26,10 +41,42 @@ export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps
 
     const [errors, setErrors] = useState<Record<string, string>>({})
 
+    // Cargar órdenes pendientes de pago
+    useEffect(() => {
+        if (open) {
+            fetchOrdenes()
+        }
+    }, [open])
+
+    const fetchOrdenes = async () => {
+        setLoading(true)
+        try {
+            const response = await fetch('/api/ordenes')
+            if (!response.ok) throw new Error('Error al cargar órdenes')
+            
+            const data = await response.json()
+            // Filtrar órdenes que no estén pagadas completamente o canceladas
+            const ordenesPendientes = data.filter((orden: OrdenServicio) => 
+                orden.estado !== 'Pagado y entregado' &&
+                orden.estado !== 'Cancelada'
+            )
+            setOrdenes(ordenesPendientes)
+        } catch (error) {
+            console.error('Error al cargar órdenes:', error)
+            toast({
+                title: "Error",
+                description: "No se pudieron cargar las órdenes de servicio",
+                variant: "destructive",
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
         if (!open) {
             setFormData({
-                folio: "",
+                ordenServicioId: "",
                 monto: "",
                 metodoPago: "",
                 referencia: "",
@@ -42,7 +89,7 @@ export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {}
 
-        if (!formData.folio) newErrors.folio = "Debe seleccionar una orden"
+        if (!formData.ordenServicioId) newErrors.ordenServicioId = "Debe seleccionar una orden"
         if (!formData.monto || parseFloat(formData.monto) <= 0) newErrors.monto = "El monto debe ser mayor a 0"
         if (!formData.metodoPago) newErrors.metodoPago = "Debe seleccionar un método de pago"
 
@@ -50,7 +97,7 @@ export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validate()) {
             toast({
                 title: "Error de validación",
@@ -60,21 +107,45 @@ export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps
             return
         }
 
-        const payment = {
-            ...formData,
-            fecha: new Date().toISOString(),
-            id: `PAY-${Date.now()}`,
+        setSubmitting(true)
+        try {
+            const response = await fetch('/api/pagos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ordenServicioId: formData.ordenServicioId,
+                    monto: parseFloat(formData.monto),
+                    metodoPago: formData.metodoPago,
+                    referencia: formData.referencia || null,
+                    notas: formData.notas || null,
+                }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Error al registrar el pago')
+            }
+
+            const pago = await response.json()
+
+            toast({
+                title: "Pago registrado exitosamente",
+                description: `Monto: $${parseFloat(formData.monto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`,
+            })
+
+            onSave?.(pago)
+            onOpenChange(false)
+        } catch (error) {
+            console.error('Error al registrar pago:', error)
+            toast({
+                title: "Error",
+                description: "No se pudo registrar el pago. Intenta nuevamente.",
+                variant: "destructive",
+            })
+        } finally {
+            setSubmitting(false)
         }
-
-        console.log("Pago registrado:", payment)
-        onSave?.(payment)
-
-        toast({
-            title: "Pago registrado exitosamente",
-            description: `Monto: $${parseFloat(formData.monto).toLocaleString("es-MX")}`,
-        })
-
-        onOpenChange(false)
     }
 
     return (
@@ -86,21 +157,51 @@ export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps
 
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="folio" className="text-slate-200">
+                        <Label htmlFor="orden" className="text-slate-200">
                             Orden de Servicio *
                         </Label>
-                        <Select value={formData.folio} onValueChange={(value) => setFormData({ ...formData, folio: value })}>
+                        <Select 
+                            value={formData.ordenServicioId} 
+                            onValueChange={(value) => {
+                                const ordenSeleccionada = ordenes.find(o => o.id === value)
+                                if (ordenSeleccionada) {
+                                    // Auto-llenar monto con el saldo pendiente, o dejar en blanco si no hay monto
+                                    const montoPendiente = ordenSeleccionada.saldoPendiente ?? ordenSeleccionada.montoTotal ?? 0
+                                    setFormData(prev => ({ 
+                                        ...prev, 
+                                        ordenServicioId: value,
+                                        monto: montoPendiente > 0 ? montoPendiente.toString() : '' 
+                                    }))
+                                } else {
+                                    setFormData({ ...formData, ordenServicioId: value })
+                                }
+                            }}
+                            disabled={loading}
+                        >
                             <SelectTrigger className="bg-slate-800/40 border-slate-700 text-slate-100">
-                                <SelectValue placeholder="Seleccionar orden" />
+                                <SelectValue placeholder={loading ? "Cargando..." : "Seleccionar orden"} />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-white/10">
-                                <SelectItem value="RS-OS-1024">RS-OS-1024 - Juan Pérez</SelectItem>
-                                <SelectItem value="RS-OS-1023">RS-OS-1023 - María González</SelectItem>
-                                <SelectItem value="RS-OS-1022">RS-OS-1022 - Pedro Ramírez</SelectItem>
-                                <SelectItem value="RS-OS-1021">RS-OS-1021 - Ana López</SelectItem>
+                                {ordenes.length === 0 ? (
+                                    <SelectItem value="none" disabled>
+                                        No hay órdenes pendientes
+                                    </SelectItem>
+                                ) : (
+                                    ordenes.map((orden) => {
+                                        const saldoPendiente = orden.saldoPendiente ?? orden.montoTotal
+                                        const montoTexto = saldoPendiente 
+                                            ? `$${saldoPendiente.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
+                                            : '(Sin cotizar)'
+                                        return (
+                                            <SelectItem key={orden.id} value={orden.id}>
+                                                {orden.folio} - {orden.cliente.nombre} - {montoTexto}
+                                            </SelectItem>
+                                        )
+                                    })
+                                )}
                             </SelectContent>
                         </Select>
-                        {errors.folio && <p className="text-xs text-red-400">{errors.folio}</p>}
+                        {errors.ordenServicioId && <p className="text-xs text-red-400">{errors.ordenServicioId}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -170,11 +271,20 @@ export function PaymentDialog({ open, onOpenChange, onSave }: PaymentDialogProps
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-slate-300">
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => onOpenChange(false)} 
+                        className="text-slate-400 hover:text-slate-300"
+                        disabled={submitting}
+                    >
                         Cancelar
                     </Button>
-                    <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-500">
-                        Registrar Pago
+                    <Button 
+                        onClick={handleSubmit} 
+                        className="bg-emerald-600 hover:bg-emerald-500"
+                        disabled={submitting || loading}
+                    >
+                        {submitting ? "Registrando..." : "Registrar Pago"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

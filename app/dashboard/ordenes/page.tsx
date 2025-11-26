@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
@@ -11,20 +11,65 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Eye, Shield, Filter, User, Wrench, Building2, Clock } from 'lucide-react'
+import { Search, Plus, Eye, Shield, Filter, User, Wrench, Building2, Clock, Loader2 } from 'lucide-react'
 import Link from "next/link"
-import { mockServiceOrders } from "@/lib/data/service-orders-mock"
 import type { ServiceOrder } from "@/lib/types/service-order"
 
+type OrdenDB = {
+  id: string
+  folio: string
+  estado: string
+  prioridad: string
+  problemaReportado: string
+  createdAt: string
+  cliente: { id: string; nombre: string; telefono: string }
+  equipo: { id: string; tipo: string; marca: string; modelo: string }
+  tecnico: { id: string; nombre: string } | null
+}
+
 export default function OrdenesPage() {
-  const { hasPermission } = useAuth()
+  const { hasPermission, user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [tecnicoFilter, setTecnicoFilter] = useState("all")
-  const [sucursalFilter, setSucursalFilter] = useState("all")
   const [marcaFilter, setMarcaFilter] = useState("all")
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [ordenes, setOrdenes] = useState<OrdenDB[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadOrdenes()
+  }, [])
+
+  const loadOrdenes = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/ordenes')
+      if (res.ok) {
+        const data = await res.json()
+        setOrdenes(data)
+      }
+    } catch (error) {
+      console.error('Error al cargar órdenes:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredOrders = ordenes.filter((order) => {
+    const matchesSearch =
+      order.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.equipo.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.problemaReportado.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesStatus = statusFilter === "all" || order.estado === statusFilter
+    const matchesTecnico = tecnicoFilter === "all" || order.tecnico?.nombre === tecnicoFilter
+    const matchesMarca = marcaFilter === "all" || order.equipo.marca === marcaFilter
+
+    return matchesSearch && matchesStatus && matchesTecnico && matchesMarca
+  })
 
   if (!hasPermission("ordenes")) {
     return (
@@ -35,20 +80,19 @@ export default function OrdenesPage() {
     )
   }
 
-  const filteredOrders = mockServiceOrders.filter((order) => {
-    const matchesSearch =
-      order.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.equipoTipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.problemaReportado.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesStatus = statusFilter === "all" || order.estado === statusFilter
-    const matchesTecnico = tecnicoFilter === "all" || order.tecnicoAsignadoNombre === tecnicoFilter
-    const matchesSucursal = sucursalFilter === "all" || order.sucursal === sucursalFilter
-    const matchesMarca = marcaFilter === "all" || order.equipoMarca === marcaFilter
-
-    return matchesSearch && matchesStatus && matchesTecnico && matchesSucursal && matchesMarca
-  })
+  if (loading) {
+    return (
+      <>
+        <DashboardHeader title="Órdenes de Servicio" />
+        <main className="flex-1 overflow-y-auto p-6 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 text-indigo-500 animate-spin mx-auto mb-4" />
+            <p className="text-slate-400">Cargando órdenes...</p>
+          </div>
+        </main>
+      </>
+    )
+  }
 
   return (
     <>
@@ -70,7 +114,7 @@ export default function OrdenesPage() {
               </div>
 
               {/* Filters Row */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-100">
                     <Filter className="h-4 w-4 mr-2 text-slate-400" />
@@ -99,19 +143,6 @@ export default function OrdenesPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={sucursalFilter} onValueChange={setSucursalFilter}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-100">
-                    <Building2 className="h-4 w-4 mr-2 text-slate-400" />
-                    <SelectValue placeholder="Sucursal" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all">Todas las sucursales</SelectItem>
-                    <SelectItem value="Sede A">Sede A</SelectItem>
-                    <SelectItem value="Sede B">Sede B</SelectItem>
-                    <SelectItem value="Sede C">Sede C</SelectItem>
-                  </SelectContent>
-                </Select>
-
                 <Select value={marcaFilter} onValueChange={setMarcaFilter}>
                   <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-100">
                     <Wrench className="h-4 w-4 mr-2 text-slate-400" />
@@ -127,12 +158,15 @@ export default function OrdenesPage() {
                   </SelectContent>
                 </Select>
 
-                <Link href="/dashboard/ordenes/nueva" className="w-full">
-                  <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 h-10">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nueva OS
-                  </Button>
-                </Link>
+                {/* Botón Nueva OS - Solo para Admin y Recepción */}
+                {user?.role !== "Técnico" && (
+                  <Link href="/dashboard/ordenes/nueva" className="w-full">
+                    <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 h-10">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nueva OS
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </Card>
@@ -264,6 +298,7 @@ export default function OrdenesPage() {
         order={selectedOrder}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
+        userRole={user?.role as "Administrador" | "Recepción" | "Técnico"}
       />
     </>
   )

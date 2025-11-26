@@ -1,24 +1,28 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface ClientFormData {
   nombre1: string
-  middle_name: string
-  apellido_paterno: string
-  apellido_materno: string
+  nombre2: string
+  apellidoPaterno: string
+  apellidoMaterno: string
   telefono: string
-  correo: string
+  email: string
   sexo: string
   edad: string
   calle: string
@@ -28,31 +32,30 @@ interface ClientFormData {
   estado: string
   pais: string
   rfc: string
-  tipo_cliente: string
-  notas_internas: string
+  tipoCliente: string
+  notas: string
   activo: boolean
 }
 
 interface ClientFormProps {
   onClose: () => void
-  onSave?: (data: ClientFormData) => void
+  onSuccess?: () => void
   initialData?: Partial<ClientFormData>
 }
 
-const existingClients = [
-  { telefono: "5512345678", correo: "juan.perez@email.com", nombre: "Juan Pérez García" },
-  { telefono: "5587654321", correo: "maria.gonzalez@email.com", nombre: "María González López" },
-]
-
-export function ClientForm({ onClose, onSave, initialData }: ClientFormProps) {
+export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps) {
   const { toast } = useToast()
+  const [sectionPersonal, setSectionPersonal] = useState(true)
+  const [sectionDireccion, setSectionDireccion] = useState(false)
+  const [sectionOtros, setSectionOtros] = useState(false)
+  
   const [formData, setFormData] = useState<ClientFormData>({
     nombre1: initialData?.nombre1 || "",
-    middle_name: initialData?.middle_name || "",
-    apellido_paterno: initialData?.apellido_paterno || "",
-    apellido_materno: initialData?.apellido_materno || "",
+    nombre2: initialData?.nombre2 || "",
+    apellidoPaterno: initialData?.apellidoPaterno || "",
+    apellidoMaterno: initialData?.apellidoMaterno || "",
     telefono: initialData?.telefono || "",
-    correo: initialData?.correo || "",
+    email: initialData?.email || "",
     sexo: initialData?.sexo || "",
     edad: initialData?.edad || "",
     calle: initialData?.calle || "",
@@ -62,149 +65,127 @@ export function ClientForm({ onClose, onSave, initialData }: ClientFormProps) {
     estado: initialData?.estado || "",
     pais: initialData?.pais || "México",
     rfc: initialData?.rfc || "",
-    tipo_cliente: initialData?.tipo_cliente || "",
-    notas_internas: initialData?.notas_internas || "",
-    activo: initialData?.activo ?? true,
+    tipoCliente: initialData?.tipoCliente || "",
+    notas: initialData?.notas || "",
+    activo: initialData?.activo !== undefined ? initialData.activo : true
   })
+  
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [sectionsOpen, setSectionsOpen] = useState({
-    personal: true,
-    direccion: true,
-    otros: true,
-  })
-  const [duplicateWarning, setDuplicateWarning] = useState<string>("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (formData.rfc && formData.rfc.length > 0) {
-      const rfcRegex = /^([A-ZÑ&]{3,4})?(\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01]))?([A-Z\d]{2}[A\d])?$/
-      if (!rfcRegex.test(formData.rfc.toUpperCase())) {
-        setErrors((prev) => ({ ...prev, rfc: "Formato de RFC inválido" }))
-      } else {
-        setErrors((prev) => {
-          const newErrors = { ...prev }
-          delete newErrors.rfc
-          return newErrors
-        })
-      }
-    }
-  }, [formData.rfc])
-
-  useEffect(() => {
-    if (formData.telefono.length >= 10 || formData.correo.includes("@")) {
-      const duplicate = existingClients.find(
-        (c) => c.telefono === formData.telefono || c.correo === formData.correo,
-      )
-      if (duplicate) {
-        setDuplicateWarning(`Posible duplicado: ${duplicate.nombre}`)
-      } else {
-        setDuplicateWarning("")
-      }
-    }
-  }, [formData.telefono, formData.correo])
-
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, "")
-    if (numbers.length <= 10) {
-      return numbers
-    }
-    return numbers.slice(0, 10)
-  }
-
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
     if (!formData.nombre1.trim()) {
-      newErrors.nombre1 = "El nombre es obligatorio"
+      newErrors.nombre1 = "El primer nombre es requerido"
     }
 
-    if (!formData.apellido_paterno.trim()) {
-      newErrors.apellido_paterno = "El apellido paterno es obligatorio"
+    if (!formData.apellidoPaterno.trim()) {
+      newErrors.apellidoPaterno = "El apellido paterno es requerido"
     }
 
     if (!formData.telefono.trim()) {
-      newErrors.telefono = "El teléfono es obligatorio"
-    } else if (!/^\d{10}$/.test(formData.telefono.replace(/\D/g, ""))) {
-      newErrors.telefono = "El teléfono debe tener 10 dígitos"
+      newErrors.telefono = "El teléfono es requerido"
+    } else if (formData.telefono.length < 10) {
+      newErrors.telefono = "El teléfono debe tener al menos 10 dígitos"
     }
 
-    if (formData.correo && !/\S+@\S+\.\S+/.test(formData.correo)) {
-      newErrors.correo = "El formato del correo no es válido"
+    if (formData.email && !formData.email.includes("@")) {
+      newErrors.email = "El email no es válido"
     }
 
-    if (formData.edad && (isNaN(Number(formData.edad)) || Number(formData.edad) < 0)) {
-      newErrors.edad = "La edad debe ser un número válido"
+    if (formData.rfc && formData.rfc !== "XAXX010101000") {
+      const rfcPattern = /^[A-ZÑ&]{3,4}\d{6}[A-Z\d]{3}$/
+      if (!rfcPattern.test(formData.rfc)) {
+        newErrors.rfc = "El RFC no tiene un formato válido"
+      }
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
       toast({
         title: "Error de validación",
-        description: "Por favor, corrige los errores antes de continuar.",
+        description: "Por favor corrige los errores en el formulario",
         variant: "destructive",
       })
       return
     }
 
-    if (onSave) {
-      onSave(formData)
+    setIsSubmitting(true)
+
+    try {
+      const url = initialData ? `/api/clientes/${(initialData as any).id}` : '/api/clientes'
+      const method = initialData ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error al ${initialData ? 'actualizar' : 'crear'} cliente`)
+      }
+
+      toast({
+        title: initialData ? "Cliente actualizado" : "Cliente creado",
+        description: `El cliente se ha ${initialData ? 'actualizado' : 'registrado'} exitosamente`,
+      })
+
+      onSuccess?.()
+      onClose()
+    } catch (error) {
+      console.error('Error al guardar cliente:', error)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el cliente. Intenta de nuevo.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    toast({
-      title: "Cliente guardado",
-      description: "Los datos del cliente se han guardado correctamente.",
-    })
-
-    onClose()
   }
 
-  const suggestGenericRFC = () => {
-    setFormData({ ...formData, rfc: "XAXX010101000" })
-    toast({
-      title: "RFC genérico aplicado",
-      description: "Se ha asignado el RFC genérico para público en general.",
-    })
+  const handleChange = (field: keyof ClientFormData, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
+  const sugerirRFCGenerico = () => {
+    handleChange('rfc', 'XAXX010101000')
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {duplicateWarning && (
-        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 animate-fade-in">
-          <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-amber-200">Cliente potencialmente duplicado</p>
-            <p className="text-xs text-amber-300/80 mt-0.5">{duplicateWarning}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-4 border border-slate-800/50 rounded-lg p-4 bg-slate-900/30">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Información Personal */}
+      <div className="border border-slate-700/50 rounded-lg p-4 bg-slate-800/30">
         <button
           type="button"
-          onClick={() => setSectionsOpen({ ...sectionsOpen, personal: !sectionsOpen.personal })}
-          className="flex items-center justify-between w-full text-left group"
+          onClick={() => setSectionPersonal(!sectionPersonal)}
+          className="flex items-center justify-between w-full mb-3 font-semibold text-slate-200"
         >
-          <h3 className="text-lg font-semibold text-slate-100 group-hover:text-violet-400 transition-colors">
-            Información personal
-          </h3>
-          {sectionsOpen.personal ? (
-            <ChevronUp className="h-5 w-5 text-slate-400 group-hover:text-violet-400 transition-colors" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-slate-400 group-hover:text-violet-400 transition-colors" />
-          )}
+          Información Personal
+          {sectionPersonal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-
-        {sectionsOpen.personal && (
-          <div className="space-y-4 pt-2 animate-fade-in">
-            <div className="grid gap-4 md:grid-cols-2">
+        
+        {sectionPersonal && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre1" className="text-slate-200 flex items-center gap-1.5">
-                  Nombre <span className="text-red-400">*</span>
+                  Primer Nombre <span className="text-red-400">*</span>
                   {formData.nombre1 && !errors.nombre1 && (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                   )}
@@ -212,9 +193,9 @@ export function ClientForm({ onClose, onSave, initialData }: ClientFormProps) {
                 <Input
                   id="nombre1"
                   value={formData.nombre1}
-                  onChange={(e) => setFormData({ ...formData, nombre1: e.target.value })}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all ${
-                    errors.nombre1 ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20" : ""
+                  onChange={(e) => handleChange('nombre1', e.target.value)}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
+                    errors.nombre1 ? 'border-red-500/50' : ''
                   }`}
                 />
                 {errors.nombre1 && (
@@ -224,71 +205,66 @@ export function ClientForm({ onClose, onSave, initialData }: ClientFormProps) {
                   </p>
                 )}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="middle_name" className="text-slate-200">
-                  Segundo nombre
-                </Label>
+                <Label htmlFor="nombre2" className="text-slate-200">Segundo Nombre</Label>
                 <Input
-                  id="middle_name"
-                  value={formData.middle_name}
-                  onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="apellido_paterno" className="text-slate-200 flex items-center gap-1.5">
-                  Apellido paterno <span className="text-red-400">*</span>
-                  {formData.apellido_paterno && !errors.apellido_paterno && (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  )}
-                </Label>
-                <Input
-                  id="apellido_paterno"
-                  value={formData.apellido_paterno}
-                  onChange={(e) => setFormData({ ...formData, apellido_paterno: e.target.value })}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all ${
-                    errors.apellido_paterno ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20" : ""
-                  }`}
-                />
-                {errors.apellido_paterno && (
-                  <p className="text-xs text-red-400 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.apellido_paterno}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="apellido_materno" className="text-slate-200">
-                  Apellido materno
-                </Label>
-                <Input
-                  id="apellido_materno"
-                  value={formData.apellido_materno}
-                  onChange={(e) => setFormData({ ...formData, apellido_materno: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
+                  id="nombre2"
+                  value={formData.nombre2}
+                  onChange={(e) => handleChange('nombre2', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
                 />
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="apellidoPaterno" className="text-slate-200 flex items-center gap-1.5">
+                  Apellido Paterno <span className="text-red-400">*</span>
+                  {formData.apellidoPaterno && !errors.apellidoPaterno && (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  )}
+                </Label>
+                <Input
+                  id="apellidoPaterno"
+                  value={formData.apellidoPaterno}
+                  onChange={(e) => handleChange('apellidoPaterno', e.target.value)}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
+                    errors.apellidoPaterno ? 'border-red-500/50' : ''
+                  }`}
+                />
+                {errors.apellidoPaterno && (
+                  <p className="text-xs text-red-400 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.apellidoPaterno}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="apellidoMaterno" className="text-slate-200">Apellido Materno</Label>
+                <Input
+                  id="apellidoMaterno"
+                  value={formData.apellidoMaterno}
+                  onChange={(e) => handleChange('apellidoMaterno', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="telefono" className="text-slate-200 flex items-center gap-1.5">
                   Teléfono <span className="text-red-400">*</span>
-                  {formData.telefono.length === 10 && !errors.telefono && (
+                  {formData.telefono && !errors.telefono && (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                   )}
                 </Label>
                 <Input
                   id="telefono"
                   value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: formatPhone(e.target.value) })}
-                  placeholder="5512345678"
+                  onChange={(e) => handleChange('telefono', e.target.value.replace(/\D/g, ''))}
                   maxLength={10}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all ${
-                    errors.telefono ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20" : ""
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
+                    errors.telefono ? 'border-red-500/50' : ''
                   }`}
                 />
                 {errors.telefono && (
@@ -298,286 +274,236 @@ export function ClientForm({ onClose, onSave, initialData }: ClientFormProps) {
                   </p>
                 )}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="correo" className="text-slate-200 flex items-center gap-1.5">
-                  Correo electrónico
-                  {formData.correo && !errors.correo && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                <Label htmlFor="email" className="text-slate-200 flex items-center gap-1.5">
+                  Email
+                  {formData.email && !errors.email && (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  )}
                 </Label>
                 <Input
-                  id="correo"
+                  id="email"
                   type="email"
-                  value={formData.correo}
-                  onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all ${
-                    errors.correo ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20" : ""
+                  value={formData.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
+                    errors.email ? 'border-red-500/50' : ''
                   }`}
                 />
-                {errors.correo && (
+                {errors.email && (
                   <p className="text-xs text-red-400 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
-                    {errors.correo}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="rfc" className="text-slate-200 flex items-center gap-1.5">
-                  RFC
-                  {formData.rfc && !errors.rfc && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="rfc"
-                    value={formData.rfc}
-                    onChange={(e) => setFormData({ ...formData, rfc: e.target.value.toUpperCase() })}
-                    className={`bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all ${
-                      errors.rfc ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20" : ""
-                    }`}
-                    placeholder="XAXX010101000"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={suggestGenericRFC}
-                    className="border-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0"
-                  >
-                    Genérico
-                  </Button>
-                </div>
-                {errors.rfc && (
-                  <p className="text-xs text-red-400 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.rfc}
+                    {errors.email}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sexo" className="text-slate-200">
-                  Sexo
-                </Label>
-                <Select value={formData.sexo} onValueChange={(value) => setFormData({ ...formData, sexo: value })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20">
+                <Label htmlFor="sexo" className="text-slate-200">Sexo</Label>
+                <Select value={formData.sexo} onValueChange={(value) => handleChange('sexo', value)}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-slate-100">
                     <SelectValue placeholder="Seleccionar" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectContent>
                     <SelectItem value="M">Masculino</SelectItem>
                     <SelectItem value="F">Femenino</SelectItem>
                     <SelectItem value="O">Otro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="edad" className="text-slate-200">
-                  Edad
-                </Label>
+                <Label htmlFor="edad" className="text-slate-200">Edad</Label>
                 <Input
                   id="edad"
                   type="number"
                   value={formData.edad}
-                  onChange={(e) => setFormData({ ...formData, edad: e.target.value })}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all ${
-                    errors.edad ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20" : ""
-                  }`}
+                  onChange={(e) => handleChange('edad', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
                 />
-                {errors.edad && (
-                  <p className="text-xs text-red-400 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.edad}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tipo_cliente" className="text-slate-200">
-                  Tipo de cliente
-                </Label>
-                <Select
-                  value={formData.tipo_cliente}
-                  onValueChange={(value) => setFormData({ ...formData, tipo_cliente: value })}
-                >
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20">
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="publico_general">Público general</SelectItem>
-                    <SelectItem value="empresa">Empresa</SelectItem>
-                    <SelectItem value="recurrente">Recurrente</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="space-y-4 border border-slate-800/50 rounded-lg p-4 bg-slate-900/30">
+      {/* Dirección */}
+      <div className="border border-slate-700/50 rounded-lg p-4 bg-slate-800/30">
         <button
           type="button"
-          onClick={() => setSectionsOpen({ ...sectionsOpen, direccion: !sectionsOpen.direccion })}
-          className="flex items-center justify-between w-full text-left group"
+          onClick={() => setSectionDireccion(!sectionDireccion)}
+          className="flex items-center justify-between w-full mb-3 font-semibold text-slate-200"
         >
-          <h3 className="text-lg font-semibold text-slate-100 group-hover:text-violet-400 transition-colors">
-            Dirección
-          </h3>
-          {sectionsOpen.direccion ? (
-            <ChevronUp className="h-5 w-5 text-slate-400 group-hover:text-violet-400 transition-colors" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-slate-400 group-hover:text-violet-400 transition-colors" />
-          )}
+          Dirección
+          {sectionDireccion ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-
-        {sectionsOpen.direccion && (
-          <div className="space-y-4 pt-2 animate-fade-in">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="calle" className="text-slate-200">
-                  Calle
-                </Label>
+        
+        {sectionDireccion && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="calle" className="text-slate-200">Calle</Label>
                 <Input
                   id="calle"
                   value={formData.calle}
-                  onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
+                  onChange={(e) => handleChange('calle', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="numero" className="text-slate-200">
-                  Número
-                </Label>
+                <Label htmlFor="numero" className="text-slate-200">Número</Label>
                 <Input
                   id="numero"
                   value={formData.numero}
-                  onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
+                  onChange={(e) => handleChange('numero', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
                 />
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="colonia" className="text-slate-200">
-                  Colonia
-                </Label>
-                <Input
-                  id="colonia"
-                  value={formData.colonia}
-                  onChange={(e) => setFormData({ ...formData, colonia: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="colonia" className="text-slate-200">Colonia</Label>
+              <Input
+                id="colonia"
+                value={formData.colonia}
+                onChange={(e) => handleChange('colonia', e.target.value)}
+                className="bg-slate-800/50 border-slate-700/50 text-slate-100"
+              />
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="municipio" className="text-slate-200">
-                  Municipio
-                </Label>
+                <Label htmlFor="municipio" className="text-slate-200">Municipio / Delegación</Label>
                 <Input
                   id="municipio"
                   value={formData.municipio}
-                  onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
+                  onChange={(e) => handleChange('municipio', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
                 />
               </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="estado" className="text-slate-200">
-                  Estado
-                </Label>
+                <Label htmlFor="estado" className="text-slate-200">Estado</Label>
                 <Input
                   id="estado"
                   value={formData.estado}
-                  onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
+                  onChange={(e) => handleChange('estado', e.target.value)}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-100"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="pais" className="text-slate-200">
-                  País
-                </Label>
-                <Input
-                  id="pais"
-                  value={formData.pais}
-                  onChange={(e) => setFormData({ ...formData, pais: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="pais" className="text-slate-200">País</Label>
+              <Input
+                id="pais"
+                value={formData.pais}
+                onChange={(e) => handleChange('pais', e.target.value)}
+                className="bg-slate-800/50 border-slate-700/50 text-slate-100"
+              />
             </div>
           </div>
         )}
       </div>
 
-      <div className="space-y-4 border border-slate-800/50 rounded-lg p-4 bg-slate-900/30">
+      {/* Otros Datos */}
+      <div className="border border-slate-700/50 rounded-lg p-4 bg-slate-800/30">
         <button
           type="button"
-          onClick={() => setSectionsOpen({ ...sectionsOpen, otros: !sectionsOpen.otros })}
-          className="flex items-center justify-between w-full text-left group"
+          onClick={() => setSectionOtros(!sectionOtros)}
+          className="flex items-center justify-between w-full mb-3 font-semibold text-slate-200"
         >
-          <h3 className="text-lg font-semibold text-slate-100 group-hover:text-violet-400 transition-colors">
-            Otros datos
-          </h3>
-          {sectionsOpen.otros ? (
-            <ChevronUp className="h-5 w-5 text-slate-400 group-hover:text-violet-400 transition-colors" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-slate-400 group-hover:text-violet-400 transition-colors" />
-          )}
+          Otros Datos
+          {sectionOtros ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-
-        {sectionsOpen.otros && (
-          <div className="space-y-4 pt-2 animate-fade-in">
+        
+        {sectionOtros && (
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="notas_internas" className="text-slate-200 flex items-center gap-1.5">
-                Notas internas
-                <Info className="h-3.5 w-3.5 text-slate-500" />
+              <Label htmlFor="rfc" className="text-slate-200 flex items-center gap-1.5">
+                RFC
+                {formData.rfc && !errors.rfc && (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                )}
               </Label>
-              <Textarea
-                id="notas_internas"
-                value={formData.notas_internas}
-                onChange={(e) => setFormData({ ...formData, notas_internas: e.target.value })}
-                placeholder="Información adicional visible solo para el personal..."
-                rows={4}
-                className="bg-slate-800/50 border-slate-700/50 text-slate-100 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all resize-none"
-              />
-              <p className="text-xs text-slate-500">Solo visible para el personal del taller</p>
+              <div className="flex gap-2">
+                <Input
+                  id="rfc"
+                  value={formData.rfc}
+                  onChange={(e) => handleChange('rfc', e.target.value.toUpperCase())}
+                  placeholder="XAXX010101000"
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
+                    errors.rfc ? 'border-red-500/50' : ''
+                  }`}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={sugerirRFCGenerico}
+                  className="bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-800"
+                >
+                  Genérico
+                </Button>
+              </div>
+              {errors.rfc && (
+                <p className="text-xs text-red-400 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.rfc}
+                </p>
+              )}
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="activo"
-                checked={formData.activo}
-                onCheckedChange={(checked) => setFormData({ ...formData, activo: !!checked })}
+            <div className="space-y-2">
+              <Label htmlFor="tipoCliente" className="text-slate-200">Tipo de Cliente</Label>
+              <Select value={formData.tipoCliente} onValueChange={(value) => handleChange('tipoCliente', value)}>
+                <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-slate-100">
+                  <SelectValue placeholder="Seleccionar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="publico_general">Público General</SelectItem>
+                  <SelectItem value="empresa">Empresa</SelectItem>
+                  <SelectItem value="recurrente">Recurrente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notas" className="text-slate-200">Notas Internas</Label>
+              <Textarea
+                id="notas"
+                value={formData.notas}
+                onChange={(e) => handleChange('notas', e.target.value)}
+                rows={4}
+                className="bg-slate-800/50 border-slate-700/50 text-slate-100 resize-none"
               />
-              <Label htmlFor="activo" className="text-slate-200 cursor-pointer">
-                Cliente activo
-              </Label>
             </div>
           </div>
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-slate-800/50">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/50">
         <Button
           type="button"
           variant="outline"
           onClick={onClose}
-          className="border-slate-700/50 text-slate-300 bg-transparent hover:bg-slate-800/50"
+          disabled={isSubmitting}
+          className="bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/20 transition-all duration-300 hover:shadow-indigo-500/30 hover:scale-[1.02]"
+          disabled={isSubmitting}
+          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/20"
         >
-          Guardar cliente
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Guardando...
+            </>
+          ) : (
+            initialData ? 'Actualizar cliente' : 'Guardar cliente'
+          )}
         </Button>
       </div>
     </form>

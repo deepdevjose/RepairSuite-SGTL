@@ -11,7 +11,10 @@ import type {
 // SUPPLIERS
 // ============================================
 
-export const mockSuppliers: Supplier[] = [
+// Datos limpios - conectar a base de datos real
+export const mockSuppliers: Supplier[] = []
+/*
+    // Los datos se cargarán desde la base de datos
     {
         id: "sup-001",
         nombreComercial: "TechDistributor MX",
@@ -73,13 +76,14 @@ export const mockSuppliers: Supplier[] = [
         ultimaCompra: "2025-01-16T11:20:00Z",
         fechaCreacion: "2024-04-05T00:00:00Z",
     },
-]
+*/
 
 // ============================================
 // SERVICES
 // ============================================
 
-export const mockServices: ServiceItem[] = [
+export const mockServices: ServiceItem[] = []
+/*
     {
         id: "srv-001",
         sku: "SRV-DIAG-GENERAL",
@@ -377,13 +381,14 @@ export const mockServices: ServiceItem[] = [
         creadoPor: "Ana Martínez",
         fechaCreacion: "2024-01-10T00:00:00Z",
     },
-]
+*/
 
 // ============================================
 // PARTS / REFACCIONES
 // ============================================
 
-export const mockParts: PartItem[] = [
+export const mockParts: PartItem[] = []
+/*
     {
         id: "prt-001",
         sku: "RAM-DDR4-8GB-2666",
@@ -529,13 +534,14 @@ export const mockParts: PartItem[] = [
         creadoPor: "Carlos Gómez",
         fechaCreacion: "2024-01-10T00:00:00Z",
     },
-]
+*/
 
 // ============================================
 // PACKAGES / PAQUETES
 // ============================================
 
-export const mockPackages: PackageItem[] = [
+export const mockPackages: PackageItem[] = []
+/*
     {
         id: "pkg-001",
         sku: "PAQ-BASICO",
@@ -633,13 +639,14 @@ export const mockPackages: PackageItem[] = [
         creadoPor: "Luis Torres",
         fechaCreacion: "2024-01-10T00:00:00Z",
     },
-]
+*/
 
 // ============================================
 // PRICE HISTORY
 // ============================================
 
-export const mockPriceHistory: PriceHistory[] = [
+export const mockPriceHistory: PriceHistory[] = []
+/*
     {
         id: "ph-001",
         catalogoSKU: "SRV-DIAG-GENERAL",
@@ -660,7 +667,7 @@ export const mockPriceHistory: PriceHistory[] = [
         usuario: "Carlos Gómez",
         fecha: "2025-01-05T14:30:00Z",
     },
-]
+*/
 
 // ============================================
 // HELPER FUNCTIONS

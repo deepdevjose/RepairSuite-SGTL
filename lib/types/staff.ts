@@ -62,7 +62,6 @@ export interface Employee {
     apellidos: string
     nombreCompleto: string // Computed: nombre + apellidos
     rolOperativo: EmployeeRole
-    sucursalAsignada: string
     telefono: string
     correoInterno: string
     estado: EmployeeStatus
@@ -116,7 +115,6 @@ export interface EmployeeMetrics {
 // Filters for staff
 export interface StaffFilters {
     searchTerm: string
-    sucursal: "all" | string
     rolOperativo: "all" | EmployeeRole
     estado: "all" | EmployeeStatus
     tieneUsuario: "all" | "si" | "no"

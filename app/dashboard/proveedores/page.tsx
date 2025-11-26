@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
-import { PaymentTermsBadge } from "@/components/suppliers/payment-terms-badge"
 import { SupplierFormDialog } from "@/components/suppliers/supplier-form-dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -24,14 +23,46 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react"
-import { mockSuppliers } from "@/lib/data/catalog-mock"
-import { formatDate } from "@/lib/utils/supplier-helpers"
+
+interface Proveedor {
+  id: string
+  nombre: string
+  contacto: string | null
+  telefono: string
+  email: string | null
+  direccion: string | null
+  notas: string | null
+  activo: boolean
+  createdAt: string
+  updatedAt: string
+}
 
 export default function ProveedoresPage() {
   const { hasPermission } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
+  const [selectedSupplier, setSelectedSupplier] = useState<Proveedor | null>(null)
+  const [proveedores, setProveedores] = useState<Proveedor[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchProveedores()
+  }, [])
+
+  const fetchProveedores = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/proveedores')
+      if (response.ok) {
+        const data = await response.json()
+        setProveedores(data)
+      }
+    } catch (error) {
+      console.error('Error al obtener proveedores:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!hasPermission("proveedores")) {
     return (
@@ -44,29 +75,28 @@ export default function ProveedoresPage() {
 
   // Filter suppliers
   const filteredSuppliers = useMemo(() => {
-    if (!searchTerm.trim()) return mockSuppliers
+    if (!searchTerm.trim()) return proveedores
 
     const term = searchTerm.toLowerCase()
-    return mockSuppliers.filter(
+    return proveedores.filter(
       (supplier) =>
-        supplier.nombreComercial.toLowerCase().includes(term) ||
-        (supplier.rfc && supplier.rfc.toLowerCase().includes(term)) ||
-        supplier.email.toLowerCase().includes(term)
+        supplier.nombre.toLowerCase().includes(term) ||
+        (supplier.email && supplier.email.toLowerCase().includes(term)) ||
+        (supplier.contacto && supplier.contacto.toLowerCase().includes(term))
     )
-  }, [searchTerm])
+  }, [searchTerm, proveedores])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const activos = mockSuppliers.filter((s) => s.activo).length
-    const totalProductos = mockSuppliers.reduce((sum, s) => sum + (s.productosAsociados?.length || 0), 0)
+    const activos = proveedores.filter((s) => s.activo).length
 
     return {
-      total: mockSuppliers.length,
+      total: proveedores.length,
       activos,
-      inactivos: mockSuppliers.length - activos,
-      totalProductos,
+      inactivos: proveedores.length - activos,
+      totalProductos: 0, // TODO: agregar conteo de productos cuando se implemente
     }
-  }, [])
+  }, [proveedores])
 
   return (
     <>
@@ -179,20 +209,16 @@ export default function ProveedoresPage() {
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Nombre Comercial
+                      Nombre
                     </TableHead>
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">RFC</TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                       Contacto
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Condiciones
-                    </TableHead>
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-center">
-                      Productos
+                      Teléfono
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Última Compra
+                      Email
                     </TableHead>
                     <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                       Estado
@@ -203,97 +229,78 @@ export default function ProveedoresPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSuppliers.map((supplier, index) => (
-                    <TableRow
-                      key={supplier.id}
-                      className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
-                      style={{
-                        animation: "fadeInUp 0.3s ease-out forwards",
-                        animationDelay: `${400 + index * 30}ms`,
-                        opacity: 0,
-                      }}
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center ring-1 ring-emerald-500/30">
-                            <Building2 className="h-4 w-4 text-emerald-400" />
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-slate-400 py-12">
+                        Cargando proveedores...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredSuppliers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-slate-400 py-12">
+                        <Building2 className="h-12 w-12 mx-auto mb-3 text-slate-600" />
+                        <p className="text-sm font-medium">No se encontraron proveedores</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {proveedores.length === 0 ? "Agrega tu primer proveedor" : "Intenta ajustar la búsqueda"}
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredSuppliers.map((supplier, index) => (
+                      <TableRow
+                        key={supplier.id}
+                        className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center ring-1 ring-emerald-500/30">
+                              <Building2 className="h-4 w-4 text-emerald-400" />
+                            </div>
+                            <div className="text-[13px] font-medium text-slate-200">{supplier.nombre}</div>
                           </div>
-                          <div>
-                            <div className="text-[13px] font-medium text-slate-200">{supplier.nombreComercial}</div>
-                            <div className="text-[11px] text-slate-500">{supplier.contactoPrincipal}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-[12px] text-indigo-400">{supplier.rfc || "—"}</TableCell>
-                      <TableCell>
-                        <div className="text-[12px]">
-                          <div className="text-slate-400">{supplier.telefono}</div>
-                          <div className="text-slate-500">{supplier.email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <PaymentTermsBadge condiciones={supplier.condicionesPago} />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-[13px] font-semibold text-blue-400">{supplier.productosAsociados?.length || 0}</span>
-                      </TableCell>
-                      <TableCell className="text-[12px] text-slate-400">
-                        {supplier.fechaCreacion ? formatDate(supplier.fechaCreacion) : "—"}
-                      </TableCell>
-                      <TableCell>
-                        {supplier.activo ? (
-                          <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Activo
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20 text-xs">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Inactivo
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <Link href={`/dashboard/proveedores/${supplier.id}`}>
+                        </TableCell>
+                        <TableCell className="text-[12px] text-slate-400">{supplier.contacto || "—"}</TableCell>
+                        <TableCell className="text-[12px] text-slate-400">{supplier.telefono}</TableCell>
+                        <TableCell className="text-[12px] text-slate-400">{supplier.email || "—"}</TableCell>
+                        <TableCell>
+                          {supplier.activo ? (
+                            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Activo
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Inactivo
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
-                              title="Ver detalles"
+                              className="h-8 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
                             >
-                              <Eye className="h-3.5 w-3.5" />
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              Ver
                             </Button>
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setSelectedSupplier(supplier)
-                              setIsFormOpen(true)
-                            }}
-                            className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
-                            title="Editar"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 text-slate-400 hover:text-slate-300 hover:bg-slate-500/10"
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Editar
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
-
-            {filteredSuppliers.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 px-4">
-                <Building2 className="h-16 w-16 text-slate-700 mb-4" />
-                <h3 className="text-lg font-semibold text-slate-400 mb-2">No se encontraron proveedores</h3>
-                <p className="text-sm text-slate-500 text-center max-w-md">
-                  Intenta ajustar los términos de búsqueda
-                </p>
-              </div>
-            )}
 
             {/* Results count */}
             {filteredSuppliers.length > 0 && (

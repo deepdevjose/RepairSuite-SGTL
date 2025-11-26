@@ -10,7 +10,6 @@ interface User {
   email: string
   role: UserRole
   name: string
-  sucursal: string
 }
 
 interface AuthContextType {
@@ -42,26 +41,37 @@ const rolePermissions: Record<UserRole, string[]> = {
   Técnico: ["dashboard", "ordenes", "equipos", "inventario", "garantias"],
 }
 
+// JLaboratories users database
+const JLAB_USERS = [
+  {
+    email: "admin@jlaboratories.com",
+    password: "JoseAdmin",
+    name: "Jose Manuel Cortes Ceron",
+    role: "Administrador" as UserRole,
+  },
+  {
+    email: "jose.tecnico@jlaboratories.com",
+    password: "JoseTech",
+    name: "Jose Manuel Cortes Ceron",
+    role: "Técnico" as UserRole,
+  },
+  {
+    email: "kevis.salas@jlaboratories.com",
+    password: "KevinTech",
+    name: "Kevis Salas Jimenez",
+    role: "Técnico" as UserRole,
+  },
+  {
+    email: "adriana.ceron@jlaboratories.com",
+    password: "Adri123",
+    name: "Adriana Ceron Madrigal",
+    role: "Recepción" as UserRole,
+  },
+]
+
 const getRoleFromEmail = (email: string): UserRole => {
-  // Check for specific demo emails first
-  if (email === "demo.admin@repairsuite.com") {
-    return "Administrador"
-  }
-  if (email === "demo.recepcion@repairsuite.com") {
-    return "Recepción"
-  }
-  if (email === "demo.tecnico@repairsuite.com") {
-    return "Técnico"
-  }
-  
-  // Fallback to pattern matching for other emails
-  if (email.includes("admin") || email.includes("director") || email.includes("gerente")) {
-    return "Administrador"
-  }
-  if (email.includes("recepcion") || email.includes("reception") || email.includes("front")) {
-    return "Recepción"
-  }
-  return "Técnico"
+  const user = JLAB_USERS.find(u => u.email === email)
+  return user?.role || "Técnico"
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -79,14 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string) => {
-    // Simulate login - in real app, this would be an API call
-    if (email && password.length >= 6) {
-      const role = getRoleFromEmail(email)
+    // Validate against JLaboratories user database
+    const user = JLAB_USERS.find(u => u.email === email && u.password === password)
+    
+    if (user) {
       const userData: User = {
-        email,
-        role,
-        name: email.split("@")[0],
-        sucursal: "Sede A",
+        email: user.email,
+        role: user.role,
+        name: user.name,
       }
       setUser(userData)
       localStorage.setItem("repairsuite_user", JSON.stringify(userData))

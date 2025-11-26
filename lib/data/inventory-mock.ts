@@ -2,12 +2,15 @@ import type {
     InventoryItem,
     InventoryMovement,
     StockReservation,
-    TransferOrder,
     ProductCategory,
 } from "@/lib/types/inventory"
 
 // Mock Inventory Items
+// Datos limpios - ahora se cargan desde la base de datos
 export const mockInventoryItems: InventoryItem[] = [
+    // Los datos se cargarán desde la base de datos
+]
+/*
     {
         id: "inv-001",
         sku: "RAM-DDR4-8GB-2666",
@@ -17,7 +20,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "DDR4 SODIMM",
         especificaciones: "8GB DDR4 2666MHz CL19 1.2V",
         stockTotal: 15,
-        stockPorSucursal: { sedeA: 8, sedeB: 5, sedeC: 2 },
         stockReservado: 3,
         stockMinimo: 5,
         precioVenta: 850.0,
@@ -35,7 +37,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "2.5\" SATA III",
         especificaciones: "256GB SATA III 6Gb/s, 550MB/s lectura",
         stockTotal: 2,
-        stockPorSucursal: { sedeA: 1, sedeB: 1, sedeC: 0 },
         stockReservado: 1,
         stockMinimo: 4,
         precioVenta: 1250.0,
@@ -53,7 +54,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "M.2 2280 NVMe PCIe Gen3",
         especificaciones: "512GB NVMe PCIe Gen3 x4, 3400MB/s lectura",
         stockTotal: 0,
-        stockPorSucursal: { sedeA: 0, sedeB: 0, sedeC: 0 },
         stockReservado: 0,
         stockMinimo: 3,
         precioVenta: 2100.0,
@@ -71,7 +71,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "2.5\" SATA III",
         especificaciones: "1TB 7200RPM 128MB Cache",
         stockTotal: 8,
-        stockPorSucursal: { sedeA: 3, sedeB: 3, sedeC: 2 },
         stockReservado: 2,
         stockMinimo: 3,
         precioVenta: 980.0,
@@ -89,7 +88,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "HP Pavilion 15-au, 15-aw",
         especificaciones: "41Wh 3 celdas Li-ion",
         stockTotal: 12,
-        stockPorSucursal: { sedeA: 6, sedeB: 4, sedeC: 2 },
         stockReservado: 1,
         stockMinimo: 5,
         precioVenta: 1450.0,
@@ -107,7 +105,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "Dell Inspiron 15 3000/5000",
         especificaciones: "42Wh 3 celdas Li-ion",
         stockTotal: 3,
-        stockPorSucursal: { sedeA: 2, sedeB: 1, sedeC: 0 },
         stockReservado: 2,
         stockMinimo: 4,
         precioVenta: 1380.0,
@@ -125,7 +122,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "Universal 15.6\" 30 pines",
         especificaciones: "1920x1080 IPS LED Slim",
         stockTotal: 5,
-        stockPorSucursal: { sedeA: 3, sedeB: 2, sedeC: 0 },
         stockReservado: 1,
         stockMinimo: 2,
         precioVenta: 2800.0,
@@ -143,7 +139,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "HP Pavilion 15-au, 15-aw",
         especificaciones: "Español Latino con marco",
         stockTotal: 7,
-        stockPorSucursal: { sedeA: 4, sedeB: 2, sedeC: 1 },
         stockReservado: 0,
         stockMinimo: 3,
         precioVenta: 650.0,
@@ -161,7 +156,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "HP 4.5mm x 3.0mm",
         especificaciones: "19.5V 3.33A 65W",
         stockTotal: 18,
-        stockPorSucursal: { sedeA: 8, sedeB: 6, sedeC: 4 },
         stockReservado: 2,
         stockMinimo: 8,
         precioVenta: 450.0,
@@ -179,7 +173,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "Dell 7.4mm x 5.0mm",
         especificaciones: "19.5V 3.34A 65W",
         stockTotal: 14,
-        stockPorSucursal: { sedeA: 6, sedeB: 5, sedeC: 3 },
         stockReservado: 1,
         stockMinimo: 8,
         precioVenta: 480.0,
@@ -197,7 +190,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "DDR4 SODIMM",
         especificaciones: "16GB DDR4 3200MHz CL22 1.2V",
         stockTotal: 6,
-        stockPorSucursal: { sedeA: 3, sedeB: 2, sedeC: 1 },
         stockReservado: 1,
         stockMinimo: 4,
         precioVenta: 1650.0,
@@ -213,7 +205,6 @@ export const mockInventoryItems: InventoryItem[] = [
         categoria: "Servicio",
         especificaciones: "Limpieza interna completa + pasta térmica",
         stockTotal: 999,
-        stockPorSucursal: { sedeA: 333, sedeB: 333, sedeC: 333 },
         stockReservado: 0,
         stockMinimo: 0,
         precioVenta: 350.0,
@@ -229,7 +220,6 @@ export const mockInventoryItems: InventoryItem[] = [
         categoria: "Servicio",
         especificaciones: "Diagnóstico completo de hardware y software",
         stockTotal: 999,
-        stockPorSucursal: { sedeA: 333, sedeB: 333, sedeC: 333 },
         stockReservado: 5,
         stockMinimo: 0,
         precioVenta: 200.0,
@@ -247,7 +237,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "MacBook Pro 13\" 2013-2015",
         especificaciones: "74.9Wh Li-Polymer",
         stockTotal: 1,
-        stockPorSucursal: { sedeA: 1, sedeB: 0, sedeC: 0 },
         stockReservado: 1,
         stockMinimo: 2,
         precioVenta: 2800.0,
@@ -265,7 +254,6 @@ export const mockInventoryItems: InventoryItem[] = [
         compatibilidad: "2.5\" SATA III",
         especificaciones: "2TB 5400RPM 128MB Cache",
         stockTotal: 4,
-        stockPorSucursal: { sedeA: 2, sedeB: 1, sedeC: 1 },
         stockReservado: 0,
         stockMinimo: 2,
         precioVenta: 1450.0,
@@ -274,10 +262,11 @@ export const mockInventoryItems: InventoryItem[] = [
         ultimoMovimiento: "2025-01-15T09:30:00Z",
         activo: true,
     },
-]
+*/
 
 // Mock Inventory Movements
-export const mockInventoryMovements: InventoryMovement[] = [
+export const mockInventoryMovements: InventoryMovement[] = []
+/*
     {
         id: "mov-001",
         sku: "RAM-DDR4-8GB-2666",
@@ -285,7 +274,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 10,
         fecha: "2025-01-10T09:00:00Z",
         usuario: "Ana Martínez",
-        sucursal: "Sede A",
         proveedor: "TechDistributor MX",
         costoUnitario: 620.0,
         factura: "FAC-2025-0045",
@@ -299,7 +287,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 2,
         fecha: "2025-01-12T14:30:00Z",
         usuario: "Carlos Gómez",
-        sucursal: "Sede A",
         ordenServicioId: "RS-OS-1024",
         notas: "Upgrade para cliente Juan Pérez",
     },
@@ -310,7 +297,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 1,
         fecha: "2025-01-14T10:15:00Z",
         usuario: "Luis Torres",
-        sucursal: "Sede B",
         ordenServicioId: "RS-OS-1028",
         notas: "Reservado para reparación pendiente",
     },
@@ -321,7 +307,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 2,
         fecha: "2025-01-13T11:00:00Z",
         usuario: "Ana Martínez",
-        sucursal: "Sede A",
         sucursalDestino: "Sede B",
         notas: "Transferencia por baja demanda en Sede A",
     },
@@ -332,7 +317,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 3,
         fecha: "2025-01-10T15:45:00Z",
         usuario: "Carlos Gómez",
-        sucursal: "Sede A",
         ordenServicioId: "RS-OS-1015",
         notas: "Venta de upgrades",
     },
@@ -343,7 +327,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 15,
         fecha: "2025-01-08T10:00:00Z",
         usuario: "Ana Martínez",
-        sucursal: "Sede A",
         proveedor: "Importadora Tech",
         costoUnitario: 280.0,
         factura: "FAC-2025-0038",
@@ -356,7 +339,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 1,
         fecha: "2025-01-12T16:20:00Z",
         usuario: "Luis Torres",
-        sucursal: "Sede A",
         ordenServicioId: "RS-OS-1025",
         notas: "Reemplazo de pantalla dañada",
     },
@@ -367,7 +349,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: -1,
         fecha: "2025-01-11T09:30:00Z",
         usuario: "Ana Martínez",
-        sucursal: "Sede B",
         notas: "Ajuste por inventario físico - unidad dañada",
     },
     {
@@ -377,7 +358,6 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 5,
         fecha: "2025-01-09T14:00:00Z",
         usuario: "Ana Martínez",
-        sucursal: "Sede A",
         proveedor: "Dell Parts Supplier",
         costoUnitario: 980.0,
         factura: "FAC-2025-0041",
@@ -390,14 +370,14 @@ export const mockInventoryMovements: InventoryMovement[] = [
         cantidad: 1,
         fecha: "2025-01-16T11:00:00Z",
         usuario: "Carlos Gómez",
-        sucursal: "Sede A",
         ordenServicioId: "RS-OS-1030",
         notas: "Reservado para upgrade gaming",
     },
-]
+*/
 
 // Mock Stock Reservations
-export const mockStockReservations: StockReservation[] = [
+export const mockStockReservations: StockReservation[] = []
+/*
     {
         id: "res-001",
         sku: "RAM-DDR4-8GB-2666",
@@ -405,7 +385,6 @@ export const mockStockReservations: StockReservation[] = [
         folioOS: "RS-OS-1024",
         cliente: "Juan Pérez",
         cantidadReservada: 2,
-        sucursal: "Sede A",
         fechaReserva: "2025-01-15T10:00:00Z",
         fechaEstimadaUso: "2025-01-20T10:00:00Z",
         estado: "Activa",
@@ -418,7 +397,6 @@ export const mockStockReservations: StockReservation[] = [
         folioOS: "RS-OS-1028",
         cliente: "María González",
         cantidadReservada: 1,
-        sucursal: "Sede B",
         fechaReserva: "2025-01-14T10:15:00Z",
         fechaEstimadaUso: "2025-01-19T14:00:00Z",
         estado: "Activa",
@@ -431,7 +409,6 @@ export const mockStockReservations: StockReservation[] = [
         folioOS: "RS-OS-1029",
         cliente: "Pedro Ramírez",
         cantidadReservada: 1,
-        sucursal: "Sede A",
         fechaReserva: "2025-01-16T09:30:00Z",
         fechaEstimadaUso: "2025-01-21T11:00:00Z",
         estado: "Activa",
@@ -444,7 +421,6 @@ export const mockStockReservations: StockReservation[] = [
         folioOS: "RS-OS-1031",
         cliente: "Laura Sánchez",
         cantidadReservada: 1,
-        sucursal: "Sede A",
         fechaReserva: "2025-01-17T15:00:00Z",
         fechaEstimadaUso: "2025-01-22T10:00:00Z",
         estado: "Activa",
@@ -457,16 +433,16 @@ export const mockStockReservations: StockReservation[] = [
         folioOS: "RS-OS-1026",
         cliente: "Roberto Silva",
         cantidadReservada: 1,
-        sucursal: "Sede C",
         fechaReserva: "2025-01-13T12:00:00Z",
         fechaEstimadaUso: "2025-01-18T16:00:00Z",
         estado: "Activa",
         usuario: "Luis Torres",
     },
-]
+*/
 
 // Mock Transfer Orders
-export const mockTransferOrders: TransferOrder[] = [
+export const mockTransferOrders: TransferOrder[] = []
+/*
     {
         id: "trans-001",
         sku: "BATT-HP-PAVILION",
@@ -494,7 +470,7 @@ export const mockTransferOrders: TransferOrder[] = [
         fechaEstimadaLlegada: "2025-01-19T10:00:00Z",
         notas: "Reposición de stock en Sede C",
     },
-]
+*/
 
 // Helper function to get product by SKU
 export function getProductBySku(sku: string): InventoryItem | undefined {

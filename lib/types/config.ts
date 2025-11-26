@@ -24,33 +24,6 @@ export interface OrderStatus {
     icono?: string
 }
 
-// Branch (Sucursal)
-export interface Branch {
-    id: string
-    nombre: string
-    direccion: {
-        calle: string
-        colonia: string
-        ciudad: string
-        estado: string
-        codigoPostal: string
-    }
-    telefono: string
-    email: string
-    horario: string // "Lun-Vie 9:00-18:00, Sáb 9:00-14:00"
-    encargado: string
-    encargadoId?: string // Link to Employee
-    prefijoFolios: string // "A", "B", "C"
-    activa: boolean
-
-    // Inventory
-    tieneInventario: boolean
-
-    // Coordinates (future)
-    latitud?: number
-    longitud?: number
-}
-
 // Business policies
 export interface BusinessPolicy {
     // Storage and abandonment
@@ -98,9 +71,6 @@ export interface SystemConfig {
     sitioWeb?: string
     logo?: string // URL
 
-    // Branches
-    sucursales: Branch[]
-
     // Order statuses
     estadosOS: OrderStatus[]
 
@@ -127,6 +97,5 @@ export const NOTIFICATION_VARIABLES = [
     { key: "{fecha}", description: "Fecha actual" },
     { key: "{equipo}", description: "Equipo del cliente" },
     { key: "{tecnico}", description: "Técnico asignado" },
-    { key: "{sucursal}", description: "Nombre de la sucursal" },
     { key: "{telefono}", description: "Teléfono del taller" },
 ]
