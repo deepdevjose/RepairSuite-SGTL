@@ -108,6 +108,29 @@ export async function POST(request: Request) {
       )
     }
 
+    // Mapeo de campos de precio según el tipo de producto
+    const precioVentaFinal = precioVenta ?? body.precioBase ?? body.precioPaquete ?? 0
+    const precioCompraFinal = precioCompra ?? body.costoProveedor ?? 0
+
+    // Recopilar datos adicionales para especificaciones
+    const especificacionesObj = especificaciones ? JSON.parse(especificaciones) : {}
+
+    // Campos específicos de servicios
+    if (body.tiempoEstimadoMinutos) especificacionesObj.tiempoEstimadoMinutos = body.tiempoEstimadoMinutos
+    if (body.nivelComplejidad) especificacionesObj.nivelComplejidad = body.nivelComplejidad
+    if (body.desglose) especificacionesObj.desglose = body.desglose
+
+    // Campos específicos de refacciones
+    if (body.garantiaClienteDias) especificacionesObj.garantiaClienteDias = body.garantiaClienteDias
+    if (body.garantiaProveedorDias) especificacionesObj.garantiaProveedorDias = body.garantiaProveedorDias
+
+    // Campos específicos de paquetes
+    if (body.serviciosIncluidos) especificacionesObj.serviciosIncluidos = body.serviciosIncluidos
+    if (body.ahorro) especificacionesObj.ahorro = body.ahorro
+
+    // Garantía general (si viene como campo suelto)
+    if (body.garantiaDias) especificacionesObj.garantiaDias = body.garantiaDias
+
     const producto = await prisma.producto.create({
       data: {
         sku,
@@ -118,16 +141,17 @@ export async function POST(request: Request) {
         marca,
         modelo,
         compatibilidad,
-        especificaciones,
+        especificaciones: JSON.stringify(especificacionesObj),
         ubicacion,
-        precioCompra: precioCompra || 0,
-        precioVenta: precioVenta || 0,
+        precioCompra: precioCompraFinal,
+        precioVenta: precioVentaFinal,
         stockActual: stockActual || 0,
         stockReservado: stockReservado || 0,
         stockMinimo: stockMinimo || 5,
         proveedorId,
+        garantiaMeses: body.garantiaMeses || 0,
         activo: activo !== undefined ? activo : true
-      },
+      } as any,
       include: {
         proveedor: true
       }

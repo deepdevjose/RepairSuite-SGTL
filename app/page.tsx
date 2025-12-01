@@ -27,20 +27,20 @@ export default function LoginPage() {
 
   const validateEmail = (value: string) => {
     if (!value) {
-      return "El correo es obligatorio"
+      return "El correo electrónico es requerido"
     }
     if (!/\S+@\S+\.\S+/.test(value)) {
-      return "El correo no es válido"
+      return "Formato de correo electrónico inválido"
     }
     return ""
   }
 
   const validatePassword = (value: string) => {
     if (!value) {
-      return "La contraseña es obligatoria"
+      return "La contraseña es requerida"
     }
     if (value.length < 6) {
-      return "La contraseña debe tener al menos 6 caracteres"
+      return "La contraseña debe contener al menos 6 caracteres"
     }
     return ""
   }
@@ -91,7 +91,7 @@ export default function LoginPage() {
     if (success) {
       router.push("/dashboard")
     } else {
-      setErrors({ general: "Error al iniciar sesión. Verifica tus credenciales." })
+      setErrors({ general: "Credenciales inválidas. Por favor, verifique su información de acceso." })
     }
   }
 
@@ -138,53 +138,53 @@ export default function LoginPage() {
               RepairSuite — SGTL
             </h2>
             <p className="text-lg text-slate-300">
-              Sistema profesional para gestión integral de talleres de reparación
+              Sistema Integral de Gestión para Talleres de Reparación
             </p>
           </div>
 
           <div className="space-y-4 mb-12">
             <div className="flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-indigo-400/70 flex-shrink-0 mt-0.5 stroke-[1.5]" />
-              <p className="text-slate-300 text-base">Gestión de órdenes centralizada</p>
+              <p className="text-slate-300 text-base">Gestión centralizada de órdenes de servicio</p>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-indigo-400/70 flex-shrink-0 mt-0.5 stroke-[1.5]" />
-              <p className="text-slate-300 text-base">Inventario en tiempo real</p>
+              <p className="text-slate-300 text-base">Control de inventario en tiempo real</p>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-indigo-400/70 flex-shrink-0 mt-0.5 stroke-[1.5]" />
-              <p className="text-slate-300 text-base">Diagnóstico, cotización y reparación optimizados</p>
+              <p className="text-slate-300 text-base">Flujo optimizado de diagnóstico, cotización y reparación</p>
             </div>
           </div>
 
           <div className="mb-12 p-6 rounded-xl bg-gradient-to-br from-indigo-950/40 to-purple-950/30 border border-indigo-500/20">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-4 w-4 text-indigo-400" />
-              <h3 className="text-sm font-semibold text-indigo-300 uppercase tracking-wider">Funciones principales del sistema</h3>
+              <h3 className="text-sm font-semibold text-indigo-300 uppercase tracking-wider">Capacidades del Sistema</h3>
             </div>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-slate-300">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 flex-shrink-0 mt-2" />
-                <span>Registrar y dar seguimiento a órdenes de servicio</span>
+                <span>Registro y seguimiento completo de órdenes de servicio</span>
               </li>
               <li className="flex items-start gap-3 text-sm text-slate-300">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 flex-shrink-0 mt-2" />
-                <span>Gestionar clientes, equipos y garantías</span>
+                <span>Administración de clientes, equipos y garantías</span>
               </li>
               <li className="flex items-start gap-3 text-sm text-slate-300">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 flex-shrink-0 mt-2" />
-                <span>Controlar inventario de piezas y repuestos</span>
+                <span>Control integral de inventario de piezas y repuestos</span>
               </li>
               <li className="flex items-start gap-3 text-sm text-slate-300">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 flex-shrink-0 mt-2" />
-                <span>Generar reportes y estadísticas del taller</span>
+                <span>Generación de reportes y análisis estadístico</span>
               </li>
             </ul>
           </div>
 
           <div className="inline-flex flex-col bg-indigo-950/40 border border-indigo-500/20 rounded-lg px-6 py-4">
             <span className="text-4xl font-bold text-indigo-400">+120</span>
-            <span className="text-slate-400 text-sm mt-1">Órdenes procesadas mensualmente en promedio</span>
+            <span className="text-slate-400 text-sm mt-1">Órdenes procesadas mensualmente</span>
           </div>
         </div>
       </div>
@@ -209,15 +209,7 @@ export default function LoginPage() {
           <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-800 p-10 shadow-2xl">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-slate-100 mb-2">Iniciar sesión</h2>
-              <p className="text-slate-400 text-sm">Accede con tus credenciales asignadas por JLaboratories</p>
-            </div>
-
-            <div className="mb-6 flex items-start gap-3 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3">
-              <Shield className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="text-green-400 font-semibold mb-0.5">Conexión cifrada (TLS 1.3)</p>
-                <p className="text-green-400/80">Acceso seguro únicamente para personal autorizado</p>
-              </div>
+              <p className="text-slate-400 text-sm">Ingrese sus credenciales corporativas de JLaboratories</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -233,9 +225,8 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={handleEmailBlur}
                   placeholder="tu@email.com"
-                  className={`h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all ${
-                    errors.email && touched.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
-                  }`}
+                  className={`h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all ${errors.email && touched.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
+                    }`}
                 />
                 {errors.email && touched.email && (
                   <p className="text-sm text-red-400 flex items-center gap-1.5 animate-fade-in">
@@ -257,9 +248,8 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={handlePasswordBlur}
                   placeholder="••••••••"
-                  className={`h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all ${
-                    errors.password && touched.password ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
-                  }`}
+                  className={`h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all ${errors.password && touched.password ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
+                    }`}
                 />
                 {errors.password && touched.password && (
                   <p className="text-sm text-red-400 flex items-center gap-1.5 animate-fade-in">
@@ -267,15 +257,6 @@ export default function LoginPage() {
                     {errors.password}
                   </p>
                 )}
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
               </div>
 
               <Button
@@ -286,7 +267,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <Lock className="h-4 w-4 animate-pulse" />
-                    Verificando credenciales...
+                    Autenticando...
                   </span>
                 ) : (
                   "Iniciar sesión"
@@ -296,7 +277,7 @@ export default function LoginPage() {
           </Card>
 
           <p className="text-center text-xs text-slate-600 mt-6">
-            Sistema interno de JLaboratories — RepairSuite 2025
+            Sistema Interno de JLaboratories — RepairSuite SGTL © 2025
           </p>
         </div>
       </div>

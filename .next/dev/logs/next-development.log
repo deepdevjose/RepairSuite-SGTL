@@ -1,242 +1,33 @@
-[00:00:04.659] Server  LOG      ✓ Ready in 3s
-[00:00:04.665] Server  WARN     ⚠ Cross origin request detected from 169.254.240.58 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[00:00:02.321] Server  LOG      ✓ Ready in 1521ms
+[00:00:16.654] Server  LOG      ○ Compiling /dashboard ...
+[00:00:24.465] Server  WARN     ⚠ Cross origin request detected from 192.168.56.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
 Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
-[00:00:07.771] Server  LOG      ○ Compiling / ...
-[00:00:11.915] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:12.205] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
-[00:00:12.205] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
-[00:00:12.205] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764137758875}
-[00:00:30.353] Server  LOG      ○ Compiling /dashboard ...
-[00:00:32.558] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
-       please check the style of container, or the props width(100%) and height(100%),
-       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
-       height and width.
-[00:00:32.558] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
-       please check the style of container, or the props width(100%) and height(100%),
-       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
-       height and width.
-[00:00:32.558] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/dashboard color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard","o":"http://localhost:3000/dashboard","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764137778988}
-[00:00:36.979] Server  ERROR    ⨯ ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-
-[00:00:37.114] Browser ERROR   ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-[00:00:38.187] Browser ERROR   ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-[00:00:38.343] Browser ERROR   ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-[00:00:39.543] Browser ERROR   ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-[00:00:39.589] Server  ERROR    ⨯ ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-
-[00:00:39.930] Browser ERROR   uncaughtError: Error: ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-
-[00:00:40.094] Browser ERROR   ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-[00:00:40.209] Browser ERROR   ./lib/data/config-mock.ts:307:1
-Parsing ecmascript source code failed
-  305 | }
-  306 |
-> 307 | }
-      | ^
-  308 |
-  309 | export function getOrderStatuses(): OrderStatus[] {
-  310 |     return mockSystemConfig.estadosOS.sort((a, b) => a.orden - b.orden)
-
-Expression expected
-
-Import traces:
-  Client Component Browser:
-    ./lib/data/config-mock.ts [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Client Component Browser]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/data/config-mock.ts [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Client Component SSR]
-    ./app/dashboard/configuracion/page.tsx [Server Component]
-[00:01:05.580] Server  LOG      ✓ Compiled in 252ms
-[00:01:06.541] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:07.147] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'map')
-[00:01:27.230] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:27.433] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'map')
-[00:01:49.084] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:01:49.104] Server  LOG      ✓ Compiled in 270ms
-[00:01:49.984] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:52.137] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
-[00:01:52.137] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/dashboard/configuracion","route":"/dashboard/configuracion"}
-[00:01:52.137] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/dashboard/configuracion color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/configuracion","o":"http://localhost:3000/dashboard/configuracion","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764137857945}
-[00:02:04.864] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
-       please check the style of container, or the props width(100%) and height(100%),
-       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
-       height and width.
-[00:02:04.864] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
-       please check the style of container, or the props width(100%) and height(100%),
-       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
-       height and width.
-[00:02:04.864] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/dashboard color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard","o":"http://localhost:3000/dashboard","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764137871322}
+[00:00:24.546] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:25.009] Browser LOG     🔄 Cargando datos del dashboard...
+[00:00:25.009] Browser LOG     🔄 Cargando datos del dashboard...
+[00:00:25.009] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:25.009] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/dashboard","route":"/dashboard"}
+[00:00:25.009] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.56.1:3000/dashboard color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard","o":"http://192.168.56.1:3000/dashboard","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764567900640}
+[00:00:25.594] Server  LOG     prisma:warn "Trusting the server certificate without validation."
+[00:00:25.632] Server  LOG     prisma:warn "Trusting the server certificate without validation."
+[00:00:25.648] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:25.665] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:25.835] Browser LOG     📦 Órdenes cargadas: 3
+[00:00:25.835] Browser LOG     📦 Órdenes cargadas: 3
+[00:00:26.054] Server  LOG     prisma:query "SELECT [dbo].[tickets_retiro].[id], [dbo].[tickets_retiro].[codigo], [dbo].[tickets_retiro].[usuarioId], [dbo].[tickets_retiro].[estado], [dbo].[tickets_retiro].[fechaExpiracion], [dbo].[tickets_retiro].[createdAt], [dbo].[tickets_retiro].[updatedAt] FROM [dbo].[tickets_retiro] WHERE [dbo].[tickets_retiro].[estado] = @P1 ORDER BY [dbo].[tickets_retiro].[createdAt] DESC OFFSET @P2 ROWS"
+[00:00:26.083] Server  LOG     prisma:query "SELECT [dbo].[tickets_retiro].[id], [dbo].[tickets_retiro].[codigo], [dbo].[tickets_retiro].[usuarioId], [dbo].[tickets_retiro].[estado], [dbo].[tickets_retiro].[fechaExpiracion], [dbo].[tickets_retiro].[createdAt], [dbo].[tickets_retiro].[updatedAt] FROM [dbo].[tickets_retiro] WHERE [dbo].[tickets_retiro].[estado] = @P1 ORDER BY [dbo].[tickets_retiro].[createdAt] DESC OFFSET @P2 ROWS"
+[00:00:26.644] Browser LOG     💰 Ventas cargadas: 0
+[00:00:26.644] Browser LOG     💰 Ventas cargadas: 0
+[00:00:26.644] Browser LOG     💵 Finanzas: {"ingresosMes":550,"porCobrar":0}
+[00:00:26.644] Browser LOG     ✅ Datos del dashboard cargados exitosamente
+[00:00:26.644] Browser LOG     💵 Finanzas: {"ingresosMes":550,"porCobrar":0}
+[00:00:26.644] Browser LOG     ✅ Datos del dashboard cargados exitosamente
+[00:00:33.594] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.56.1:3000/dashboard/clientes color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/clientes","o":"http://192.168.56.1:3000/dashboard/clientes","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764567909219}
+[00:00:33.877] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:33.925] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:36.744] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.56.1:3000/dashboard/equipos color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/equipos","o":"http://192.168.56.1:3000/dashboard/equipos","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764567912384}
+[00:00:37.000] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:37.043] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:39.787] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.56.1:3000/dashboard/ordenes color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/ordenes","o":"http://192.168.56.1:3000/dashboard/ordenes","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1764567915423}
+[00:00:40.085] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"
+[00:00:40.125] Server  LOG     prisma:query "SELECT [dbo].[notificaciones].[id], [dbo].[notificaciones].[usuarioId], [dbo].[notificaciones].[titulo], [dbo].[notificaciones].[descripcion], [dbo].[notificaciones].[tipo], [dbo].[notificaciones].[ordenId], [dbo].[notificaciones].[leida], [dbo].[notificaciones].[createdAt], [dbo].[notificaciones].[updatedAt] FROM [dbo].[notificaciones] WHERE ([dbo].[notificaciones].[usuarioId] = @P1 OR [dbo].[notificaciones].[usuarioId] IS NULL) ORDER BY [dbo].[notificaciones].[createdAt] DESC OFFSET @P2 ROWS FETCH NEXT @P3 ROWS ONLY"

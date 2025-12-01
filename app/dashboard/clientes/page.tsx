@@ -12,7 +12,9 @@ import { ClientDetailsDialog } from "@/components/clients/client-details-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Search, Plus, Users, UserPlus, Repeat, ClipboardList, Package, Eye } from 'lucide-react'
+import { Search, Plus, Users, UserPlus, Repeat, ClipboardList, Package, Eye, Trash2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
 type FilterType = "all" | "new" | "active-orders" | "inactive" | "multi-equipment" | "recurring"
 
@@ -42,6 +44,9 @@ interface Cliente {
 
 export default function ClientesPage() {
   const { hasPermission } = useAuth()
+  const searchParams = useSearchParams()
+  const searchId = searchParams.get('id')
+
   const [searchTerm, setSearchTerm] = useState("")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterType>("all")
@@ -54,6 +59,16 @@ export default function ClientesPage() {
   useEffect(() => {
     fetchClientes()
   }, [])
+
+  useEffect(() => {
+    if (searchId && clientes.length > 0) {
+      const client = clientes.find(c => c.id === searchId)
+      if (client) {
+        setSelectedClient(client)
+        setIsDetailsOpen(true)
+      }
+    }
+  }, [searchId, clientes])
 
   const fetchClientes = async () => {
     try {
@@ -82,7 +97,7 @@ export default function ClientesPage() {
   const filteredClients = clientes.filter((client) => {
     const searchLower = searchTerm.toLowerCase()
     const nombreCompleto = `${client.nombre1} ${client.nombre2 || ''} ${client.apellidoPaterno} ${client.apellidoMaterno || ''}`.toLowerCase()
-    
+
     const matchesSearch =
       searchTerm === "" ||
       nombreCompleto.includes(searchLower) ||
@@ -243,9 +258,8 @@ export default function ClientesPage() {
                   filteredClients.map((client, index) => (
                     <TableRow
                       key={client.id}
-                      className={`border-slate-800/30 hover:bg-slate-800/40 transition-all duration-200 text-slate-300 ${
-                        index % 2 === 0 ? "bg-slate-900/20" : "bg-slate-900/40"
-                      }`}
+                      className={`border-slate-800/30 hover:bg-slate-800/40 transition-all duration-200 text-slate-300 ${index % 2 === 0 ? "bg-slate-900/20" : "bg-slate-900/40"
+                        }`}
                     >
                       <TableCell className="font-medium text-slate-200">
                         {`${client.nombre1}${client.nombre2 ? ' ' + client.nombre2 : ''} ${client.apellidoPaterno}${client.apellidoMaterno ? ' ' + client.apellidoMaterno : ''}`}
@@ -256,18 +270,62 @@ export default function ClientesPage() {
                         {new Date(client.createdAt).toLocaleDateString('es-MX')}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all"
-                          onClick={() => {
-                            setSelectedClient(client)
-                            setIsDetailsOpen(true)
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Detalles
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all"
+                            onClick={() => {
+                              setSelectedClient(client)
+                              setIsDetailsOpen(true)
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Detalles
+                          </Button>
+                          {hasPermission("configuracion") && ( // Check for Admin permission (configuracion is admin only)
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-100">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-slate-400">
+                                    Esta acción desactivará al cliente. No se perderán sus datos históricos pero ya no aparecerá en las listas activas.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700">Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={async () => {
+                                      try {
+                                        const res = await fetch(`/api/clientes/${client.id}`, {
+                                          method: 'DELETE'
+                                        })
+                                        if (res.ok) {
+                                          fetchClientes()
+                                          // Optional: Show toast
+                                        }
+                                      } catch (error) {
+                                        console.error("Error deleting client", error)
+                                      }
+                                    }}
+                                    className="bg-red-600 hover:bg-red-700 text-white border-0"
+                                  >
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -284,7 +342,7 @@ export default function ClientesPage() {
           <DialogHeader>
             <DialogTitle className="text-slate-100 text-xl">Nuevo cliente</DialogTitle>
           </DialogHeader>
-          <ClientForm 
+          <ClientForm
             onClose={() => setIsFormOpen(false)}
             onSuccess={() => {
               fetchClientes()
@@ -299,6 +357,12 @@ export default function ClientesPage() {
         client={selectedClient}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
+        onClientUpdated={(updatedClient) => {
+          fetchClientes()
+          if (updatedClient) {
+            setSelectedClient(updatedClient)
+          }
+        }}
       />
     </>
   )

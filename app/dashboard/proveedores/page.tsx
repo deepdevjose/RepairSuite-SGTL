@@ -192,7 +192,13 @@ export default function ProveedoresPage() {
                 />
               </div>
 
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium shadow-lg shadow-indigo-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-600/30">
+              <Button
+                onClick={() => {
+                  setSelectedSupplier(null)
+                  setIsFormOpen(true)
+                }}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium shadow-lg shadow-indigo-600/20 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-600/30"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nuevo Proveedor
               </Button>
@@ -289,6 +295,10 @@ export default function ProveedoresPage() {
                               size="sm"
                               variant="ghost"
                               className="h-8 text-slate-400 hover:text-slate-300 hover:bg-slate-500/10"
+                              onClick={() => {
+                                setSelectedSupplier(supplier)
+                                setIsFormOpen(true)
+                              }}
                             >
                               <Pencil className="h-3.5 w-3.5 mr-1" />
                               Editar
@@ -307,7 +317,7 @@ export default function ProveedoresPage() {
               <div className="border-t border-white/5 px-6 py-4">
                 <p className="text-xs text-slate-500">
                   Mostrando <span className="font-semibold text-slate-400">{filteredSuppliers.length}</span> de{" "}
-                  <span className="font-semibold text-slate-400">{mockSuppliers.length}</span> proveedores
+                  <span className="font-semibold text-slate-400">{proveedores.length}</span> proveedores
                 </p>
               </div>
             )}
@@ -319,11 +329,26 @@ export default function ProveedoresPage() {
       <SupplierFormDialog
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
-        supplier={selectedSupplier}
-        onSave={(data) => {
-          console.log("Proveedor guardado:", data)
-          // Aquí se implementaría la lógica de guardado
-          setSelectedSupplier(null)
+        supplier={selectedSupplier as any}
+        onSave={async (data) => {
+          try {
+            const method = selectedSupplier ? 'PUT' : 'POST'
+            const body = selectedSupplier ? { ...data, id: selectedSupplier.id } : data
+
+            const res = await fetch('/api/proveedores', {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            })
+
+            if (!res.ok) throw new Error('Error al guardar proveedor')
+
+            await fetchProveedores()
+            setIsFormOpen(false)
+            setSelectedSupplier(null)
+          } catch (error) {
+            console.error('Error saving supplier:', error)
+          }
         }}
       />
     </>

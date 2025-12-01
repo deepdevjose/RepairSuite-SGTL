@@ -8,6 +8,7 @@ import { AccessDenied } from "@/components/access-denied"
 import { PaymentMethodBadge } from "@/components/sales/payment-method-badge"
 import { PaymentStatusBadge } from "@/components/sales/payment-status-badge"
 import { PaymentDialog } from "@/components/sales/payment-dialog"
+import { PaymentDetailsDialog, PaymentDetailItem } from "@/components/sales/payment-details-dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Eye, DollarSign, TrendingUp, Clock, AlertCircle } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils/sales-helpers"
+import { PaymentMethod, PaymentStatus, SaleDetail } from "@/lib/types/sales"
 
 interface Venta {
   id: string
@@ -38,8 +40,8 @@ interface Venta {
   total: number
   montoPagado: number
   saldoPendiente: number
-  metodoPago: string
-  estadoPago: string
+  metodoPago: PaymentMethod
+  estadoPago: PaymentStatus
   fechaVencimiento: string | null
   createdAt: string
   items: Array<{
@@ -53,7 +55,7 @@ interface Venta {
   }>
   pagos: Array<{
     monto: number
-    metodoPago: string
+    metodoPago: PaymentMethod
     createdAt: string
     usuario: {
       nombre: string
@@ -61,29 +63,136 @@ interface Venta {
   }>
 }
 
+interface OrdenConPagos {
+  id: string
+  folio: string
+  cliente: {
+    nombre1: string
+    apellidoPaterno: string
+  }
+  equipo: {
+    marca: string
+    modelo: string
+  }
+  montoTotal: number | null
+  saldoPendiente: number | null
+  createdAt: string
+  pagos: Array<{
+    id: string
+    monto: number
+    metodoPago: string
+    fechaPago: string
+  }>
+}
+
+type TransaccionUnificada = {
+  id: string
+  folio: string
+  tipo: 'venta' | 'orden'
+  cliente: string
+  descripcion: string
+  total: number
+  montoPagado: number
+  saldoPendiente: number
+  estadoPago: string
+  createdAt: string
+  ultimoPago?: {
+    fecha: string
+    metodo: string
+  }
+}
+
 export default function VentasPage() {
   const { hasPermission, user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [estadoFilter, setEstadoFilter] = useState("all")
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [selectedSale, setSelectedSale] = useState<Venta | null>(null)
+  const [selectedTransactionDetails, setSelectedTransactionDetails] = useState<PaymentDetailItem | null>(null)
   const [ventas, setVentas] = useState<Venta[]>([])
+  const [ordenes, setOrdenes] = useState<OrdenConPagos[]>([])
+  const [transacciones, setTransacciones] = useState<TransaccionUnificada[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchVentas()
+    fetchData()
   }, [])
 
-  const fetchVentas = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/ventas')
-      if (response.ok) {
-        const data = await response.json()
-        setVentas(data)
-      }
+
+      // Cargar ventas
+      const resVentas = await fetch('/api/ventas')
+      const dataVentas = await resVentas.json()
+      setVentas(dataVentas)
+
+      // Cargar órdenes con pagos
+      const resOrdenes = await fetch('/api/ordenes')
+      const dataOrdenes = await resOrdenes.json()
+
+      // Filtrar solo órdenes que tienen pagos
+      const ordenesConPagos = dataOrdenes.filter((o: any) =>
+        o.pagos && o.pagos.length > 0
+      )
+      setOrdenes(ordenesConPagos)
+
+      // Unificar transacciones
+      const transaccionesUnificadas: TransaccionUnificada[] = [
+        // Ventas
+        ...dataVentas.map((v: Venta) => ({
+          id: v.id,
+          folio: v.folio,
+          tipo: 'venta' as const,
+          cliente: `${v.cliente.nombre1} ${v.cliente.apellidoPaterno}`,
+          descripcion: v.ordenServicio
+            ? `${v.ordenServicio.equipo.marca} ${v.ordenServicio.equipo.modelo}`
+            : 'Venta directa',
+          total: Number(v.total),
+          montoPagado: Number(v.montoPagado),
+          saldoPendiente: Number(v.saldoPendiente),
+          estadoPago: v.estadoPago,
+          createdAt: v.createdAt,
+          ultimoPago: v.pagos && v.pagos.length > 0 ? {
+            fecha: v.pagos[0].createdAt,
+            metodo: v.pagos[0].metodoPago
+          } : undefined
+        })),
+        // Órdenes de servicio con pagos
+        ...ordenesConPagos.map((o: any) => {
+          const totalPagado = o.pagos.reduce((sum: number, p: any) => sum + Number(p.monto), 0)
+          const montoTotal = o.montoTotal ? Number(o.montoTotal) : totalPagado
+          const saldoPendiente = o.saldoPendiente !== null ? Number(o.saldoPendiente) : (montoTotal - totalPagado)
+          const estadoPago = saldoPendiente <= 0 ? 'Pagado' : totalPagado > 0 ? 'Parcial' : 'Pendiente'
+
+          return {
+            id: o.id,
+            folio: o.folio,
+            tipo: 'orden' as const,
+            cliente: `${o.cliente.nombre1} ${o.cliente.apellidoPaterno}`,
+            descripcion: `${o.equipo.marca} ${o.equipo.modelo}`,
+            total: montoTotal,
+            montoPagado: totalPagado,
+            saldoPendiente: saldoPendiente,
+            estadoPago: estadoPago,
+            createdAt: o.createdAt,
+            ultimoPago: o.pagos && o.pagos.length > 0 ? {
+              fecha: o.pagos[0].fechaPago,
+              metodo: o.pagos[0].metodoPago
+            } : undefined
+          }
+        })
+      ]
+
+      // Ordenar por fecha descendente
+      transaccionesUnificadas.sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+
+      setTransacciones(transaccionesUnificadas)
     } catch (error) {
-      console.error('Error al obtener ventas:', error)
+      console.error('Error al obtener datos:', error)
     } finally {
       setLoading(false)
     }
@@ -101,32 +210,27 @@ export default function VentasPage() {
   const canRegisterPayment = user?.role === "Administrador" || user?.role === "Recepción"
   const canViewUtility = user?.role === "Administrador"
 
-  // Filter sales
-  const filteredSales = useMemo(() => {
-    return ventas.filter((sale) => {
-      const clienteNombre = `${sale.cliente.nombre1} ${sale.cliente.apellidoPaterno}`.toLowerCase()
-      const equipoInfo = sale.ordenServicio 
-        ? `${sale.ordenServicio.equipo.marca} ${sale.ordenServicio.equipo.modelo}`.toLowerCase()
-        : ''
-      
+  // Filter transactions
+  const filteredTransactions = useMemo(() => {
+    return transacciones.filter((trans) => {
       const matchesSearch =
-        sale.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        clienteNombre.includes(searchTerm.toLowerCase()) ||
-        equipoInfo.includes(searchTerm.toLowerCase())
+        trans.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        trans.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        trans.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesEstado = estadoFilter === "all" || sale.estadoPago === estadoFilter
+      const matchesEstado = estadoFilter === "all" || trans.estadoPago === estadoFilter
 
       return matchesSearch && matchesEstado
     })
-  }, [ventas, searchTerm, estadoFilter])
+  }, [transacciones, searchTerm, estadoFilter])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const cobrado = ventas.reduce((sum, sale) => sum + Number(sale.montoPagado), 0)
-    const porCobrar = ventas.reduce((sum, sale) => sum + Number(sale.saldoPendiente), 0)
-    const totalVentas = ventas.reduce((sum, sale) => sum + Number(sale.total), 0)
-    
-    // Calcular utilidad (diferencia entre precio de venta y costo)
+    const cobrado = transacciones.reduce((sum, trans) => sum + trans.montoPagado, 0)
+    const porCobrar = transacciones.reduce((sum, trans) => sum + trans.saldoPendiente, 0)
+    const totalTransacciones = transacciones.reduce((sum, trans) => sum + trans.total, 0)
+
+    // Calcular utilidad (solo de ventas con items)
     const utilidad = ventas.reduce((sum, sale) => {
       const utilidadVenta = sale.items.reduce((itemSum, item) => {
         const utilidadItem = (Number(item.precioUnitario) - Number(item.costoUnitario)) * item.cantidad
@@ -136,30 +240,139 @@ export default function VentasPage() {
     }, 0)
 
     const hoy = new Date().toISOString().split("T")[0]
-    const pagosHoy = ventas.reduce((count, sale) => {
+
+    // Contar pagos de hoy (ventas + órdenes)
+    const pagosVentasHoy = ventas.reduce((count, sale) => {
       const pagosDeHoy = sale.pagos.filter(p => p.createdAt.split('T')[0] === hoy).length
       return count + pagosDeHoy
     }, 0)
 
-    const vencidas = ventas.filter((sale) => 
-      Number(sale.saldoPendiente) > 0 && 
-      sale.fechaVencimiento && 
+    const pagosOrdenesHoy = ordenes.reduce((count, orden) => {
+      const pagosDeHoy = orden.pagos.filter(p => p.fechaPago.split('T')[0] === hoy).length
+      return count + pagosDeHoy
+    }, 0)
+
+    const pagosHoy = pagosVentasHoy + pagosOrdenesHoy
+
+    const vencidas = ventas.filter((sale) =>
+      Number(sale.saldoPendiente) > 0 &&
+      sale.fechaVencimiento &&
       sale.fechaVencimiento < hoy
     ).length
 
     return {
       cobrado,
       porCobrar,
-      totalVentas,
+      totalVentas: totalTransacciones,
       utilidad,
       pagosHoy,
       vencidas,
     }
-  }, [ventas])
+  }, [transacciones, ventas, ordenes])
 
-  const handleOpenPaymentDialog = (sale: SaleDetail) => {
+  const handleOpenPaymentDialog = (sale: Venta) => {
     setSelectedSale(sale)
     setIsPaymentDialogOpen(true)
+  }
+
+  const handleViewDetails = (trans: TransaccionUnificada) => {
+    let details: PaymentDetailItem | null = null
+
+    if (trans.tipo === 'venta') {
+      const venta = ventas.find(v => v.id === trans.id)
+      if (venta) {
+        details = {
+          id: venta.id,
+          folio: venta.folio,
+          tipo: 'venta',
+          cliente: `${venta.cliente.nombre1} ${venta.cliente.apellidoPaterno}`,
+          descripcion: trans.descripcion,
+          total: Number(venta.total),
+          montoPagado: Number(venta.montoPagado),
+          saldoPendiente: Number(venta.saldoPendiente),
+          estadoPago: venta.estadoPago,
+          fecha: venta.createdAt,
+          pagos: venta.pagos.map(p => ({
+            fecha: p.createdAt,
+            monto: Number(p.monto),
+            metodo: p.metodoPago,
+            registradoPor: p.usuario?.nombre
+          })),
+          items: venta.items.map(item => ({
+            cantidad: item.cantidad,
+            descripcion: item.producto.nombre,
+            precio: Number(item.precioUnitario),
+            total: Number(item.precioUnitario) * item.cantidad
+          }))
+        }
+      }
+    } else {
+      const orden = ordenes.find(o => o.id === trans.id)
+      if (orden) {
+        details = {
+          id: orden.id,
+          folio: orden.folio,
+          tipo: 'orden',
+          cliente: `${orden.cliente.nombre1} ${orden.cliente.apellidoPaterno}`,
+          descripcion: trans.descripcion,
+          total: trans.total,
+          montoPagado: trans.montoPagado,
+          saldoPendiente: trans.saldoPendiente,
+          estadoPago: trans.estadoPago,
+          fecha: orden.createdAt,
+          pagos: orden.pagos.map(p => ({
+            fecha: p.fechaPago,
+            monto: Number(p.monto),
+            metodo: p.metodoPago
+          }))
+        }
+      }
+    }
+
+    if (details) {
+      setSelectedTransactionDetails(details)
+      setIsDetailsDialogOpen(true)
+    }
+  }
+
+  // Helper to map Venta to SaleDetail for PaymentDialog
+  const getSaleDetail = (sale: Venta | null): SaleDetail | null => {
+    if (!sale) return null
+    return {
+      id: sale.id,
+      ordenServicioId: sale.ordenServicio?.folio || '',
+      folioOS: sale.folio, // Using sale folio as main folio
+      cliente: `${sale.cliente.nombre1} ${sale.cliente.apellidoPaterno}`,
+      clienteEmail: sale.cliente.email || undefined,
+      clienteTelefono: sale.cliente.telefono,
+      equipo: sale.ordenServicio ? `${sale.ordenServicio.equipo.marca} ${sale.ordenServicio.equipo.modelo}` : 'Venta directa',
+      fechaCreacion: sale.createdAt,
+      conceptos: sale.items.map(i => ({
+        tipo: i.tipo as "Servicio" | "Refacción",
+        catalogoSKU: '',
+        nombre: i.producto.nombre,
+        cantidad: i.cantidad,
+        precioUnitario: i.precioUnitario,
+        costoUnitario: i.costoUnitario,
+        subtotal: i.cantidad * i.precioUnitario
+      })),
+      subtotal: sale.subtotal,
+      descuento: sale.descuento,
+      total: sale.total,
+      pagado: sale.montoPagado,
+      saldo: sale.saldoPendiente,
+      estado: sale.estadoPago,
+      pagos: sale.pagos.map(p => ({
+        id: '',
+        ordenServicioId: '',
+        folioOS: sale.folio,
+        monto: p.monto,
+        metodoPago: p.metodoPago,
+        fecha: p.createdAt,
+        usuarioRegistro: p.usuario.nombre,
+        nombreUsuario: p.usuario.nombre
+      }))
+    }
   }
 
   return (
@@ -207,7 +420,7 @@ export default function VentasPage() {
                   </div>
                 </div>
                 <div className="text-3xl font-bold text-slate-100 mb-1">{formatCurrency(stats.totalVentas)}</div>
-                <div className="text-xs text-slate-500 font-medium">{ventas.length} órdenes</div>
+                <div className="text-xs text-slate-500 font-medium">{transacciones.length} transacciones</div>
               </div>
             </Card>
 
@@ -337,85 +550,92 @@ export default function VentasPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSales.map((sale, index) => (
-                    <TableRow
-                      key={sale.id}
-                      className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
-                      style={{
-                        animation: "fadeInUp 0.3s ease-out forwards",
-                        animationDelay: `${index * 30}ms`,
-                        opacity: 0,
-                      }}
-                    >
-                      <TableCell className="font-mono text-[12px] text-indigo-400">
-                        {sale.ordenServicio?.folio || sale.folio}
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center text-slate-400 py-8">
+                        Cargando transacciones...
                       </TableCell>
-                      <TableCell className="text-[13px]">
-                        {`${sale.cliente.nombre1} ${sale.cliente.apellidoPaterno}`}
+                    </TableRow>
+                  ) : filteredTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center text-slate-400 py-8">
+                        No se encontraron transacciones
                       </TableCell>
-                      <TableCell className="text-[12px] text-slate-400">
-                        {sale.ordenServicio ? `${sale.ordenServicio.equipo.marca} ${sale.ordenServicio.equipo.modelo}` : 'Venta directa'}
-                      </TableCell>
-                      <TableCell className="text-[12px] text-slate-400">{formatDate(sale.createdAt)}</TableCell>
-                      <TableCell className="text-right text-[13px] font-semibold text-slate-200">
-                        {formatCurrency(Number(sale.total))}
-                      </TableCell>
-                      <TableCell className="text-right text-[13px] font-semibold text-green-400">
-                        {formatCurrency(Number(sale.montoPagado))}
-                      </TableCell>
-                      <TableCell className="text-right text-[13px] font-semibold text-yellow-400">
-                        {formatCurrency(Number(sale.saldoPendiente))}
-                      </TableCell>
-                      <TableCell>
-                        <PaymentStatusBadge estado={sale.estadoPago} />
-                      </TableCell>
-                      <TableCell>
-                        {sale.pagos && sale.pagos.length > 0 ? (
-                          <div className="text-[11px]">
-                            <div className="text-slate-400">{formatDate(sale.pagos[0].createdAt)}</div>
-                            <PaymentMethodBadge metodo={sale.pagos[0].metodoPago} />
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-600">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <Link href={`/dashboard/ventas/${sale.folio}`}>
+                    </TableRow>
+                  ) : (
+                    filteredTransactions.map((trans, index) => (
+                      <TableRow
+                        key={trans.id}
+                        className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
+                        style={{
+                          animation: "fadeInUp 0.3s ease-out forwards",
+                          animationDelay: `${index * 30}ms`,
+                          opacity: 0,
+                        }}
+                      >
+                        <TableCell className="font-mono text-[12px] text-indigo-400">
+                          {trans.folio}
+                          <span className="ml-2 text-[10px] text-slate-500">
+                            ({trans.tipo === 'venta' ? 'Venta' : 'OS'})
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-[13px]">
+                          {trans.cliente}
+                        </TableCell>
+                        <TableCell className="text-[12px] text-slate-400">
+                          {trans.descripcion}
+                        </TableCell>
+                        <TableCell className="text-[12px] text-slate-400">{formatDate(trans.createdAt)}</TableCell>
+                        <TableCell className="text-right text-[13px] font-semibold text-slate-200">
+                          {formatCurrency(trans.total)}
+                        </TableCell>
+                        <TableCell className="text-right text-[13px] font-semibold text-green-400">
+                          {formatCurrency(trans.montoPagado)}
+                        </TableCell>
+                        <TableCell className="text-right text-[13px] font-semibold text-yellow-400">
+                          {formatCurrency(trans.saldoPendiente)}
+                        </TableCell>
+                        <TableCell>
+                          <PaymentStatusBadge estado={trans.estadoPago as PaymentStatus} />
+                        </TableCell>
+                        <TableCell>
+                          {trans.ultimoPago ? (
+                            <div className="text-[11px]">
+                              <div className="text-slate-400">{formatDate(trans.ultimoPago.fecha)}</div>
+                              <PaymentMethodBadge metodo={trans.ultimoPago.metodo as PaymentMethod} />
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-600">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
                             <Button
                               size="sm"
                               variant="ghost"
                               className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
                               title="Ver detalles"
+                              onClick={() => handleViewDetails(trans)}
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                          </Link>
-                          {canRegisterPayment && Number(sale.saldoPendiente) > 0 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleOpenPaymentDialog(sale)}
-                              className="h-7 px-2 text-slate-400 hover:text-green-400 hover:bg-green-500/10 text-xs"
-                              title="Registrar pago"
-                            >
-                              <DollarSign className="h-3.5 w-3.5 mr-1" />
-                              Pagar
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
 
             {/* Results count */}
-            {filteredSales.length > 0 && (
+            {filteredTransactions.length > 0 && (
               <div className="border-t border-white/5 px-6 py-4">
                 <p className="text-xs text-slate-500">
-                  Mostrando <span className="font-semibold text-slate-400">{filteredSales.length}</span> ventas
+                  Mostrando <span className="font-semibold text-slate-400">{filteredTransactions.length}</span> transacciones
+                  <span className="ml-2 text-slate-600">
+                    ({ventas.length} ventas + {ordenes.length} órdenes con pagos)
+                  </span>
                 </p>
               </div>
             )}
@@ -427,11 +647,18 @@ export default function VentasPage() {
       <PaymentDialog
         open={isPaymentDialogOpen}
         onOpenChange={setIsPaymentDialogOpen}
-        sale={selectedSale}
+        sale={getSaleDetail(selectedSale)}
         onPaymentRegistered={() => {
-          fetchVentas() // Refrescar lista de ventas
+          fetchData() // Refrescar lista de transacciones
           setIsPaymentDialogOpen(false)
         }}
+      />
+
+      {/* Payment Details Dialog */}
+      <PaymentDetailsDialog
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        data={selectedTransactionDetails}
       />
     </>
   )

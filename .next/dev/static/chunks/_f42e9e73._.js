@@ -50,34 +50,34 @@ const rolePermissions = {
 // JLaboratories users database
 const JLAB_USERS = [
     {
+        id: "user-admin-001",
         email: "admin@jlaboratories.com",
         password: "JoseAdmin",
         name: "Jose Manuel Cortes Ceron",
         role: "Administrador"
     },
     {
+        id: "user-tech-001",
         email: "jose.tecnico@jlaboratories.com",
         password: "JoseTech",
         name: "Jose Manuel Cortes Ceron",
         role: "Técnico"
     },
     {
+        id: "user-tech-002",
         email: "kevis.salas@jlaboratories.com",
         password: "KevinTech",
         name: "Kevis Salas Jimenez",
         role: "Técnico"
     },
     {
+        id: "user-recep-001",
         email: "adriana.ceron@jlaboratories.com",
         password: "Adri123",
         name: "Adriana Ceron Madrigal",
         role: "Recepción"
     }
 ];
-const getRoleFromEmail = (email)=>{
-    const user = JLAB_USERS.find((u)=>u.email === email);
-    return user?.role || "Técnico";
-};
 function AuthProvider({ children }) {
     _s();
     const [user, setUser] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
@@ -98,6 +98,7 @@ function AuthProvider({ children }) {
         const user = JLAB_USERS.find((u)=>u.email === email && u.password === password);
         if (user) {
             const userData = {
+                id: user.id,
                 email: user.email,
                 role: user.role,
                 name: user.name
@@ -128,7 +129,7 @@ function AuthProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/lib/auth-context.tsx",
-        lineNumber: 120,
+        lineNumber: 121,
         columnNumber: 5
     }, this);
 }

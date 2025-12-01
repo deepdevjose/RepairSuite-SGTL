@@ -34,9 +34,9 @@ export function ProductDetailsDialog({ open, onOpenChange, product }: ProductDet
           {/* Header with Image and Basic Info */}
           <div className="flex gap-4">
             <div className="flex-shrink-0">
-              <ProductThumbnail 
-                categoria={product.categoria} 
-                imagen={product.imagen} 
+              <ProductThumbnail
+                categoria={product.categoria}
+                imagen={product.imagen}
                 nombre={product.nombre}
                 size="lg"
               />
@@ -115,6 +115,18 @@ export function ProductDetailsDialog({ open, onOpenChange, product }: ProductDet
                   <span className="text-slate-500">Estado:</span>
                   <StockBadge status={status} />
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Garantía:</span>
+                  <span className="text-slate-300 font-medium">
+                    {product.garantiaMeses > 0 ? `${product.garantiaMeses} Meses` : "Sin garantía"}
+                  </span>
+                </div>
+                {product.categoria !== 'Software' && product.categoria !== 'Servicio' && product.proveedor && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Proveedor:</span>
+                    <span className="text-slate-300 font-medium">{product.proveedor.nombre}</span>
+                  </div>
+                )}
               </div>
             </div>
 

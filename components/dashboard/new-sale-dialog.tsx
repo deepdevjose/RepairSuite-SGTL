@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/lib/auth-context"
 import { Plus, Trash2 } from "lucide-react"
 
 interface NewSaleDialogProps {
@@ -38,6 +39,7 @@ interface SaleItem {
 
 export function NewSaleDialog({ open, onOpenChange, onSave }: NewSaleDialogProps) {
     const { toast } = useToast()
+    const { user } = useAuth()
     const [clientes, setClientes] = useState<Cliente[]>([])
     const [productos, setProductos] = useState<Producto[]>([])
     const [loading, setLoading] = useState(false)
@@ -208,8 +210,8 @@ export function NewSaleDialog({ open, onOpenChange, onSave }: NewSaleDialogProps
                             <Label htmlFor="cliente" className="text-slate-200">
                                 Cliente *
                             </Label>
-                            <Select 
-                                value={formData.clienteId} 
+                            <Select
+                                value={formData.clienteId}
                                 onValueChange={(value) => setFormData({ ...formData, clienteId: value })}
                                 disabled={loading}
                             >
@@ -246,9 +248,11 @@ export function NewSaleDialog({ open, onOpenChange, onSave }: NewSaleDialogProps
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-900 border-white/10">
                                     <SelectItem value="Efectivo">Efectivo</SelectItem>
-                                    <SelectItem value="Tarjeta">Tarjeta</SelectItem>
-                                    <SelectItem value="Transferencia">Transferencia</SelectItem>
-                                    <SelectItem value="Cheque">Cheque</SelectItem>
+                                    <SelectItem value="Tarjeta" disabled={user?.role === "Recepción"}>Tarjeta</SelectItem>
+                                    <SelectItem value="Transferencia" disabled={user?.role === "Recepción"}>Transferencia</SelectItem>
+                                    {user?.role !== "Recepción" && (
+                                        <SelectItem value="Cheque">Cheque</SelectItem>
+                                    )}
                                 </SelectContent>
                             </Select>
                             {errors.metodoPago && <p className="text-xs text-red-400">{errors.metodoPago}</p>}
@@ -267,7 +271,7 @@ export function NewSaleDialog({ open, onOpenChange, onSave }: NewSaleDialogProps
                                 disabled={loading}
                             >
                                 <Plus className="h-3 w-3 mr-1" />
-                                Agregar
+                                <Agregar
                             </Button>
                         </div>
 
@@ -393,16 +397,16 @@ export function NewSaleDialog({ open, onOpenChange, onSave }: NewSaleDialogProps
                 </div>
 
                 <DialogFooter>
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => onOpenChange(false)} 
+                    <Button
+                        variant="ghost"
+                        onClick={() => onOpenChange(false)}
                         className="text-slate-400 hover:text-slate-300"
                         disabled={submitting}
                     >
                         Cancelar
                     </Button>
-                    <Button 
-                        onClick={handleSubmit} 
+                    <Button
+                        onClick={handleSubmit}
                         className="bg-purple-600 hover:bg-purple-500"
                         disabled={submitting || loading}
                     >

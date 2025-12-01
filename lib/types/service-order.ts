@@ -5,15 +5,16 @@
 
 // Service Order States
 export type ServiceOrderState =
-    | "Esperando diagnóstico"      // Recepcionista creó OS, cobró diagnóstico ($150), asignó técnico
-    | "En diagnóstico"             // Técnico está revisando el equipo
+    | "Esperando inicialización"   // Recepcionista creó OS, esperando que técnico inicie
+    | "En diagnóstico"             // Técnico está revisando el equipo (o iniciando servicio de catálogo)
     | "Diagnóstico terminado"      // Técnico completó diagnóstico y agregó cotización
     | "Esperando aprobación"       // Recepción contacta cliente, esperando respuesta
-    | "En reparación"              // Cliente aprobó, técnico está reparando
-    | "Reparación terminada"       // Técnico terminó, puso piezas usadas
-    | "Lista para entrega"         // En recepción, esperando que cliente recoja
-    | "Pagado y entregado"         // Cliente pagó y recogió su equipo (estado final)
-    | "Cancelada"                  // Orden cancelada
+    | "Aprobada"                   // Cliente aprobó, esperando que técnico inicie reparación
+    | "En reparación"              // Técnico está reparando
+    | "Reparación terminada"       // Técnico terminó, revisando calidad
+    | "Lista para entrega"         // Técnico validó, listo para cliente
+    | "Pagado y entregado"         // Cliente pagó y recogió
+    | "Cancelada"                  // Cancelada
 
 // Payment Types
 export type PaymentType = "Diagnóstico" | "Anticipo" | "Pago parcial" | "Pago final"

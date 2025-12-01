@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -31,31 +31,291 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { NewServiceOrderDialog } from "@/components/dashboard/new-service-order-dialog"
 import { PaymentDialog } from "@/components/dashboard/payment-dialog"
 import { NewClientDialog } from "@/components/dashboard/new-client-dialog"
-import { NewSaleDialog } from "@/components/dashboard/new-sale-dialog"
+import { NewEquipmentDialog } from "@/components/dashboard/new-equipment-dialog"
 import { OrderDetailsDialog } from "@/components/dashboard/order-details-dialog"
+import { PendingRequestsDialog } from "@/components/inventory/pending-requests-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 const chartData: any[] = []
 
+type Orden = {
+  id: string
+  folio: string
+  estado: string
+  tipoServicio?: string // Added
+  cliente: { nombre?: string, telefono?: string }
+  equipo: { marca: string, modelo: string, tipo: string }
+  tecnico?: { nombre: string }
+  createdAt: string
+  montoTotal?: number
+  anticipo?: number
+  saldoPendiente?: number
+  tiempoReparacion?: string
+  problemaReportado?: string
+  fechaCompletado?: string
+  fechaEstimadaFin?: string
+  pagos?: Array<{ monto: number, fechaPago: string }>
+  diagnostico?: string
+  cotizacion?: number
+}
+
+type Venta = {
+  id: string
+  montoPagado: number
+  saldoPendiente: number
+  total: number
+  createdAt: string
+}
+
 const recentOrders: any[] = []
 
-const topTechnicians: any[] = []
+
 
 const recentActivity: any[] = []
 
 export default function DashboardPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { toast } = useToast()
   const [dateFilter, setDateFilter] = useState<string>("30")
   const [technicianFilter, setTechnicianFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   // Dialog states
+  // Dialog states
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false)
   const [isPaymentOpen, setIsPaymentOpen] = useState(false)
   const [isNewClientOpen, setIsNewClientOpen] = useState(false)
-  const [isNewSaleOpen, setIsNewSaleOpen] = useState(false)
+  const [isNewEquipmentOpen, setIsNewEquipmentOpen] = useState(false)
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState<typeof recentOrders[0] | null>(null)
+  const [isPendingRequestsOpen, setIsPendingRequestsOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<Orden | null>(null)
+
+  // Chaining states
+  const [createdClientId, setCreatedClientId] = useState<string | undefined>(undefined)
+  const [createdEquipmentId, setCreatedEquipmentId] = useState<string | undefined>(undefined)
+  const [createdOrderId, setCreatedOrderId] = useState<string | undefined>(undefined)
+  const [paymentAmount, setPaymentAmount] = useState<number | undefined>(undefined)
+
+  // Stats
+  const [stats, setStats] = useState({
+    totalActivas: 0,
+    enDiagnostico: 0,
+    enReparacion: 0,
+    listasEntrega: 0,
+    pendientesInventario: 0,
+  })
+  const [ordenes, setOrdenes] = useState<Orden[]>([])
+  const [ventas, setVentas] = useState<Venta[]>([])
+  const [financialStats, setFinancialStats] = useState({
+    ingresosMes: 0,
+    porCobrar: 0,
+  })
+  const [technicianOrders, setTechnicianOrders] = useState<Orden[]>([])
+  const [recentActivityList, setRecentActivityList] = useState<any[]>([])
+  const [chartDataList, setChartDataList] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const loadDashboardData = async (showLoading = true) => {
+    try {
+      if (showLoading) {
+        setLoading(true)
+        console.log('🔄 Cargando datos del dashboard...')
+      }
+
+      // Cargar órdenes
+      const resOrdenes = await fetch('/api/ordenes', { cache: 'no-store' })
+      if (!resOrdenes.ok) {
+        throw new Error(`Error al cargar órdenes: ${resOrdenes.status}`)
+      }
+      const dataOrdenes = await resOrdenes.json()
+      if (showLoading) console.log('📦 Órdenes cargadas:', dataOrdenes.length)
+      setOrdenes(dataOrdenes)
+
+      // Calcular estadísticas de órdenes
+      const totalActivas = dataOrdenes.filter((o: Orden) =>
+        !['Completada', 'Cancelada', 'Entregada', 'Pagado y entregado'].includes(o.estado)
+      ).length
+
+      const enDiagnostico = dataOrdenes.filter((o: Orden) =>
+        ['Esperando diagnóstico', 'En diagnóstico', 'Diagnóstico terminado', 'Esperando aprobación', 'En espera de aprobación'].includes(o.estado)
+      ).length
+
+      const enReparacion = dataOrdenes.filter((o: Orden) =>
+        ['En reparación', 'En proceso', 'Reparación terminada'].includes(o.estado)
+      ).length
+
+      const listasEntrega = dataOrdenes.filter((o: Orden) =>
+        ['Lista para entrega', 'Listo para entrega'].includes(o.estado)
+      ).length
+
+      setStats({
+        totalActivas,
+        enDiagnostico,
+        enReparacion,
+        listasEntrega,
+        pendientesInventario: 0,
+      })
+
+      // Fetch pending inventory withdrawals count
+      try {
+        const resPending = await fetch('/api/inventory/withdrawals/pending')
+        if (resPending.ok) {
+          const pendingData = await resPending.json()
+          setStats(prev => ({ ...prev, pendientesInventario: pendingData.length }))
+        }
+      } catch (e) {
+        console.error("Error loading pending withdrawals count", e)
+      }
+
+      // --- Technician Specific Data ---
+      if (user?.role === "Técnico") {
+        // Assigned Orders
+        const myOrders = dataOrdenes
+          .filter((o: Orden) => {
+            if (!o.tecnico?.nombre) return false
+            const techName = o.tecnico.nombre.toLowerCase()
+            const userName = user.name.toLowerCase()
+            return userName.includes(techName) || techName.includes(userName)
+          })
+          .sort((a: Orden, b: Orden) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5)
+
+        setTechnicianOrders(myOrders)
+      }
+
+      // Recent Activity (Global or Technician specific could be implemented here)
+      // For now, we'll show global recent activity derived from orders
+      const activity = dataOrdenes
+        .sort((a: Orden, b: Orden) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5)
+        .map((o: Orden) => ({
+          id: o.id,
+          mensaje: `Orden ${o.folio} - ${o.estado}`,
+          tiempo: new Date(o.createdAt).toLocaleDateString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+          icon: Activity, // Default icon
+          color: 'text-blue-400'
+        }))
+      setRecentActivityList(activity)
+
+      // Chart Data (Orders by State)
+      const statusCounts = dataOrdenes.reduce((acc: any, o: Orden) => {
+        const status = o.estado
+        acc[status] = (acc[status] || 0) + 1
+        return acc
+      }, {})
+
+      const diagnosticoCount =
+        (statusCounts['Esperando diagnóstico'] || 0) +
+        (statusCounts['En diagnóstico'] || 0) +
+        (statusCounts['Diagnóstico terminado'] || 0) +
+        (statusCounts['Esperando aprobación'] || 0) +
+        (statusCounts['En espera de aprobación'] || 0)
+
+      const reparacionCount =
+        (statusCounts['En reparación'] || 0) +
+        (statusCounts['En proceso'] || 0) +
+        (statusCounts['Reparación terminada'] || 0) +
+        (statusCounts['Esperando repuestos'] || 0)
+
+      const entregaCount =
+        (statusCounts['Listo para entrega'] || 0) +
+        (statusCounts['Lista para entrega'] || 0)
+
+      const chartData = [
+        { name: 'Diagnóstico', mantenimiento: diagnosticoCount },
+        { name: 'Reparación', reparacion: reparacionCount },
+        { name: 'Entrega', upgrade: entregaCount },
+      ]
+      setChartDataList(chartData)
+      // --------------------------------
+
+      // Cargar ventas para estadísticas financieras
+      const resVentas = await fetch('/api/ventas')
+      if (!resVentas.ok) {
+        console.warn('⚠️ Error al cargar ventas:', resVentas.status)
+        setVentas([])
+      } else {
+        const dataVentas = await resVentas.json()
+        if (showLoading) console.log('💰 Ventas cargadas:', dataVentas.length)
+        setVentas(dataVentas)
+      }
+
+      // Calcular ingresos del mes actual (ventas + pagos de órdenes)
+      const now = new Date()
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+      // Ingresos de ventas del mes
+      const resVentasData = await fetch('/api/ventas').then(r => r.ok ? r.json() : []).catch(() => [])
+      const ingresosVentas = resVentasData
+        .filter((v: Venta) => new Date(v.createdAt) >= firstDayOfMonth)
+        .reduce((sum: number, v: Venta) => sum + Number(v.montoPagado || 0), 0)
+
+      // Ingresos de pagos de órdenes del mes
+      const ingresosPagosOrdenes = dataOrdenes.reduce((sum: number, orden: any) => {
+        if (!orden.pagos || orden.pagos.length === 0) return sum
+
+        const pagosDelMes = orden.pagos.filter((p: any) => new Date(p.fechaPago) >= firstDayOfMonth)
+        const totalPagosDelMes = pagosDelMes.reduce((pSum: number, p: any) => pSum + Number(p.monto || 0), 0)
+        return sum + totalPagosDelMes
+      }, 0)
+
+      const ingresosMes = ingresosVentas + ingresosPagosOrdenes
+
+      // Calcular total por cobrar (ventas + órdenes)
+      const porCobrarVentas = resVentasData
+        .reduce((sum: number, v: Venta) => sum + Number(v.saldoPendiente || 0), 0)
+
+      // Para órdenes: calcular saldo pendiente = montoTotal - suma de pagos
+      const porCobrarOrdenes = dataOrdenes.reduce((sum: number, orden: any) => {
+        const montoTotal = Number(orden.montoTotal || 0)
+
+        // Calcular total pagado de esta orden
+        const totalPagado = (orden.pagos || []).reduce((pSum: number, p: any) =>
+          pSum + Number(p.monto || 0), 0
+        )
+
+        // Saldo pendiente = total - pagado
+        const saldoPendiente = montoTotal - totalPagado
+
+        // Solo sumar si hay saldo pendiente positivo
+        return sum + (saldoPendiente > 0 ? saldoPendiente : 0)
+      }, 0)
+
+      const porCobrar = porCobrarVentas + porCobrarOrdenes
+
+      if (showLoading) console.log('💵 Finanzas:', { ingresosMes, porCobrar })
+
+      setFinancialStats({
+        ingresosMes,
+        porCobrar,
+      })
+
+      if (showLoading) console.log('✅ Datos del dashboard cargados exitosamente')
+    } catch (error) {
+      console.error('❌ Error al cargar datos del dashboard:', error)
+      if (showLoading) {
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los datos del dashboard",
+          variant: "destructive"
+        })
+      }
+    } finally {
+      if (showLoading) setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadDashboardData()
+
+    // Poll for updates every 15 seconds
+    const intervalId = setInterval(() => {
+      loadDashboardData()
+    }, 15000)
+
+    return () => clearInterval(intervalId)
+  }, [])
 
   return (
     <>
@@ -86,9 +346,9 @@ export default function DashboardPage() {
                     <ClipboardList className="h-4 w-4 text-indigo-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">{stats.totalActivas}</div>
                 <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                  Sin datos
+                  {stats.totalActivas > 0 ? `${stats.totalActivas} órdenes activas` : 'Sin datos'}
                 </div>
               </div>
             </Card>
@@ -102,7 +362,7 @@ export default function DashboardPage() {
                     <Wrench className="h-4 w-4 text-blue-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">{stats.enDiagnostico}</div>
                 <div className="text-xs text-slate-500 font-medium">Requieren atención</div>
               </div>
             </Card>
@@ -116,7 +376,7 @@ export default function DashboardPage() {
                     <Activity className="h-4 w-4 text-purple-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">{stats.enReparacion}</div>
                 <div className="text-xs text-slate-500 font-medium">En reparación</div>
               </div>
             </Card>
@@ -130,79 +390,51 @@ export default function DashboardPage() {
                     <CheckCircle2 className="h-4 w-4 text-green-400" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">0</div>
+                <div className="text-4xl font-bold text-slate-100 mb-2">{stats.listasEntrega}</div>
                 <div className="text-xs text-slate-500 font-medium">Notificar clientes</div>
               </div>
             </Card>
           </div>
 
           {/* Fila 2: KPIs Financieros */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up" style={{ animationDelay: "150ms" }}>
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-2xl group-hover:from-emerald-500/20 transition-all duration-500" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Ingresos del mes</div>
-                  <div className="p-2 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
-                    <DollarSign className="h-4 w-4 text-emerald-400" />
+          {user?.role !== "Técnico" && (
+            <div className="grid gap-4 md:grid-cols-2 animate-fade-in-up" style={{ animationDelay: "150ms" }}>
+              <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/10 group cursor-pointer">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-2xl group-hover:from-emerald-500/20 transition-all duration-500" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Ingresos del mes</div>
+                    <div className="p-2 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
+                      <DollarSign className="h-4 w-4 text-emerald-400" />
+                    </div>
+                  </div>
+                  <div className="text-4xl font-bold text-slate-100 mb-2">${financialStats.ingresosMes.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                    {financialStats.ingresosMes > 0 ? 'Del mes actual' : 'Sin ingresos'}
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">$0</div>
-                <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                  Sin datos
-                </div>
-              </div>
-            </Card>
+              </Card>
 
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-full blur-2xl group-hover:from-cyan-500/20 transition-all duration-500" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Ticket promedio</div>
-                  <div className="p-2 rounded-lg bg-cyan-500/10 ring-1 ring-cyan-500/20">
-                    <ShoppingCart className="h-4 w-4 text-cyan-400" />
+              <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/10 group cursor-pointer">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full blur-2xl group-hover:from-amber-500/20 transition-all duration-500" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Por cobrar</div>
+                    <div className="p-2 rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20">
+                      <Clock className="h-4 w-4 text-amber-400" />
+                    </div>
                   </div>
+                  <div className="text-4xl font-bold text-slate-100 mb-2">${financialStats.porCobrar.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+                  <div className="text-xs text-slate-500 font-medium">Pendiente de pago</div>
                 </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">$0</div>
-                <div className="text-xs text-slate-500 font-medium">Por orden de servicio</div>
-              </div>
-            </Card>
+              </Card>
+            </div>
+          )}
 
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-violet-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-transparent rounded-full blur-2xl group-hover:from-violet-500/20 transition-all duration-500" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Tasa conversión</div>
-                  <div className="p-2 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20">
-                    <TrendingUp className="h-4 w-4 text-violet-400" />
-                  </div>
-                </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">0%</div>
-                <div className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                  Sin datos
-                </div>
-              </div>
-            </Card>
-
-            <Card className="relative overflow-hidden bg-slate-900/60 backdrop-blur-sm border-white/5 p-6 hover:bg-slate-900/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/10 group cursor-pointer">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full blur-2xl group-hover:from-amber-500/20 transition-all duration-500" />
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Por cobrar</div>
-                  <div className="p-2 rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20">
-                    <Clock className="h-4 w-4 text-amber-400" />
-                  </div>
-                </div>
-                <div className="text-4xl font-bold text-slate-100 mb-2">$0</div>
-                <div className="text-xs text-slate-500 font-medium">Pendiente de pago</div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Acciones Rápidas y Alertas */}
+          {/* Unified Grid for Secondary Widgets */}
           <div className="grid gap-4 md:grid-cols-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-            {/* Acciones Rápidas - Solo para Admin y Recepción */}
-            {user?.role !== "Técnico" && (
+            {/* Acciones Rápidas - Solo para Recepción */}
+            {user?.role === "Recepción" && (
               <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
                 <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
                   <Activity className="h-5 w-5 text-indigo-400" />
@@ -231,11 +463,11 @@ export default function DashboardPage() {
                     <span className="text-sm">Nuevo Cliente</span>
                   </Button>
                   <Button
-                    onClick={() => setIsNewSaleOpen(true)}
+                    onClick={() => setIsNewEquipmentOpen(true)}
                     className="h-20 flex-col gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 hover:text-purple-200"
                   >
                     <ShoppingBag className="h-5 w-5" />
-                    <span className="text-sm">Nueva Venta</span>
+                    <span className="text-sm">Registrar equipo</span>
                   </Button>
                 </div>
               </Card>
@@ -249,135 +481,133 @@ export default function DashboardPage() {
                   Órdenes Asignadas Recientemente
                 </h3>
                 <div className="space-y-3">
-                  <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-start gap-3">
-                    <Bell className="h-5 w-5 text-indigo-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-indigo-300">Nueva orden: RS-OS-1024</p>
-                      <p className="text-xs text-indigo-400/80">HP Pavilion 15 - Juan Pérez</p>
-                      <p className="text-xs text-slate-500 mt-1">Hace 15 minutos</p>
+                  {technicianOrders.length === 0 ? (
+                    <div className="text-center py-6 text-slate-500 text-sm">
+                      No tienes órdenes asignadas recientemente
+                    </div>
+                  ) : (
+                    technicianOrders.map((order) => (
+                      <div key={order.id} className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-start gap-3">
+                        <Bell className="h-5 w-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-indigo-300">Orden: {order.folio}</p>
+                          <p className="text-xs text-indigo-400/80">{order.equipo.marca} {order.equipo.modelo} - {order.cliente.nombre}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {new Date(order.createdAt).toLocaleDateString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </Card>
+            )}
+
+            {/* Alertas */}
+            {user?.role !== "Técnico" && (
+              <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-amber-400" />
+                  Alertas y Notificaciones
+                </h3>
+                <div className="space-y-3">
+                  {/* Órdenes retrasadas */}
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-300">
+                        {ordenes.filter(o => {
+                          const diasTranscurridos = Math.floor((new Date().getTime() - new Date(o.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+                          return diasTranscurridos > 7 && !['Pagado y entregado', 'Cancelada', 'Entregada'].includes(o.estado)
+                        }).length} órdenes retrasadas
+                      </p>
+                      <p className="text-xs text-red-400/80">
+                        {ordenes.filter(o => {
+                          const diasTranscurridos = Math.floor((new Date().getTime() - new Date(o.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+                          return diasTranscurridos > 7 && !['Pagado y entregado', 'Cancelada', 'Entregada'].includes(o.estado)
+                        }).length > 0 ? 'Más de 7 días sin completar' : 'Sin alertas'}
+                      </p>
                     </div>
                   </div>
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-start gap-3">
-                    <Wrench className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-blue-300">Nueva orden: RS-OS-1022</p>
-                      <p className="text-xs text-blue-400/80">Dell XPS 15 - Pedro Ramírez</p>
-                      <p className="text-xs text-slate-500 mt-1">Hace 2 horas</p>
+
+                  {/* Cotizaciones pendientes */}
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-300">
+                        {ordenes.filter(o => o.estado === 'Esperando aprobación').length} cotizaciones sin respuesta
+                      </p>
+                      <p className="text-xs text-amber-400/80">
+                        {ordenes.filter(o => o.estado === 'Esperando aprobación').length > 0 ? 'Pendientes de aprobación del cliente' : 'Sin pendientes'}
+                      </p>
                     </div>
                   </div>
-                  <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-purple-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-purple-300">Cotización aprobada: RS-OS-1018</p>
-                      <p className="text-xs text-purple-400/80">MacBook Pro - Ana López</p>
-                      <p className="text-xs text-slate-500 mt-1">Hace 4 horas</p>
+
+                  {/* Equipos listos para entrega */}
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-300">
+                        {ordenes.filter(o => o.estado === 'Listo para entrega').length} equipos listos
+                      </p>
+                      <p className="text-xs text-green-400/80">
+                        {ordenes.filter(o => o.estado === 'Listo para entrega').length > 0 ? 'Listos para notificar al cliente' : 'Sin notificaciones'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Solicitudes de Inventario Pendientes */}
+                  <div
+                    className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-start gap-3 cursor-pointer hover:bg-indigo-500/20 transition-colors"
+                    onClick={() => setIsPendingRequestsOpen(true)}
+                  >
+                    <ClipboardList className="h-5 w-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-indigo-300">
+                        {stats.pendientesInventario || 0} solicitudes de inventario
+                      </p>
+                      <p className="text-xs text-indigo-400/80">
+                        {stats.pendientesInventario > 0 ? 'Requieren aprobación' : 'Sin pendientes'}
+                      </p>
                     </div>
                   </div>
                 </div>
               </Card>
             )}
 
-            {/* Alertas */}
-            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
-              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                <Bell className="h-5 w-5 text-amber-400" />
-                Alertas y Notificaciones
-              </h3>
-              <div className="space-y-3">
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-red-300">0 órdenes retrasadas</p>
-                    <p className="text-xs text-red-400/80">Sin alertas</p>
-                  </div>
-                </div>
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-300">0 cotizaciones sin respuesta</p>
-                    <p className="text-xs text-amber-400/80">Sin pendientes</p>
-                  </div>
-                </div>
-                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-green-300">0 equipos listos</p>
-                    <p className="text-xs text-green-400/80">Sin notificaciones</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
 
-          {/* Top Técnicos y Actividad Reciente */}
-          <div className="grid gap-4 md:grid-cols-2 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
-            {/* Top Técnicos */}
-            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
-              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                <Award className="h-5 w-5 text-yellow-400" />
-                Top Técnicos del Mes
-              </h3>
-              <div className="space-y-3">
-                {topTechnicians.map((tech, index) => (
-                  <div
-                    key={tech.id}
-                    className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:bg-slate-800/50 transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
-                          {tech.avatar}
-                        </div>
-                        {index === 0 && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-                            <Award className="h-3 w-3 text-yellow-900" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-slate-200">{tech.nombre}</span>
-                          <div className="flex items-center gap-0.5">
-                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs text-slate-400">{tech.calificacion}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-slate-400">
-                          <span>{tech.ordenesCompletadas} órdenes</span>
-                          <span className="text-emerald-400">
-                            ${(tech.ingresosGenerados / 1000).toFixed(1)}K generados
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
 
             {/* Actividad Reciente */}
-            <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
-              <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-400" />
-                Actividad Reciente
-              </h3>
-              <div className="space-y-3">
-                {recentActivity.map((activity) => {
-                  const Icon = activity.icon
-                  return (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg bg-slate-800/50 ${activity.color}`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-slate-300">{activity.mensaje}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{activity.tiempo}</p>
-                      </div>
+            {user?.role !== "Recepción" && (
+              <Card className="bg-slate-900/60 backdrop-blur-sm border-white/5 p-6">
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-blue-400" />
+                  Actividad Reciente
+                </h3>
+                <div className="space-y-3">
+                  {recentActivityList.length === 0 ? (
+                    <div className="text-center py-6 text-slate-500 text-sm">
+                      No hay actividad reciente
                     </div>
-                  )
-                })}
-              </div>
-            </Card>
+                  ) : (
+                    recentActivityList.map((activity) => {
+                      const Icon = activity.icon
+                      return (
+                        <div key={activity.id} className="flex items-start gap-3">
+                          <div className={`p-2 rounded-lg bg-slate-800/50 ${activity.color}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-slate-300">{activity.mensaje}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{activity.tiempo}</p>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </Card>
+            )}
           </div>
 
           {/* Gráfico de Órdenes por Estado - Solo visible para Admin y Técnico */}
@@ -436,7 +666,7 @@ export default function DashboardPage() {
 
               <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
+                  <BarChart data={chartDataList}>
                     <defs>
                       <linearGradient id="mantenimientoGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
@@ -484,171 +714,106 @@ export default function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
-          )}
 
-          {/* Tabla de Órdenes Recientes */}
-          <Card
-            className="bg-slate-900/60 backdrop-blur-sm border-white/5 animate-fade-in-up hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-200"
-            style={{ animationDelay: "350ms" }}
-          >
-            <div className="p-6 border-b border-white/5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h3 className="text-lg font-semibold text-slate-100">
-                  {user?.role === "Técnico" ? "Mis Órdenes Asignadas" : "Órdenes recientes"}
-                </h3>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setStatusFilter("all")}
-                    className={`h-7 text-xs ${statusFilter === "all"
-                      ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30"
-                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                      }`}
-                  >
-                    Todos
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setStatusFilter("En diagnóstico")}
-                    className={`h-7 text-xs ${statusFilter === "En diagnóstico"
-                      ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                      }`}
-                  >
-                    En diagnóstico
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setStatusFilter("En proceso")}
-                    className={`h-7 text-xs ${statusFilter === "En proceso"
-                      ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
-                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                      }`}
-                  >
-                    En proceso
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setStatusFilter("Listo para entrega")}
-                    className={`h-7 text-xs ${statusFilter === "Listo para entrega"
-                      ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
-                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                      }`}
-                  >
-                    Listo
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setStatusFilter("En espera de aprobación")}
-                    className={`h-7 text-xs ${statusFilter === "En espera de aprobación"
-                      ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-                      : "text-slate-400 hover:text-slate-300 hover:bg-white/5"
-                      }`}
-                  >
-                    Espera aprobación
-                  </Button>
+              {/* Equipos listos para entrega */}
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-300">
+                    {ordenes.filter(o => o.estado === 'Listo para entrega').length} equipos listos
+                  </p>
+                  <p className="text-xs text-green-400/80">
+                    {ordenes.filter(o => o.estado === 'Listo para entrega').length > 0 ? 'Listos para notificar al cliente' : 'Sin notificaciones'}
+                  </p>
                 </div>
               </div>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/5 hover:bg-transparent">
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Folio
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Cliente
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Equipo
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Estado
-                  </TableHead>
-                  {user?.role !== "Técnico" && (
-                    <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                      Técnico
-                    </TableHead>
-                  )}
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider text-right">
-                    Importe
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Tiempo rep.
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Fecha
-                  </TableHead>
-                  <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                    Acción
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentOrders
-                  .filter((order) => statusFilter === "all" || order.estado === statusFilter)
-                  .map((order) => (
-                  <TableRow
-                    key={order.folio}
-                    className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150 group"
-                  >
-                    <TableCell className="font-mono text-[13px] text-indigo-400 font-medium">{order.folio}</TableCell>
-                    <TableCell className="font-medium text-[13px]">{order.cliente}</TableCell>
-                    <TableCell className="text-[13px] text-slate-400">{order.equipo}</TableCell>
-                    <TableCell>
-                      <BadgeStatus status={order.estado} />
-                    </TableCell>
-                    {user?.role !== "Técnico" && (
-                      <TableCell className="text-slate-400 text-[13px]">{order.tecnico}</TableCell>
-                    )}
-                    <TableCell className="text-slate-300 text-[13px] font-semibold text-right tabular-nums">
-                      ${order.importe.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className="text-slate-400 text-[13px] tabular-nums">{order.tiempoReparacion}</TableCell>
-                    <TableCell className="text-slate-400 text-[13px]">{order.fecha}</TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedOrder(order)
-                          setIsOrderDetailsOpen(true)
-                        }}
-                        className="h-8 px-3 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-200 group-hover:translate-x-0.5 text-[13px] font-medium"
-                      >
-                        Detalles
-                        <ArrowUpRight className="h-3.5 w-3.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+            </Card>
+          )}
         </div>
       </main>
 
       {/* Modals */}
-      <NewServiceOrderDialog open={isNewOrderOpen} onOpenChange={setIsNewOrderOpen} />
-      <PaymentDialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen} />
-      <NewClientDialog open={isNewClientOpen} onOpenChange={setIsNewClientOpen} />
-      <NewSaleDialog open={isNewSaleOpen} onOpenChange={setIsNewSaleOpen} />
-      <OrderDetailsDialog 
-        open={isOrderDetailsOpen} 
-        onOpenChange={setIsOrderDetailsOpen} 
-        order={selectedOrder}
-        onStatusChange={(newStatus) => {
-          console.log(`Estado cambiado a: ${newStatus}`)
-          // Aquí se actualizaría el estado en la base de datos
+      < NewClientDialog
+        open={isNewClientOpen}
+        onOpenChange={setIsNewClientOpen}
+        onSave={(client) => {
+          setCreatedClientId(client.id)
+          // Chain: Client -> Equipment
+          setTimeout(() => setIsNewEquipmentOpen(true), 500)
+        }
+        }
+      />
+
+      < NewEquipmentDialog
+        open={isNewEquipmentOpen}
+        onOpenChange={(open) => {
+          setIsNewEquipmentOpen(open)
+          if (!open) setCreatedClientId(undefined) // Reset if closed without success
         }}
+        initialClientId={createdClientId}
+        onSuccess={(equipment) => {
+          if (equipment) {
+            setCreatedEquipmentId(equipment.id)
+            // Chain: Equipment -> Order
+            setTimeout(() => setIsNewOrderOpen(true), 500)
+          }
+        }}
+      />
+
+      < NewServiceOrderDialog
+        open={isNewOrderOpen}
+        onOpenChange={(open) => {
+          setIsNewOrderOpen(open)
+          if (!open) {
+            setCreatedClientId(undefined)
+            setCreatedEquipmentId(undefined)
+          }
+        }}
+        initialClientId={createdClientId}
+        initialEquipmentId={createdEquipmentId}
+        onSave={(order) => {
+          loadDashboardData()
+          // Chain: Order -> Payment
+          if (order.anticipoRequerido > 0) {
+            setCreatedOrderId(order.id)
+            setPaymentAmount(order.anticipoRequerido)
+            setTimeout(() => setIsPaymentOpen(true), 500)
+          }
+        }}
+      />
+
+      < PaymentDialog
+        open={isPaymentOpen}
+        onOpenChange={(open) => {
+          setIsPaymentOpen(open)
+          if (!open) {
+            setCreatedOrderId(undefined)
+            setPaymentAmount(undefined)
+          }
+        }}
+        initialOrderId={createdOrderId}
+        initialAmount={paymentAmount}
+        onSave={() => {
+          loadDashboardData()
+          toast({
+            title: "Proceso completado",
+            description: "Se ha registrado el cliente, equipo, orden y pago exitosamente.",
+          })
+        }}
+      />
+
+      < OrderDetailsDialog
+        open={isOrderDetailsOpen}
+        onOpenChange={setIsOrderDetailsOpen}
+        order={selectedOrder}
+        onStatusChange={() => loadDashboardData()}
+      />
+
+      <PendingRequestsDialog
+        open={isPendingRequestsOpen}
+        onOpenChange={setIsPendingRequestsOpen}
       />
     </>
   )
 }
+

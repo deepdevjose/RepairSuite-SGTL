@@ -46,8 +46,8 @@ export function ProductThumbnail({ categoria, imagen, nombre, size = "md" }: Pro
         Otro: "from-gray-500/20 to-slate-500/20 text-gray-400",
     }
 
-    const Icon = categoryIcons[categoria]
-    const colorClass = categoryColors[categoria]
+    const Icon = categoryIcons[categoria] || Package
+    const colorClass = categoryColors[categoria] || categoryColors["Otro"]
 
     if (imagen) {
         return (

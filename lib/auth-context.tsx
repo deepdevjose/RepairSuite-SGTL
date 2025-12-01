@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 type UserRole = "Administrador" | "Recepción" | "Técnico"
 
 interface User {
+  id: string
   email: string
   role: UserRole
   name: string
@@ -44,35 +45,34 @@ const rolePermissions: Record<UserRole, string[]> = {
 // JLaboratories users database
 const JLAB_USERS = [
   {
+    id: "user-admin-001",
     email: "admin@jlaboratories.com",
     password: "JoseAdmin",
     name: "Jose Manuel Cortes Ceron",
     role: "Administrador" as UserRole,
   },
   {
+    id: "user-tech-001",
     email: "jose.tecnico@jlaboratories.com",
     password: "JoseTech",
     name: "Jose Manuel Cortes Ceron",
     role: "Técnico" as UserRole,
   },
   {
+    id: "user-tech-002",
     email: "kevis.salas@jlaboratories.com",
     password: "KevinTech",
     name: "Kevis Salas Jimenez",
     role: "Técnico" as UserRole,
   },
   {
+    id: "user-recep-001",
     email: "adriana.ceron@jlaboratories.com",
     password: "Adri123",
     name: "Adriana Ceron Madrigal",
     role: "Recepción" as UserRole,
   },
 ]
-
-const getRoleFromEmail = (email: string): UserRole => {
-  const user = JLAB_USERS.find(u => u.email === email)
-  return user?.role || "Técnico"
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -91,9 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     // Validate against JLaboratories user database
     const user = JLAB_USERS.find(u => u.email === email && u.password === password)
-    
+
     if (user) {
       const userData: User = {
+        id: user.id,
         email: user.email,
         role: user.role,
         name: user.name,

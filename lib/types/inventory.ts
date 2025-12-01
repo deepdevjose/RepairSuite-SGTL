@@ -2,17 +2,17 @@
 
 export type StockStatus = "OK" | "Bajo" | "Crítico"
 
-export type MovementType = 
-  | "Entrada" 
-  | "Salida" 
-  | "Transferencia" 
-  | "Reserva OS" 
+export type MovementType =
+  | "Entrada"
+  | "Salida"
+  | "Transferencia"
+  | "Reserva OS"
   | "Ajuste"
   | "Merma"
 
 export type TransferStatus = "Pendiente" | "En tránsito" | "Recibida" | "Cancelada"
 
-export type ProductCategory = 
+export type ProductCategory =
   | "RAM"
   | "SSD"
   | "HDD"
@@ -21,6 +21,7 @@ export type ProductCategory =
   | "Teclado"
   | "Cargador"
   | "Servicio"
+  | "Software"
   | "Otro"
 
 export type SalidaType = "OS" | "Merma" | "Ajuste" | "Otro"
@@ -42,6 +43,11 @@ export interface InventoryItem {
   ubicacion: string
   ultimoMovimiento: string // ISO date string
   activo: boolean
+  garantiaMeses: number
+  proveedor?: {
+    id: string
+    nombre: string
+  }
 }
 
 export interface InventoryMovement {

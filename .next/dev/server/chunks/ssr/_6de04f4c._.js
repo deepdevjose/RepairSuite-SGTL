@@ -2091,6 +2091,10 @@ function EquiposPage() {
     const [filterWarranty, setFilterWarranty] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("all");
     const [isFormOpen, setIsFormOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [confirmCreateOS, setConfirmCreateOS] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [clientes, setClientes] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [loadingClientes, setLoadingClientes] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [equipos, setEquipos] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [loadingEquipos, setLoadingEquipos] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
     const [formData, setFormData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])({
         // Datos del equipo
         cliente: "",
@@ -2140,19 +2144,63 @@ function EquiposPage() {
                     title: "Equipos"
                 }, void 0, false, {
                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                    lineNumber: 88,
+                    lineNumber: 111,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$access$2d$denied$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AccessDenied"], {}, void 0, false, {
                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                    lineNumber: 89,
+                    lineNumber: 112,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true);
     }
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        loadEquipos();
+    }, []);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (isFormOpen) {
+            loadClientes();
+        }
+    }, [
+        isFormOpen
+    ]);
+    const loadEquipos = async ()=>{
+        try {
+            setLoadingEquipos(true);
+            const res = await fetch('/api/equipos');
+            const data = await res.json();
+            setEquipos(data);
+        } catch (error) {
+            console.error('Error al cargar equipos:', error);
+            toast({
+                title: "Error",
+                description: "No se pudieron cargar los equipos",
+                variant: "destructive"
+            });
+        } finally{
+            setLoadingEquipos(false);
+        }
+    };
+    const loadClientes = async ()=>{
+        try {
+            setLoadingClientes(true);
+            const res = await fetch('/api/clientes');
+            const data = await res.json();
+            setClientes(data);
+        } catch (error) {
+            console.error('Error al cargar clientes:', error);
+            toast({
+                title: "Error",
+                description: "No se pudieron cargar los clientes",
+                variant: "destructive"
+            });
+        } finally{
+            setLoadingClientes(false);
+        }
+    };
     const checkSerialDuplicate = (serial)=>{
-        const exists = mockEquipments.some((eq)=>eq.numero_serie.toLowerCase() === serial.toLowerCase());
+        const exists = equipos.some((eq)=>eq.numeroSerie?.toLowerCase() === serial.toLowerCase());
         setSerialDuplicate(exists);
         return exists;
     };
@@ -2166,15 +2214,52 @@ function EquiposPage() {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-    const handleSubmit = (e)=>{
+    const handleSubmit = async (e)=>{
         e.preventDefault();
         if (!validateForm()) return;
-        toast({
-            title: "Equipo registrado",
-            description: "El equipo se ha registrado correctamente."
-        });
-        setIsFormOpen(false);
-        resetForm();
+        try {
+            const equipoData = {
+                clienteId: formData.cliente,
+                tipo: "Laptop",
+                marca: formData.marca,
+                modelo: formData.modelo,
+                numeroSerie: formData.numero_serie,
+                color: formData.color || null,
+                fechaIngreso: formData.fecha_ingreso,
+                estadoFisico: formData.estado_fisico,
+                accesoriosRecibidos: formData.accesorios_chips.length > 0 ? formData.accesorios_chips : formData.accesorios_texto ? [
+                    formData.accesorios_texto
+                ] : [],
+                enciende: formData.enciende || null,
+                tieneContrasena: formData.tiene_contrasena,
+                contrasena: formData.contrasena || null,
+                notas: formData.notas_generales || null
+            };
+            const response = await fetch('/api/equipos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(equipoData)
+            });
+            if (!response.ok) {
+                throw new Error('Error al registrar equipo');
+            }
+            toast({
+                title: "Equipo registrado",
+                description: "El equipo se ha registrado correctamente en la base de datos."
+            });
+            setIsFormOpen(false);
+            resetForm();
+            loadEquipos(); // Recargar lista de equipos
+        } catch (error) {
+            console.error('Error al guardar equipo:', error);
+            toast({
+                title: "Error",
+                description: "No se pudo registrar el equipo. Intenta de nuevo.",
+                variant: "destructive"
+            });
+        }
     };
     const resetForm = ()=>{
         setFormData({
@@ -2206,12 +2291,11 @@ function EquiposPage() {
         setErrors({});
         setSerialDuplicate(false);
     };
-    const filteredEquipments = mockEquipments.filter((equipment)=>{
-        const matchesSearch = equipment.cliente.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.marca.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.modelo.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.numero_serie.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = filterStatus === "all" || equipment.estado_orden === filterStatus;
+    const filteredEquipments = equipos.filter((equipment)=>{
+        const clienteNombre = equipment.cliente?.nombre || '';
+        const matchesSearch = clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.marca.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.modelo.toLowerCase().includes(searchTerm.toLowerCase()) || (equipment.numeroSerie || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesBrand = filterBrand === "all" || equipment.marca === filterBrand;
-        const matchesWarranty = filterWarranty === "all" || equipment.garantia === filterWarranty;
-        return matchesSearch && matchesStatus && matchesBrand && matchesWarranty;
+        return matchesSearch && matchesBrand;
     });
     const getStatusBadge = (status)=>{
         const statusConfig = {
@@ -2227,7 +2311,7 @@ function EquiposPage() {
             children: status
         }, void 0, false, {
             fileName: "[project]/app/dashboard/equipos/page.tsx",
-            lineNumber: 180,
+            lineNumber: 287,
             columnNumber: 7
         }, this);
     };
@@ -2279,7 +2363,7 @@ function EquiposPage() {
                 title: "Equipos"
             }, void 0, false, {
                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                lineNumber: 227,
+                lineNumber: 334,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -2302,7 +2386,7 @@ function EquiposPage() {
                                                         className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 234,
+                                                        lineNumber: 341,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2312,13 +2396,13 @@ function EquiposPage() {
                                                         className: "pl-10 bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 235,
+                                                        lineNumber: 342,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 233,
+                                                lineNumber: 340,
                                                 columnNumber: 17
                                             }, this),
                                             user?.role !== "Técnico" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2332,20 +2416,20 @@ function EquiposPage() {
                                                         className: "h-4 w-4 mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 252,
+                                                        lineNumber: 359,
                                                         columnNumber: 21
                                                     }, this),
                                                     "Registrar equipo"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 245,
+                                                lineNumber: 352,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                        lineNumber: 232,
+                                        lineNumber: 339,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2361,12 +2445,12 @@ function EquiposPage() {
                                                             placeholder: "Estado"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 262,
+                                                            lineNumber: 369,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 261,
+                                                        lineNumber: 368,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2377,7 +2461,7 @@ function EquiposPage() {
                                                                 children: "Todos los estados"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 265,
+                                                                lineNumber: 372,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2385,7 +2469,7 @@ function EquiposPage() {
                                                                 children: "Diagnóstico"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 266,
+                                                                lineNumber: 373,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2393,7 +2477,7 @@ function EquiposPage() {
                                                                 children: "En revisión"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 267,
+                                                                lineNumber: 374,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2401,7 +2485,7 @@ function EquiposPage() {
                                                                 children: "En espera de aprobación"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 268,
+                                                                lineNumber: 375,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2409,7 +2493,7 @@ function EquiposPage() {
                                                                 children: "En proceso"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 269,
+                                                                lineNumber: 376,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2417,7 +2501,7 @@ function EquiposPage() {
                                                                 children: "Listo"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 270,
+                                                                lineNumber: 377,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2425,19 +2509,19 @@ function EquiposPage() {
                                                                 children: "Completado"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 271,
+                                                                lineNumber: 378,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 264,
+                                                        lineNumber: 371,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 260,
+                                                lineNumber: 367,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -2450,12 +2534,12 @@ function EquiposPage() {
                                                             placeholder: "Marca"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 277,
+                                                            lineNumber: 384,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 276,
+                                                        lineNumber: 383,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2466,7 +2550,7 @@ function EquiposPage() {
                                                                 children: "Todas las marcas"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 280,
+                                                                lineNumber: 387,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2474,7 +2558,7 @@ function EquiposPage() {
                                                                 children: "HP"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 281,
+                                                                lineNumber: 388,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2482,7 +2566,7 @@ function EquiposPage() {
                                                                 children: "Apple"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 282,
+                                                                lineNumber: 389,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2490,7 +2574,7 @@ function EquiposPage() {
                                                                 children: "Dell"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 283,
+                                                                lineNumber: 390,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2498,19 +2582,19 @@ function EquiposPage() {
                                                                 children: "Lenovo"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 284,
+                                                                lineNumber: 391,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 279,
+                                                        lineNumber: 386,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 275,
+                                                lineNumber: 382,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -2523,12 +2607,12 @@ function EquiposPage() {
                                                             placeholder: "Garantía"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 290,
+                                                            lineNumber: 397,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 289,
+                                                        lineNumber: 396,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2539,7 +2623,7 @@ function EquiposPage() {
                                                                 children: "Todas"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 293,
+                                                                lineNumber: 400,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2547,7 +2631,7 @@ function EquiposPage() {
                                                                 children: "Activa"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 294,
+                                                                lineNumber: 401,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2555,19 +2639,19 @@ function EquiposPage() {
                                                                 children: "Expirada"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 295,
+                                                                lineNumber: 402,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 292,
+                                                        lineNumber: 399,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 288,
+                                                lineNumber: 395,
                                                 columnNumber: 17
                                             }, this),
                                             (filterStatus !== "all" || filterBrand !== "all" || filterWarranty !== "all") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2582,24 +2666,24 @@ function EquiposPage() {
                                                 children: "Limpiar filtros"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 300,
+                                                lineNumber: 407,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                        lineNumber: 259,
+                                        lineNumber: 366,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                lineNumber: 231,
+                                lineNumber: 338,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 230,
+                            lineNumber: 337,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -2617,7 +2701,7 @@ function EquiposPage() {
                                                         children: "Cliente"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 322,
+                                                        lineNumber: 429,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -2625,7 +2709,7 @@ function EquiposPage() {
                                                         children: "Equipo"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 323,
+                                                        lineNumber: 430,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -2633,7 +2717,7 @@ function EquiposPage() {
                                                         children: "Número de serie"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 324,
+                                                        lineNumber: 431,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -2641,7 +2725,7 @@ function EquiposPage() {
                                                         children: "Última OS"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 325,
+                                                        lineNumber: 432,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -2649,7 +2733,7 @@ function EquiposPage() {
                                                         children: "Estado actual"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 326,
+                                                        lineNumber: 433,
                                                         columnNumber: 21
                                                     }, this),
                                                     user?.role !== "Técnico" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -2657,7 +2741,7 @@ function EquiposPage() {
                                                         children: "Técnico asignado"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 328,
+                                                        lineNumber: 435,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableHead"], {
@@ -2665,45 +2749,60 @@ function EquiposPage() {
                                                         children: "Garantía"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 330,
+                                                        lineNumber: 437,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 321,
+                                                lineNumber: 428,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 320,
+                                            lineNumber: 427,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableBody"], {
-                                            children: filteredEquipments.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableRow"], {
+                                            children: loadingEquipos ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableRow"], {
                                                 className: "border-slate-800",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
-                                                    colSpan: user?.role === "Técnico" ? 6 : 7,
+                                                    colSpan: 7,
                                                     className: "text-center text-slate-400 py-12",
-                                                    children: "No se encontraron equipos"
+                                                    children: "Cargando equipos..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 336,
+                                                    lineNumber: 443,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 335,
+                                                lineNumber: 442,
+                                                columnNumber: 21
+                                            }, this) : filteredEquipments.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableRow"], {
+                                                className: "border-slate-800",
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
+                                                    colSpan: 7,
+                                                    className: "text-center text-slate-400 py-12",
+                                                    children: equipos.length === 0 ? 'No hay equipos registrados' : 'No se encontraron equipos con esos filtros'
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                    lineNumber: 449,
+                                                    columnNumber: 23
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                lineNumber: 448,
                                                 columnNumber: 21
                                             }, this) : filteredEquipments.map((equipment, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableRow"], {
                                                     className: `border-slate-800 hover:bg-slate-800/30 transition-colors ${idx % 2 === 0 ? "bg-slate-900/30" : ""}`,
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
                                                             className: "font-medium text-slate-200",
-                                                            children: equipment.cliente
+                                                            children: equipment.cliente?.nombre || 'Cliente desconocido'
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 348,
+                                                            lineNumber: 461,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -2715,7 +2814,7 @@ function EquiposPage() {
                                                                         children: equipment.marca
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 351,
+                                                                        lineNumber: 466,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2723,26 +2822,26 @@ function EquiposPage() {
                                                                         children: equipment.modelo
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 352,
+                                                                        lineNumber: 467,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 350,
+                                                                lineNumber: 465,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 349,
+                                                            lineNumber: 464,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
                                                             className: "font-mono text-sm text-slate-300",
-                                                            children: equipment.numero_serie
+                                                            children: equipment.numeroSerie || 'Sin número'
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 355,
+                                                            lineNumber: 470,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -2751,116 +2850,103 @@ function EquiposPage() {
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "text-slate-300 font-medium",
-                                                                        children: equipment.ultima_orden
+                                                                        children: "-"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 358,
+                                                                        lineNumber: 475,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "text-xs text-slate-500",
-                                                                        children: equipment.fecha_ultima_orden
+                                                                        children: "Sin órdenes"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 359,
+                                                                        lineNumber: 476,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 357,
+                                                                lineNumber: 474,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 356,
+                                                            lineNumber: 473,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
-                                                            children: getStatusBadge(equipment.estado_orden)
+                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
+                                                                className: "bg-slate-500/20 text-slate-400 border-slate-500/50 border",
+                                                                children: "Sin orden"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                                lineNumber: 480,
+                                                                columnNumber: 27
+                                                            }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 362,
+                                                            lineNumber: 479,
                                                             columnNumber: 25
                                                         }, this),
                                                         user?.role !== "Técnico" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
                                                             className: "text-slate-300",
-                                                            children: equipment.tecnico
+                                                            children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 364,
+                                                            lineNumber: 485,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TableCell"], {
-                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "space-y-0.5",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
-                                                                        className: `${equipment.garantia === "Activa" ? "bg-green-500/20 text-green-400 border-green-500/50" : "bg-red-500/20 text-red-400 border-red-500/50"} border`,
-                                                                        children: equipment.garantia
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 368,
-                                                                        columnNumber: 29
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "text-xs text-slate-500",
-                                                                        children: [
-                                                                            equipment.garantia === "Activa" ? "Expira: " : "Expiró: ",
-                                                                            equipment.fecha_expira_garantia
-                                                                        ]
-                                                                    }, void 0, true, {
-                                                                        fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 377,
-                                                                        columnNumber: 29
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true, {
+                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
+                                                                className: "bg-slate-500/20 text-slate-400 border-slate-500/50 border",
+                                                                children: "N/A"
+                                                            }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 367,
+                                                                lineNumber: 488,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 366,
+                                                            lineNumber: 487,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, equipment.id, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 342,
+                                                    lineNumber: 455,
                                                     columnNumber: 23
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 333,
+                                            lineNumber: 440,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 319,
+                                    lineNumber: 426,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                lineNumber: 318,
+                                lineNumber: 425,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 317,
+                            lineNumber: 424,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                    lineNumber: 229,
+                    lineNumber: 336,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                lineNumber: 228,
+                lineNumber: 335,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -2877,19 +2963,19 @@ function EquiposPage() {
                                         className: "h-6 w-6 text-indigo-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                        lineNumber: 397,
+                                        lineNumber: 506,
                                         columnNumber: 15
                                     }, this),
                                     "Registrar nuevo equipo"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                lineNumber: 396,
+                                lineNumber: 505,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 395,
+                            lineNumber: 504,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -2909,26 +2995,26 @@ function EquiposPage() {
                                                     children: "1. Datos del equipo"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 410,
+                                                    lineNumber: 519,
                                                     columnNumber: 17
                                                 }, this),
                                                 collapsedSections.equipmentData ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 412,
+                                                    lineNumber: 521,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 414,
+                                                    lineNumber: 523,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 405,
+                                            lineNumber: 514,
                                             columnNumber: 15
                                         }, this),
                                         !collapsedSections.equipmentData && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2947,13 +3033,13 @@ function EquiposPage() {
                                                                     children: "*"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 421,
+                                                                    lineNumber: 530,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 420,
+                                                            lineNumber: 529,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -2962,66 +3048,53 @@ function EquiposPage() {
                                                                     ...formData,
                                                                     cliente: value
                                                                 }),
+                                                            disabled: loadingClientes,
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
                                                                     className: `bg-slate-800 border-slate-700 text-slate-100 ${errors.cliente ? "border-red-500" : ""}`,
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {
-                                                                        placeholder: "Seleccionar cliente"
+                                                                        placeholder: loadingClientes ? "Cargando clientes..." : "Seleccionar cliente"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 430,
+                                                                        lineNumber: 540,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 427,
+                                                                    lineNumber: 537,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
                                                                     className: "bg-slate-800 border-slate-700",
-                                                                    children: [
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                            value: "1",
-                                                                            children: "Juan Pérez García"
-                                                                        }, void 0, false, {
+                                                                    children: clientes.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                        value: "no-clientes",
+                                                                        disabled: true,
+                                                                        children: loadingClientes ? "Cargando..." : "No hay clientes registrados"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                                        lineNumber: 544,
+                                                                        columnNumber: 27
+                                                                    }, this) : clientes.map((cliente)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                            value: cliente.id,
+                                                                            children: [
+                                                                                cliente.nombre,
+                                                                                " - ",
+                                                                                cliente.telefono
+                                                                            ]
+                                                                        }, cliente.id, true, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 433,
-                                                                            columnNumber: 25
-                                                                        }, this),
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                            value: "2",
-                                                                            children: "María González López"
-                                                                        }, void 0, false, {
-                                                                            fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 434,
-                                                                            columnNumber: 25
-                                                                        }, this),
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                            value: "3",
-                                                                            children: "Pedro Ramírez Sánchez"
-                                                                        }, void 0, false, {
-                                                                            fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 435,
-                                                                            columnNumber: 25
-                                                                        }, this),
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                            value: "4",
-                                                                            children: "Ana Martínez Cruz"
-                                                                        }, void 0, false, {
-                                                                            fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 436,
-                                                                            columnNumber: 25
-                                                                        }, this)
-                                                                    ]
-                                                                }, void 0, true, {
+                                                                            lineNumber: 549,
+                                                                            columnNumber: 29
+                                                                        }, this))
+                                                                }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 432,
+                                                                    lineNumber: 542,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 423,
+                                                            lineNumber: 532,
                                                             columnNumber: 21
                                                         }, this),
                                                         errors.cliente && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3029,13 +3102,13 @@ function EquiposPage() {
                                                             children: errors.cliente
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 439,
+                                                            lineNumber: 556,
                                                             columnNumber: 40
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 419,
+                                                    lineNumber: 528,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3054,13 +3127,13 @@ function EquiposPage() {
                                                                             children: "*"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 445,
+                                                                            lineNumber: 562,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 444,
+                                                                    lineNumber: 561,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3074,7 +3147,7 @@ function EquiposPage() {
                                                                     className: `bg-slate-800 border-slate-700 text-slate-100 ${errors.marca ? "border-red-500" : ""}`
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 447,
+                                                                    lineNumber: 564,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 errors.marca && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3082,13 +3155,13 @@ function EquiposPage() {
                                                                     children: errors.marca
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 454,
+                                                                    lineNumber: 571,
                                                                     columnNumber: 40
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 443,
+                                                            lineNumber: 560,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3104,13 +3177,13 @@ function EquiposPage() {
                                                                             children: "*"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 459,
+                                                                            lineNumber: 576,
                                                                             columnNumber: 32
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 458,
+                                                                    lineNumber: 575,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3124,7 +3197,7 @@ function EquiposPage() {
                                                                     className: `bg-slate-800 border-slate-700 text-slate-100 ${errors.modelo ? "border-red-500" : ""}`
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 461,
+                                                                    lineNumber: 578,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 errors.modelo && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3132,19 +3205,19 @@ function EquiposPage() {
                                                                     children: errors.modelo
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 468,
+                                                                    lineNumber: 585,
                                                                     columnNumber: 41
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 457,
+                                                            lineNumber: 574,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 442,
+                                                    lineNumber: 559,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3159,7 +3232,7 @@ function EquiposPage() {
                                                                     children: "Color"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 474,
+                                                                    lineNumber: 591,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3173,13 +3246,13 @@ function EquiposPage() {
                                                                     className: "bg-slate-800 border-slate-700 text-slate-100"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 477,
+                                                                    lineNumber: 594,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 473,
+                                                            lineNumber: 590,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3195,13 +3268,13 @@ function EquiposPage() {
                                                                             children: "*"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 488,
+                                                                            lineNumber: 605,
                                                                             columnNumber: 41
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 487,
+                                                                    lineNumber: 604,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3222,7 +3295,7 @@ function EquiposPage() {
                                                                     className: `bg-slate-800 border-slate-700 text-slate-100 font-mono ${errors.numero_serie || serialDuplicate ? "border-red-500" : ""}`
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 490,
+                                                                    lineNumber: 607,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 serialDuplicate && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3232,20 +3305,20 @@ function EquiposPage() {
                                                                             className: "h-4 w-4 flex-shrink-0 mt-0.5"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 508,
+                                                                            lineNumber: 625,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "Este número de serie ya existe en el sistema"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 509,
+                                                                            lineNumber: 626,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 507,
+                                                                    lineNumber: 624,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 errors.numero_serie && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3253,19 +3326,19 @@ function EquiposPage() {
                                                                     children: errors.numero_serie
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 512,
+                                                                    lineNumber: 629,
                                                                     columnNumber: 47
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 486,
+                                                            lineNumber: 603,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 472,
+                                                    lineNumber: 589,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3277,7 +3350,7 @@ function EquiposPage() {
                                                             children: "Fecha de ingreso"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 517,
+                                                            lineNumber: 634,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -3291,25 +3364,25 @@ function EquiposPage() {
                                                             className: "bg-slate-800 border-slate-700 text-slate-100"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 520,
+                                                            lineNumber: 637,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 516,
+                                                    lineNumber: 633,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 418,
+                                            lineNumber: 527,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 404,
+                                    lineNumber: 513,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3325,80 +3398,129 @@ function EquiposPage() {
                                                     children: "2. Estado físico"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 539,
+                                                    lineNumber: 656,
                                                     columnNumber: 17
                                                 }, this),
                                                 collapsedSections.physicalState ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 541,
+                                                    lineNumber: 658,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 543,
+                                                    lineNumber: 660,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 534,
+                                            lineNumber: 651,
                                             columnNumber: 15
                                         }, this),
                                         !collapsedSections.physicalState && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "p-4 bg-slate-900/50",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "grid gap-3 md:grid-cols-2",
-                                                children: Object.entries(formData.estado_fisico).map(([key, value])=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "mb-4 pb-4 border-b border-slate-700",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "flex items-center space-x-2",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$checkbox$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Checkbox"], {
-                                                                id: key,
-                                                                checked: value,
-                                                                onCheckedChange: (checked)=>setFormData({
-                                                                        ...formData,
-                                                                        estado_fisico: {
-                                                                            ...formData.estado_fisico,
-                                                                            [key]: checked === true
-                                                                        }
-                                                                    }),
-                                                                className: "border-slate-600 data-[state=checked]:bg-purple-600"
+                                                                id: "ninguno_estetico",
+                                                                checked: Object.values(formData.estado_fisico).every((v)=>!v),
+                                                                onCheckedChange: (checked)=>{
+                                                                    if (checked) {
+                                                                        // Desmarcar todos los checkboxes
+                                                                        const nuevoEstado = Object.keys(formData.estado_fisico).reduce((acc, key)=>{
+                                                                            acc[key] = false;
+                                                                            return acc;
+                                                                        }, {});
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            estado_fisico: nuevoEstado
+                                                                        });
+                                                                    }
+                                                                },
+                                                                className: "border-slate-600 data-[state=checked]:bg-green-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 551,
-                                                                columnNumber: 25
+                                                                lineNumber: 667,
+                                                                columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
-                                                                htmlFor: key,
-                                                                className: "text-slate-300 cursor-pointer capitalize font-normal",
-                                                                children: key.replace(/_/g, " ")
+                                                                htmlFor: "ninguno_estetico",
+                                                                className: "text-green-400 cursor-pointer font-medium",
+                                                                children: "✓ Ningún daño estético (equipo en perfecto estado)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 562,
-                                                                columnNumber: 25
+                                                                lineNumber: 682,
+                                                                columnNumber: 23
                                                             }, this)
                                                         ]
-                                                    }, key, true, {
+                                                    }, void 0, true, {
                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                        lineNumber: 550,
-                                                        columnNumber: 23
-                                                    }, this))
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 548,
-                                                columnNumber: 19
-                                            }, this)
-                                        }, void 0, false, {
+                                                        lineNumber: 666,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                    lineNumber: 665,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "grid gap-3 md:grid-cols-2",
+                                                    children: Object.entries(formData.estado_fisico).map(([key, value])=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "flex items-center space-x-2",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$checkbox$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Checkbox"], {
+                                                                    id: key,
+                                                                    checked: value,
+                                                                    onCheckedChange: (checked)=>setFormData({
+                                                                            ...formData,
+                                                                            estado_fisico: {
+                                                                                ...formData.estado_fisico,
+                                                                                [key]: checked === true
+                                                                            }
+                                                                        }),
+                                                                    className: "border-slate-600 data-[state=checked]:bg-purple-600"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                                    lineNumber: 694,
+                                                                    columnNumber: 25
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
+                                                                    htmlFor: key,
+                                                                    className: "text-slate-300 cursor-pointer capitalize font-normal",
+                                                                    children: key.replace(/_/g, " ")
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                                    lineNumber: 705,
+                                                                    columnNumber: 25
+                                                                }, this)
+                                                            ]
+                                                        }, key, true, {
+                                                            fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                            lineNumber: 693,
+                                                            columnNumber: 23
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/dashboard/equipos/page.tsx",
+                                                    lineNumber: 691,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 547,
+                                            lineNumber: 664,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 533,
+                                    lineNumber: 650,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3414,26 +3536,26 @@ function EquiposPage() {
                                                     children: "3. Accesorios recibidos"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 582,
+                                                    lineNumber: 725,
                                                     columnNumber: 17
                                                 }, this),
                                                 collapsedSections.accessories ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 584,
+                                                    lineNumber: 727,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 586,
+                                                    lineNumber: 729,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 577,
+                                            lineNumber: 720,
                                             columnNumber: 15
                                         }, this),
                                         !collapsedSections.accessories && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3447,7 +3569,7 @@ function EquiposPage() {
                                                             children: "Accesorios comunes"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 592,
+                                                            lineNumber: 735,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3459,18 +3581,18 @@ function EquiposPage() {
                                                                     children: accessory
                                                                 }, accessory, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 595,
+                                                                    lineNumber: 738,
                                                                     columnNumber: 25
                                                                 }, this))
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 593,
+                                                            lineNumber: 736,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 591,
+                                                    lineNumber: 734,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3482,7 +3604,7 @@ function EquiposPage() {
                                                             children: "Otros accesorios (texto libre)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 612,
+                                                            lineNumber: 755,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -3496,25 +3618,25 @@ function EquiposPage() {
                                                             placeholder: "Describe otros accesorios no listados..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 615,
+                                                            lineNumber: 758,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 611,
+                                                    lineNumber: 754,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 590,
+                                            lineNumber: 733,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 576,
+                                    lineNumber: 719,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3530,26 +3652,26 @@ function EquiposPage() {
                                                     children: "4. Diagnóstico inicial"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 634,
+                                                    lineNumber: 777,
                                                     columnNumber: 17
                                                 }, this),
                                                 collapsedSections.diagnosis ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 636,
+                                                    lineNumber: 779,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 638,
+                                                    lineNumber: 781,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 629,
+                                            lineNumber: 772,
                                             columnNumber: 15
                                         }, this),
                                         !collapsedSections.diagnosis && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3563,7 +3685,7 @@ function EquiposPage() {
                                                             children: "¿El equipo enciende?"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 644,
+                                                            lineNumber: 787,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -3579,12 +3701,12 @@ function EquiposPage() {
                                                                         placeholder: "Seleccionar"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 647,
+                                                                        lineNumber: 790,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 646,
+                                                                    lineNumber: 789,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -3595,7 +3717,7 @@ function EquiposPage() {
                                                                             children: "Sí"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 650,
+                                                                            lineNumber: 793,
                                                                             columnNumber: 25
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3603,7 +3725,7 @@ function EquiposPage() {
                                                                             children: "No"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 651,
+                                                                            lineNumber: 794,
                                                                             columnNumber: 25
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3611,25 +3733,25 @@ function EquiposPage() {
                                                                             children: "Intermitente"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 652,
+                                                                            lineNumber: 795,
                                                                             columnNumber: 25
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 649,
+                                                                    lineNumber: 792,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 645,
+                                                            lineNumber: 788,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 643,
+                                                    lineNumber: 786,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3648,7 +3770,7 @@ function EquiposPage() {
                                                                     className: "border-slate-600 data-[state=checked]:bg-green-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 659,
+                                                                    lineNumber: 802,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
@@ -3657,13 +3779,13 @@ function EquiposPage() {
                                                                     children: "¿El equipo trae contraseña?"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 667,
+                                                                    lineNumber: 810,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 658,
+                                                            lineNumber: 801,
                                                             columnNumber: 21
                                                         }, this),
                                                         formData.tiene_contrasena && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -3679,7 +3801,7 @@ function EquiposPage() {
                                                                     className: "bg-slate-800 border-slate-700 text-slate-100"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 674,
+                                                                    lineNumber: 817,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3696,7 +3818,7 @@ function EquiposPage() {
                                                                             className: "border-slate-600 data-[state=checked]:bg-amber-600"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 682,
+                                                                            lineNumber: 825,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
@@ -3705,13 +3827,13 @@ function EquiposPage() {
                                                                             children: "El cliente no proporcionó la contraseña"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                            lineNumber: 690,
+                                                                            lineNumber: 833,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 681,
+                                                                    lineNumber: 824,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
@@ -3719,19 +3841,19 @@ function EquiposPage() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 657,
+                                                    lineNumber: 800,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 642,
+                                            lineNumber: 785,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 628,
+                                    lineNumber: 771,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3751,32 +3873,32 @@ function EquiposPage() {
                                                             children: "(mínimo 3 fotos sugeridas)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 709,
+                                                            lineNumber: 852,
                                                             columnNumber: 42
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 708,
+                                                    lineNumber: 851,
                                                     columnNumber: 17
                                                 }, this),
                                                 collapsedSections.photos ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 712,
+                                                    lineNumber: 855,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 714,
+                                                    lineNumber: 857,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 703,
+                                            lineNumber: 846,
                                             columnNumber: 15
                                         }, this),
                                         !collapsedSections.photos && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3791,7 +3913,7 @@ function EquiposPage() {
                                                             children: "Subir fotos del equipo"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 720,
+                                                            lineNumber: 863,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3807,7 +3929,7 @@ function EquiposPage() {
                                                                                 className: "w-8 h-8 mb-2 text-slate-400"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                                lineNumber: 729,
+                                                                                lineNumber: 872,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3818,14 +3940,14 @@ function EquiposPage() {
                                                                                         children: "Click para subir"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                                        lineNumber: 731,
+                                                                                        lineNumber: 874,
                                                                                         columnNumber: 29
                                                                                     }, this),
                                                                                     " o arrastra y suelta"
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                                lineNumber: 730,
+                                                                                lineNumber: 873,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3833,13 +3955,13 @@ function EquiposPage() {
                                                                                 children: "PNG, JPG hasta 10MB"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                                lineNumber: 733,
+                                                                                lineNumber: 876,
                                                                                 columnNumber: 27
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 728,
+                                                                        lineNumber: 871,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3851,24 +3973,24 @@ function EquiposPage() {
                                                                         onChange: handlePhotoUpload
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 735,
+                                                                        lineNumber: 878,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                lineNumber: 724,
+                                                                lineNumber: 867,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 723,
+                                                            lineNumber: 866,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 719,
+                                                    lineNumber: 862,
                                                     columnNumber: 19
                                                 }, this),
                                                 formData.fotos.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3883,12 +4005,12 @@ function EquiposPage() {
                                                                         children: foto.name
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 752,
+                                                                        lineNumber: 895,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 751,
+                                                                    lineNumber: 894,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3899,35 +4021,35 @@ function EquiposPage() {
                                                                         className: "h-3 w-3 text-white"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                        lineNumber: 759,
+                                                                        lineNumber: 902,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                                    lineNumber: 754,
+                                                                    lineNumber: 897,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, index, true, {
                                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                            lineNumber: 750,
+                                                            lineNumber: 893,
                                                             columnNumber: 25
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 748,
+                                                    lineNumber: 891,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 718,
+                                            lineNumber: 861,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 702,
+                                    lineNumber: 845,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3943,26 +4065,26 @@ function EquiposPage() {
                                                     children: "6. Notas generales"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 776,
+                                                    lineNumber: 919,
                                                     columnNumber: 17
                                                 }, this),
                                                 collapsedSections.notes ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 778,
+                                                    lineNumber: 921,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                     className: "h-5 w-5 text-slate-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                    lineNumber: 780,
+                                                    lineNumber: 923,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 771,
+                                            lineNumber: 914,
                                             columnNumber: 15
                                         }, this),
                                         !collapsedSections.notes && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3977,18 +4099,18 @@ function EquiposPage() {
                                                 placeholder: "Observaciones adicionales, comentarios del cliente, detalles relevantes..."
                                             }, void 0, false, {
                                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                                lineNumber: 785,
+                                                lineNumber: 928,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 784,
+                                            lineNumber: 927,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 770,
+                                    lineNumber: 913,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4005,7 +4127,7 @@ function EquiposPage() {
                                             children: "Cancelar"
                                         }, void 0, false, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 797,
+                                            lineNumber: 940,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -4014,30 +4136,30 @@ function EquiposPage() {
                                             children: "Registrar equipo"
                                         }, void 0, false, {
                                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                            lineNumber: 808,
+                                            lineNumber: 951,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 796,
+                                    lineNumber: 939,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 402,
+                            lineNumber: 511,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                    lineNumber: 394,
+                    lineNumber: 503,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                lineNumber: 393,
+                lineNumber: 502,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -4052,12 +4174,12 @@ function EquiposPage() {
                                 children: "Crear orden de servicio"
                             }, void 0, false, {
                                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                lineNumber: 822,
+                                lineNumber: 965,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 821,
+                            lineNumber: 964,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4065,7 +4187,7 @@ function EquiposPage() {
                             children: "¿Deseas crear una nueva orden de servicio para este equipo? Serás redirigido al formulario de creación."
                         }, void 0, false, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 824,
+                            lineNumber: 967,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4078,7 +4200,7 @@ function EquiposPage() {
                                     children: "Cancelar"
                                 }, void 0, false, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 828,
+                                    lineNumber: 971,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -4087,24 +4209,24 @@ function EquiposPage() {
                                     children: "Crear orden"
                                 }, void 0, false, {
                                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                                    lineNumber: 835,
+                                    lineNumber: 978,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/dashboard/equipos/page.tsx",
-                            lineNumber: 827,
+                            lineNumber: 970,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/dashboard/equipos/page.tsx",
-                    lineNumber: 820,
+                    lineNumber: 963,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/dashboard/equipos/page.tsx",
-                lineNumber: 819,
+                lineNumber: 962,
                 columnNumber: 7
             }, this)
         ]

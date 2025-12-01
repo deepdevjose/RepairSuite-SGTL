@@ -10,8 +10,7 @@ export async function GET(
     const cliente = await prisma.cliente.findUnique({
       where: { id: params.id },
       include: {
-        equipos: true,
-        ordenesServicio: true,
+        equipos: true
       }
     })
 
@@ -22,7 +21,13 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(cliente)
+    // Agregar campo 'nombre' concatenado para compatibilidad
+    const clienteConNombre = {
+      ...cliente,
+      nombre: `${cliente.nombre1}${cliente.nombre2 ? ' ' + cliente.nombre2 : ''} ${cliente.apellidoPaterno}${cliente.apellidoMaterno ? ' ' + cliente.apellidoMaterno : ''}`
+    }
+
+    return NextResponse.json(clienteConNombre)
   } catch (error) {
     console.error('Error al obtener cliente:', error)
     return NextResponse.json(

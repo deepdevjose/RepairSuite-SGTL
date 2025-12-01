@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
@@ -18,20 +18,90 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Eye, Pencil, Users, UserCheck, Shield, Wrench, CheckCircle, XCircle } from "lucide-react"
-import { mockEmployees, mockUsers } from "@/lib/data/staff-mock"
+import { Search, Plus, Eye, Pencil, Users, UserCheck, Shield, Wrench, CheckCircle, XCircle, Loader2 } from "lucide-react"
 import { formatDate } from "@/lib/utils/sales-helpers"
+import { useToast } from "@/hooks/use-toast"
+import type { Employee, User } from "@/lib/types/staff"
 
 export default function PersonalPage() {
   const { hasPermission } = useAuth()
+  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [sucursalFilter, setSucursalFilter] = useState("all")
   const [rolFilter, setRolFilter] = useState("all")
   const [estadoFilter, setEstadoFilter] = useState("all")
   const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false)
   const [isUserFormOpen, setIsUserFormOpen] = useState(false)
-  const [selectedEmployee, setSelectedEmployee] = useState<typeof mockEmployees[0] | null>(null)
-  const [selectedUser, setSelectedUser] = useState<typeof mockUsers[0] | null>(null)
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const [empRes, userRes] = await Promise.all([
+        fetch('/api/empleados'),
+        fetch('/api/usuarios')
+      ])
+
+      if (empRes.ok && userRes.ok) {
+        const empData = await empRes.json()
+        const userData = await userRes.json()
+
+        // Map API data to Employee type
+        const mappedEmployees: Employee[] = empData.map((e: any) => ({
+          id: e.id,
+          nombre: e.nombre,
+          apellidos: e.apellidos,
+          nombreCompleto: e.nombreCompleto || `${e.nombre} ${e.apellidos}`,
+          rolOperativo: e.rolOperativo,
+          telefono: e.telefono || "",
+          correoInterno: e.correoInterno || "",
+          estado: e.estado,
+          fechaAlta: e.createdAt,
+          horarioTrabajo: e.horarioTrabajo,
+          especialidades: e.especialidades ? JSON.parse(e.especialidades) : [],
+          tieneUsuario: e.usuarios && e.usuarios.length > 0,
+          usuarioId: e.usuarios && e.usuarios.length > 0 ? e.usuarios[0].id : undefined,
+          avatar: e.avatar
+        }))
+
+        // Map API data to User type
+        const mappedUsers: User[] = userData.map((u: any) => ({
+          id: u.id,
+          empleadoId: u.empleadoId || "", // This might be missing if we don't fetch it in /api/usuarios, need to check
+          correoLogin: u.email,
+          rolSistema: u.rol,
+          permisos: {} as any, // Permissions are not yet in DB, using empty object or default
+          activo: u.activo,
+          ultimoAcceso: u.updatedAt, // Using updatedAt as proxy for now
+          fechaCreacion: u.createdAt,
+          requiereCambioPassword: false
+        }))
+
+        setEmployees(mappedEmployees)
+        setUsers(mappedUsers)
+      }
+    } catch (error) {
+      console.error("Error loading data:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo cargar la información del personal",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (hasPermission("personal")) {
+      loadData()
+    }
+  }, [hasPermission])
 
   if (!hasPermission("personal")) {
     return (
@@ -44,28 +114,36 @@ export default function PersonalPage() {
 
   // Filter employees
   const filteredEmployees = useMemo(() => {
-    return mockEmployees.filter((emp) => {
+    return employees.filter((emp) => {
       const matchesSearch =
         emp.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
         emp.correoInterno.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesSucursal = sucursalFilter === "all" || emp.sucursalAsignada === sucursalFilter
+      const matchesSucursal = sucursalFilter === "all" || "Sede A" === sucursalFilter // Hardcoded for now as sucursal is not fully implemented
       const matchesRol = rolFilter === "all" || emp.rolOperativo === rolFilter
       const matchesEstado = estadoFilter === "all" || emp.estado === estadoFilter
 
       return matchesSearch && matchesSucursal && matchesRol && matchesEstado
     })
-  }, [searchTerm, sucursalFilter, rolFilter, estadoFilter])
+  }, [searchTerm, sucursalFilter, rolFilter, estadoFilter, employees])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const total = mockEmployees.length
-    const activos = mockEmployees.filter((e) => e.estado === "Activo").length
-    const conUsuario = mockEmployees.filter((e) => e.tieneUsuario).length
-    const tecnicos = mockEmployees.filter((e) => e.rolOperativo === "Técnico").length
+    const total = employees.length
+    const activos = employees.filter((e) => e.estado === "Activo").length
+    const conUsuario = employees.filter((e) => e.tieneUsuario).length
+    const tecnicos = employees.filter((e) => e.rolOperativo === "Técnico").length
 
     return { total, activos, conUsuario, tecnicos }
-  }, [])
+  }, [employees])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -156,26 +234,6 @@ export default function PersonalPage() {
 
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <Select value={sucursalFilter} onValueChange={setSucursalFilter}>
-                        <SelectTrigger className="h-9 w-[130px] bg-slate-800/40 border-slate-700 text-slate-300 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700">
-                          <SelectItem value="all" className="text-slate-300 text-xs">
-                            Todas
-                          </SelectItem>
-                          <SelectItem value="Sede A" className="text-slate-300 text-xs">
-                            Sede A
-                          </SelectItem>
-                          <SelectItem value="Sede B" className="text-slate-300 text-xs">
-                            Sede B
-                          </SelectItem>
-                          <SelectItem value="Sede C" className="text-slate-300 text-xs">
-                            Sede C
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
                       <Select value={rolFilter} onValueChange={setRolFilter}>
                         <SelectTrigger className="h-9 w-[130px] bg-slate-800/40 border-slate-700 text-slate-300 text-xs">
                           <SelectValue />
@@ -243,9 +301,6 @@ export default function PersonalPage() {
                           Rol
                         </TableHead>
                         <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
-                          Sucursal
-                        </TableHead>
-                        <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
                           Especialidades
                         </TableHead>
                         <TableHead className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
@@ -260,84 +315,95 @@ export default function PersonalPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredEmployees.map((emp, index) => (
-                        <TableRow
-                          key={emp.id}
-                          className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
-                          style={{
-                            animation: "fadeInUp 0.3s ease-out forwards",
-                            animationDelay: `${index * 30}ms`,
-                            opacity: 0,
-                          }}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
-                                {emp.nombre[0]}
-                                {emp.apellidos[0]}
-                              </div>
-                              <div>
-                                <div className="text-[13px] font-medium text-slate-200">{emp.nombreCompleto}</div>
-                                <div className="text-[11px] text-slate-500">{emp.correoInterno}</div>
-                              </div>
-                            </div>
+                      {filteredEmployees.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                            No se encontraron empleados
                           </TableCell>
-                          <TableCell>
-                            <EmployeeRoleBadge rol={emp.rolOperativo} />
-                          </TableCell>
-                          <TableCell className="text-[12px] text-slate-400">{emp.sucursalAsignada}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {emp.especialidades.slice(0, 2).map((esp) => (
-                                <SpecialtyBadge key={esp} especialidad={esp} />
-                              ))}
-                              {emp.especialidades.length > 2 && (
-                                <Badge className="bg-slate-700/10 text-slate-500 border-slate-700/20 text-[10px] px-1.5 py-0">
-                                  +{emp.especialidades.length - 2}
+                        </TableRow>
+                      ) : (
+                        filteredEmployees.map((emp, index) => (
+                          <TableRow
+                            key={emp.id}
+                            className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
+                            style={{
+                              animation: "fadeInUp 0.3s ease-out forwards",
+                              animationDelay: `${index * 30}ms`,
+                              opacity: 0,
+                            }}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
+                                  {emp.nombre[0]}
+                                  {emp.apellidos[0]}
+                                </div>
+                                <div>
+                                  <div className="text-[13px] font-medium text-slate-200">{emp.nombreCompleto}</div>
+                                  <div className="text-[11px] text-slate-500">{emp.correoInterno}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <EmployeeRoleBadge rol={emp.rolOperativo} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {emp.especialidades.slice(0, 2).map((esp) => (
+                                  <SpecialtyBadge key={esp} especialidad={esp} />
+                                ))}
+                                {emp.especialidades.length > 2 && (
+                                  <Badge className="bg-slate-700/10 text-slate-500 border-slate-700/20 text-[10px] px-1.5 py-0">
+                                    +{emp.especialidades.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <EmployeeStatusBadge estado={emp.estado} />
+                            </TableCell>
+                            <TableCell>
+                              {emp.tieneUsuario ? (
+                                <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Sí
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20 text-xs">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  No
                                 </Badge>
                               )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <EmployeeStatusBadge estado={emp.estado} />
-                          </TableCell>
-                          <TableCell>
-                            {emp.tieneUsuario ? (
-                              <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Sí
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20 text-xs">
-                                <XCircle className="h-3 w-3 mr-1" />
-                                No
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-end gap-1">
-                              <Link href={`/dashboard/personal/${emp.id}`}>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-end gap-1">
+                                <Link href={`/dashboard/personal/${emp.id}`}>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
+                                    title="Ver detalles"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </Button>
+                                </Link>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10"
-                                  title="Ver detalles"
+                                  className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
+                                  title="Editar"
+                                  onClick={() => {
+                                    setSelectedEmployee(emp)
+                                    setIsEmployeeFormOpen(true)
+                                  }}
                                 >
-                                  <Eye className="h-3.5 w-3.5" />
+                                  <Pencil className="h-3.5 w-3.5" />
                                 </Button>
-                              </Link>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
-                                title="Editar"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -399,64 +465,77 @@ export default function PersonalPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockUsers.map((user, index) => {
-                        const empleado = mockEmployees.find((e) => e.id === user.empleadoId)
-                        if (!empleado) return null
+                      {users.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                            No se encontraron usuarios
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        users.map((user, index) => {
+                          const empleado = employees.find((e) => e.id === user.empleadoId)
 
-                        return (
-                          <TableRow
-                            key={user.id}
-                            className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
-                            style={{
-                              animation: "fadeInUp 0.3s ease-out forwards",
-                              animationDelay: `${index * 30}ms`,
-                              opacity: 0,
-                            }}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
-                                  {empleado.nombre[0]}
-                                  {empleado.apellidos[0]}
+                          return (
+                            <TableRow
+                              key={user.id}
+                              className="border-white/5 hover:bg-white/[0.02] text-slate-300 transition-all duration-150"
+                              style={{
+                                animation: "fadeInUp 0.3s ease-out forwards",
+                                animationDelay: `${index * 30}ms`,
+                                opacity: 0,
+                              }}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
+                                    {empleado ? empleado.nombre[0] : "?"}
+                                    {empleado ? empleado.apellidos[0] : "?"}
+                                  </div>
+                                  <div className="text-[13px] font-medium text-slate-200">
+                                    {empleado ? empleado.nombreCompleto : "Usuario sin empleado"}
+                                  </div>
                                 </div>
-                                <div className="text-[13px] font-medium text-slate-200">{empleado.nombreCompleto}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-[12px] text-slate-400 font-mono">{user.correoLogin}</TableCell>
-                            <TableCell>
-                              <SystemRoleBadge rol={user.rolSistema} />
-                            </TableCell>
-                            <TableCell className="text-[12px] text-slate-400">
-                              {user.ultimoAcceso ? formatDate(user.ultimoAcceso) : "Nunca"}
-                            </TableCell>
-                            <TableCell>
-                              {user.activo ? (
-                                <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Activo
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-xs">
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Inactivo
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
-                                  title="Editar permisos"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
+                              </TableCell>
+                              <TableCell className="text-[12px] text-slate-400 font-mono">{user.correoLogin}</TableCell>
+                              <TableCell>
+                                <SystemRoleBadge rol={user.rolSistema} />
+                              </TableCell>
+                              <TableCell className="text-[12px] text-slate-400">
+                                {user.ultimoAcceso ? formatDate(user.ultimoAcceso) : "Nunca"}
+                              </TableCell>
+                              <TableCell>
+                                {user.activo ? (
+                                  <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Activo
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-xs">
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Inactivo
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
+                                    title="Editar permisos"
+                                    onClick={() => {
+                                      setSelectedUser(user)
+                                      setIsUserFormOpen(true)
+                                    }}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -464,7 +543,7 @@ export default function PersonalPage() {
                 {/* Results count */}
                 <div className="border-t border-white/5 px-6 py-4">
                   <p className="text-xs text-slate-500">
-                    Mostrando <span className="font-semibold text-slate-400">{mockUsers.length}</span> usuarios
+                    Mostrando <span className="font-semibold text-slate-400">{users.length}</span> usuarios
                   </p>
                 </div>
               </Card>
@@ -479,8 +558,8 @@ export default function PersonalPage() {
         onOpenChange={setIsEmployeeFormOpen}
         employee={selectedEmployee}
         onSave={(employee) => {
-          console.log("Employee saved:", employee)
-          // Aquí se actualizaría la lista de empleados
+          loadData() // Reload data after save
+          setIsEmployeeFormOpen(false)
         }}
       />
 
@@ -489,9 +568,10 @@ export default function PersonalPage() {
         open={isUserFormOpen}
         onOpenChange={setIsUserFormOpen}
         user={selectedUser}
+        employees={employees}
         onSave={(user) => {
-          console.log("User saved:", user)
-          // Aquí se actualizaría la lista de usuarios
+          loadData() // Reload data after save
+          setIsUserFormOpen(false)
         }}
       />
     </>

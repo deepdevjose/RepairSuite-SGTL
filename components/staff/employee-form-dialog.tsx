@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import type { Employee, EmployeeRole, EmployeeStatus, EmployeeSpecialty } from "@/lib/types/staff"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react"
 
 interface EmployeeFormDialogProps {
     open: boolean
@@ -24,6 +24,7 @@ const ESPECIALIDADES: EmployeeSpecialty[] = ["Hardware", "Software", "Apple", "G
 export function EmployeeFormDialog({ open, onOpenChange, employee, onSave }: EmployeeFormDialogProps) {
     const { toast } = useToast()
     const isEditing = !!employee
+    const [saving, setSaving] = useState(false)
 
     const [formData, setFormData] = useState({
         nombre: "",
@@ -49,11 +50,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSave }: Emp
                 telefono: employee.telefono,
                 correoInterno: employee.correoInterno,
                 rolOperativo: employee.rolOperativo,
-                sucursalAsignada: employee.sucursalAsignada,
+                sucursalAsignada: employee.sucursalAsignada || "Sede A",
                 estado: employee.estado,
-                fechaAlta: employee.fechaAlta.split("T")[0],
+                fechaAlta: employee.fechaAlta ? employee.fechaAlta.split("T")[0] : new Date().toISOString().split("T")[0],
                 horarioTrabajo: employee.horarioTrabajo || "Lun-Vie 9:00-18:00",
-                especialidades: employee.especialidades,
+                especialidades: employee.especialidades || [],
             })
         } else {
             // Reset form
@@ -84,8 +85,6 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSave }: Emp
         }
         if (!formData.telefono.trim()) {
             newErrors.telefono = "El teléfono es requerido"
-        } else if (!/^\+?[\d\s-]{10,}$/.test(formData.telefono)) {
-            newErrors.telefono = "Formato de teléfono inválido"
         }
         if (!formData.correoInterno.trim()) {
             newErrors.correoInterno = "El correo es requerido"
@@ -100,23 +99,50 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSave }: Emp
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validate()) return
 
-        const employeeData: Partial<Employee> = {
-            ...formData,
-            nombreCompleto: `${formData.nombre} ${formData.apellidos}`,
-            fechaAlta: `${formData.fechaAlta}T00:00:00Z`,
+        setSaving(true)
+        try {
+            const employeeData = {
+                ...formData,
+                id: employee?.id, // Include ID if editing
+                nombreCompleto: `${formData.nombre} ${formData.apellidos}`,
+                fechaAlta: `${formData.fechaAlta}T00:00:00Z`,
+            }
+
+            const method = isEditing ? 'PUT' : 'POST'
+            const response = await fetch('/api/empleados', {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(employeeData)
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Error al guardar empleado')
+            }
+
+            const savedEmployee = await response.json()
+
+            onSave?.(savedEmployee)
+
+            toast({
+                title: isEditing ? "Empleado actualizado" : "Empleado creado",
+                description: `${formData.nombre} ${formData.apellidos} ha sido ${isEditing ? "actualizado" : "agregado"} correctamente.`,
+            })
+
+            onOpenChange(false)
+        } catch (error: any) {
+            console.error("Error saving employee:", error)
+            toast({
+                title: "Error",
+                description: error.message || "No se pudo guardar el empleado",
+                variant: "destructive"
+            })
+        } finally {
+            setSaving(false)
         }
-
-        onSave?.(employeeData)
-
-        toast({
-            title: isEditing ? "Empleado actualizado" : "Empleado creado",
-            description: `${formData.nombre} ${formData.apellidos} ha sido ${isEditing ? "actualizado" : "agregado"} correctamente.`,
-        })
-
-        onOpenChange(false)
     }
 
     const toggleEspecialidad = (esp: EmployeeSpecialty) => {
@@ -391,10 +417,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSave }: Emp
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                        disabled={saving}
                     >
                         Cancelar
                     </Button>
-                    <Button onClick={handleSubmit} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+                    <Button onClick={handleSubmit} className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={saving}>
+                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isEditing ? "Actualizar" : "Crear"} Empleado
                     </Button>
                 </div>

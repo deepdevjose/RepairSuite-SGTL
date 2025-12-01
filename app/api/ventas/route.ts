@@ -167,7 +167,16 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(ventas)
+    // Add virtual nombre field to each venta's cliente
+    const ventasConNombre = ventas.map(venta => ({
+      ...venta,
+      cliente: {
+        ...venta.cliente,
+        nombre: `${venta.cliente.nombre1}${venta.cliente.nombre2 ? ' ' + venta.cliente.nombre2 : ''} ${venta.cliente.apellidoPaterno}${venta.cliente.apellidoMaterno ? ' ' + venta.cliente.apellidoMaterno : ''}`
+      }
+    }))
+
+    return NextResponse.json(ventasConNombre)
   } catch (error) {
     console.error('Error al obtener ventas:', error)
     return NextResponse.json(

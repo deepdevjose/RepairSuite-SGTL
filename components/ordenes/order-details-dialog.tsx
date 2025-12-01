@@ -38,8 +38,31 @@ export function OrderDetailsDialog({ order, open, onOpenChange, userRole = "Rece
     const [showDiagnosisDialog, setShowDiagnosisDialog] = useState(false)
     const [showRepairDialog, setShowRepairDialog] = useState(false)
     const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+    const [isUpdating, setIsUpdating] = useState(false)
 
     if (!order) return null
+
+    const handleChangeStatus = async (newStatus: string) => {
+        try {
+            setIsUpdating(true)
+            const response = await fetch(`/api/ordenes/${order.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: newStatus })
+            })
+
+            if (response.ok) {
+                onOpenChange(false)
+                window.location.reload() // Recargar para ver cambios
+            } else {
+                console.error('Error al cambiar estado')
+            }
+        } catch (error) {
+            console.error('Error:', error)
+        } finally {
+            setIsUpdating(false)
+        }
+    }
 
     // Determine available actions based on state and role
     const canStartDiagnosis = order.estado === "Esperando diagnóstico" && userRole === "Técnico"
@@ -174,13 +197,11 @@ export function OrderDetailsDialog({ order, open, onOpenChange, userRole = "Rece
                         {canStartDiagnosis && (
                             <Button
                                 className="bg-blue-600 hover:bg-blue-500"
-                                onClick={() => {
-                                    console.log('Cambiar estado a: En diagnóstico')
-                                    // Aquí iría la lógica para cambiar el estado
-                                }}
+                                onClick={() => handleChangeStatus('En diagnóstico')}
+                                disabled={isUpdating}
                             >
                                 <Wrench className="h-4 w-4 mr-2" />
-                                Iniciar diagnóstico
+                                {isUpdating ? 'Actualizando...' : 'Iniciar diagnóstico'}
                             </Button>
                         )}
                         
@@ -208,20 +229,22 @@ export function OrderDetailsDialog({ order, open, onOpenChange, userRole = "Rece
                         {canContactClient && (
                             <Button
                                 className="bg-yellow-600 hover:bg-yellow-500"
-                                onClick={() => console.log("Contact client - change to waiting approval")}
+                                onClick={() => handleChangeStatus('Esperando aprobación')}
+                                disabled={isUpdating}
                             >
                                 <AlertCircle className="h-4 w-4 mr-2" />
-                                Contactar cliente (esperar aprobación)
+                                {isUpdating ? 'Actualizando...' : 'Contactar cliente (esperar aprobación)'}
                             </Button>
                         )}
 
                         {canApproveRepair && (
                             <Button
                                 className="bg-green-600 hover:bg-green-500"
-                                onClick={() => console.log("Client approved - start repair")}
+                                onClick={() => handleChangeStatus('En reparación')}
+                                disabled={isUpdating}
                             >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                Cliente aprobó → Iniciar reparación
+                                {isUpdating ? 'Actualizando...' : 'Cliente aprobó → Iniciar reparación'}
                             </Button>
                         )}
 

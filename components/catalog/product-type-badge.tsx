@@ -21,15 +21,20 @@ export function ProductTypeBadge({ tipo, showIcon = true }: ProductTypeBadgeProp
             className: "bg-orange-500/10 text-orange-400 border-orange-500/20",
             icon: PackageIcon,
         },
+        // Map "Producto" to Refacción style for backward compatibility
+        Producto: {
+            className: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+            icon: Cpu,
+        },
     }
 
-    const variant = variants[tipo]
+    const variant = variants[tipo as keyof typeof variants] || variants['Refacción']
     const Icon = variant.icon
 
     return (
         <Badge className={`${variant.className} font-medium text-xs`}>
             {showIcon && <Icon className="h-3 w-3 mr-1" />}
-            {tipo}
+            {tipo === 'Producto' ? 'Refacción' : tipo}
         </Badge>
     )
 }

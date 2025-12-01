@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/lib/auth-context"
 import type { SaleDetail, PaymentMethod, MixedPaymentBreakdown } from "@/lib/types/sales"
 import { formatCurrency, validateMixedPayment } from "@/lib/utils/sales-helpers"
 import { AlertCircle, DollarSign, Upload } from "lucide-react"
@@ -21,6 +22,7 @@ interface PaymentDialogProps {
 
 export function PaymentDialog({ open, onOpenChange, sale, onPaymentRegistered }: PaymentDialogProps) {
     const { toast } = useToast()
+    const { user } = useAuth()
     const [metodoPago, setMetodoPago] = useState<PaymentMethod>("Efectivo")
     const [monto, setMonto] = useState("")
     const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0])
@@ -209,10 +211,10 @@ export function PaymentDialog({ open, onOpenChange, sale, onPaymentRegistered }:
                                     <SelectItem value="Efectivo" className="text-slate-300">
                                         Efectivo
                                     </SelectItem>
-                                    <SelectItem value="Tarjeta" className="text-slate-300">
+                                    <SelectItem value="Tarjeta" className="text-slate-300" disabled={user?.role === "Recepción"}>
                                         Tarjeta
                                     </SelectItem>
-                                    <SelectItem value="Transferencia" className="text-slate-300">
+                                    <SelectItem value="Transferencia" className="text-slate-300" disabled={user?.role === "Recepción"}>
                                         Transferencia
                                     </SelectItem>
                                     <SelectItem value="MercadoPago" className="text-slate-300">

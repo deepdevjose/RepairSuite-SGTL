@@ -5,55 +5,110 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
 import { OrderStateBadge } from "@/components/ordenes/order-state-badge"
-import { OrderDetailsDialog } from "@/components/ordenes/order-details-dialog"
+import { OrderDetailsDialog } from "@/components/dashboard/order-details-dialog"
+import { NewServiceOrderDialog } from "@/components/dashboard/new-service-order-dialog"
+import { PaymentDialog } from "@/components/dashboard/payment-dialog"
+import { NewClientDialog } from "@/components/dashboard/new-client-dialog"
+import { NewEquipmentDialog } from "@/components/dashboard/new-equipment-dialog"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Eye, Shield, Filter, User, Wrench, Building2, Clock, Loader2 } from 'lucide-react'
+import { Search, Plus, Eye, Shield, Filter, User, Building2, Clock, Loader2 } from 'lucide-react'
 import Link from "next/link"
-import type { ServiceOrder } from "@/lib/types/service-order"
+import { useToast } from "@/hooks/use-toast"
+import type { ServiceOrderState } from "@/lib/types/service-order"
+import { useSearchParams } from 'next/navigation'
 
 type OrdenDB = {
   id: string
   folio: string
-  estado: string
+  estado: ServiceOrderState
   prioridad: string
   problemaReportado: string
+  tipoServicio?: string // Added
   createdAt: string
   cliente: { id: string; nombre: string; telefono: string }
   equipo: { id: string; tipo: string; marca: string; modelo: string }
   tecnico: { id: string; nombre: string } | null
+  montoTotal?: number
+  anticipo?: number
+  saldoPendiente?: number
+  tiempoReparacion?: string
+  fechaCompletado?: string
+  fechaEstimadaFin?: string // Added
+  diagnostico?: string
+  cotizacion?: number
 }
 
 export default function OrdenesPage() {
   const { hasPermission, user } = useAuth()
+  const searchParams = useSearchParams()
+  const searchId = searchParams.get('id')
+
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [tecnicoFilter, setTecnicoFilter] = useState("all")
-  const [marcaFilter, setMarcaFilter] = useState("all")
-  const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null)
+
+  const [selectedOrder, setSelectedOrder] = useState<OrdenDB | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [ordenes, setOrdenes] = useState<OrdenDB[]>([])
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+
+  // Dialog states
+  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false)
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [isNewClientOpen, setIsNewClientOpen] = useState(false)
+  const [isNewEquipmentOpen, setIsNewEquipmentOpen] = useState(false)
+
+  // Chaining states
+  const [createdClientId, setCreatedClientId] = useState<string | undefined>(undefined)
+  const [createdEquipmentId, setCreatedEquipmentId] = useState<string | undefined>(undefined)
+  const [createdOrderId, setCreatedOrderId] = useState<string | undefined>(undefined)
+  const [paymentAmount, setPaymentAmount] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     loadOrdenes()
+
+    // Poll for updates every 10 seconds
+    const intervalId = setInterval(() => {
+      loadOrdenes(false)
+    }, 10000)
+
+    return () => clearInterval(intervalId)
   }, [])
 
-  const loadOrdenes = async () => {
+  useEffect(() => {
+    if (searchId && ordenes.length > 0) {
+      const order = ordenes.find(o => o.id === searchId)
+      if (order) {
+        setSelectedOrder(order)
+        setIsDetailsOpen(true)
+      }
+    }
+  }, [searchId, ordenes])
+
+  const loadOrdenes = async (showLoading = true) => {
     try {
-      setLoading(true)
-      const res = await fetch('/api/ordenes')
+      if (showLoading) setLoading(true)
+      const res = await fetch('/api/ordenes', { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setOrdenes(data)
       }
     } catch (error) {
       console.error('Error al cargar órdenes:', error)
+      if (showLoading) {
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar las órdenes",
+          variant: "destructive"
+        })
+      }
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
@@ -66,10 +121,25 @@ export default function OrdenesPage() {
 
     const matchesStatus = statusFilter === "all" || order.estado === statusFilter
     const matchesTecnico = tecnicoFilter === "all" || order.tecnico?.nombre === tecnicoFilter
-    const matchesMarca = marcaFilter === "all" || order.equipo.marca === marcaFilter
-
-    return matchesSearch && matchesStatus && matchesTecnico && matchesMarca
+    return matchesSearch && matchesStatus && matchesTecnico
   })
+
+  // Calcular estadísticas
+  const totalActivas = ordenes.filter(o =>
+    !['Pagado y entregado', 'Cancelada'].includes(o.estado)
+  ).length
+
+  const enDiagnostico = ordenes.filter(o =>
+    ['Esperando diagnóstico', 'En diagnóstico', 'Diagnóstico terminado', 'Esperando aprobación', 'En espera de aprobación'].includes(o.estado)
+  ).length
+
+  const enReparacion = ordenes.filter(o =>
+    ['En reparación', 'En proceso', 'Reparación terminada'].includes(o.estado)
+  ).length
+
+  const listasEntrega = ordenes.filter(o =>
+    ['Lista para entrega', 'Listo para entrega'].includes(o.estado)
+  ).length
 
   if (!hasPermission("ordenes")) {
     return (
@@ -114,7 +184,7 @@ export default function OrdenesPage() {
               </div>
 
               {/* Filters Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-100">
                     <Filter className="h-4 w-4 mr-2 text-slate-400" />
@@ -143,29 +213,18 @@ export default function OrdenesPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={marcaFilter} onValueChange={setMarcaFilter}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-100">
-                    <Wrench className="h-4 w-4 mr-2 text-slate-400" />
-                    <SelectValue placeholder="Marca" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all">Todas las marcas</SelectItem>
-                    <SelectItem value="HP">HP</SelectItem>
-                    <SelectItem value="Apple">Apple</SelectItem>
-                    <SelectItem value="Dell">Dell</SelectItem>
-                    <SelectItem value="Lenovo">Lenovo</SelectItem>
-                    <SelectItem value="ASUS">ASUS</SelectItem>
-                  </SelectContent>
-                </Select>
 
-                {/* Botón Nueva OS - Solo para Admin y Recepción */}
+
                 {user?.role !== "Técnico" && (
-                  <Link href="/dashboard/ordenes/nueva" className="w-full">
-                    <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 h-10">
+                  <div className="w-full">
+                    <Button
+                      onClick={() => setIsNewOrderOpen(true)}
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 h-10"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Nueva OS
                     </Button>
-                  </Link>
+                  </div>
                 )}
               </div>
             </div>
@@ -175,22 +234,22 @@ export default function OrdenesPage() {
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="bg-slate-900/50 border-slate-800 p-5 backdrop-blur-sm hover:bg-slate-900/70 transition-colors">
               <div className="text-sm text-slate-400 font-medium">Total activas</div>
-              <div className="text-3xl font-bold text-slate-100 mt-1">59</div>
+              <div className="text-3xl font-bold text-slate-100 mt-1">{totalActivas}</div>
               <div className="text-xs text-slate-500 mt-1">Órdenes en proceso</div>
             </Card>
             <Card className="bg-slate-900/50 border-slate-800 p-5 backdrop-blur-sm hover:bg-slate-900/70 transition-colors">
               <div className="text-sm text-slate-400 font-medium">En diagnóstico</div>
-              <div className="text-3xl font-bold text-blue-400 mt-1">12</div>
+              <div className="text-3xl font-bold text-blue-400 mt-1">{enDiagnostico}</div>
               <div className="text-xs text-slate-500 mt-1">Esperando revisión técnica</div>
             </Card>
             <Card className="bg-slate-900/50 border-slate-800 p-5 backdrop-blur-sm hover:bg-slate-900/70 transition-colors">
               <div className="text-sm text-slate-400 font-medium">En reparación</div>
-              <div className="text-3xl font-bold text-purple-400 mt-1">24</div>
+              <div className="text-3xl font-bold text-purple-400 mt-1">{enReparacion}</div>
               <div className="text-xs text-slate-500 mt-1">Reparaciones en curso</div>
             </Card>
             <Card className="bg-slate-900/50 border-slate-800 p-5 backdrop-blur-sm hover:bg-slate-900/70 transition-colors">
               <div className="text-sm text-slate-400 font-medium">Listas para entrega</div>
-              <div className="text-3xl font-bold text-green-400 mt-1">15</div>
+              <div className="text-3xl font-bold text-green-400 mt-1">{listasEntrega}</div>
               <div className="text-xs text-slate-500 mt-1">Esperando al cliente</div>
             </Card>
           </div>
@@ -229,18 +288,13 @@ export default function OrdenesPage() {
                         <TableCell className="font-mono text-sm font-medium">
                           <div className="flex items-center gap-2">
                             {order.folio}
-                            {order.esGarantia && (
-                              <span title="OS por garantía">
-                                <Shield className="h-4 w-4 text-emerald-400" />
-                              </span>
-                            )}
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{order.clienteNombre}</TableCell>
+                        <TableCell className="font-medium">{order.cliente.nombre}</TableCell>
                         <TableCell>
                           <div className="space-y-0.5">
-                            <div className="font-medium text-slate-200">{order.equipoTipo} {order.equipoModelo}</div>
-                            <div className="text-xs text-slate-500">{order.equipoMarca}</div>
+                            <div className="font-medium text-slate-200">{order.equipo.marca} {order.equipo.modelo}</div>
+                            <div className="text-xs text-slate-500">{order.equipo.tipo}</div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -249,25 +303,23 @@ export default function OrdenesPage() {
                         <TableCell className="text-slate-400">
                           <div className="flex items-center gap-2">
                             <User className="h-3.5 w-3.5 text-slate-500" />
-                            {order.tecnicoAsignadoNombre || "No asignado"}
+                            {order.tecnico?.nombre || "No asignado"}
                           </div>
                         </TableCell>
                         <TableCell className="max-w-[250px]">
-                          <div className="text-sm text-slate-400 truncate" title={order.diagnostico?.problema || order.problemaReportado}>
-                            {order.diagnostico?.problema || order.problemaReportado}
+                          <div className="text-sm text-slate-400 truncate" title={order.problemaReportado}>
+                            {order.problemaReportado}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {(order.costoDiagnostico + order.costoReparacion) > 0 ? (
-                            <span className="text-emerald-400">${(order.costoDiagnostico + order.costoReparacion).toLocaleString()}</span>
-                          ) : (
-                            <span className="text-slate-500">Pendiente</span>
-                          )}
+                          <span className="text-slate-500">
+                            {order.montoTotal ? `$${order.montoTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : 'Pendiente'}
+                          </span>
                         </TableCell>
                         <TableCell className="text-slate-500 text-sm">
                           <div className="flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
-                            {new Date(order.ultimaActualizacion).toLocaleString("es-MX", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            {new Date(order.createdAt).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
@@ -295,10 +347,104 @@ export default function OrdenesPage() {
 
       {/* Order Details Dialog */}
       <OrderDetailsDialog
-        order={selectedOrder}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        userRole={user?.role as "Administrador" | "Recepción" | "Técnico"}
+        order={selectedOrder ? {
+          id: selectedOrder.id,
+          folio: selectedOrder.folio,
+          cliente: selectedOrder.cliente.nombre,
+          clienteTelefono: selectedOrder.cliente.telefono,
+          equipo: `${selectedOrder.equipo.tipo}`,
+          equipoMarca: selectedOrder.equipo.marca,
+          equipoModelo: selectedOrder.equipo.modelo,
+          problemaReportado: selectedOrder.problemaReportado,
+          estado: selectedOrder.estado,
+          tipoServicio: selectedOrder.tipoServicio, // Added
+          tecnico: selectedOrder.tecnico?.nombre || 'Sin asignar',
+          fecha: new Date(selectedOrder.createdAt).toLocaleDateString('es-MX'),
+          importe: selectedOrder.montoTotal,
+          anticipo: selectedOrder.anticipo,
+          saldoPendiente: selectedOrder.saldoPendiente,
+          tiempoReparacion: selectedOrder.tiempoReparacion || 'No definido',
+          fechaEstimada: selectedOrder.fechaEstimadaFin ? new Date(selectedOrder.fechaEstimadaFin).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : undefined,
+          diagnostico: selectedOrder.diagnostico || undefined,
+          cotizacion: selectedOrder.cotizacion ? Number(selectedOrder.cotizacion) : undefined,
+        } : null}
+        onStatusChange={async (newStatus) => {
+          if (!selectedOrder) return
+          await loadOrdenes()
+          setIsDetailsOpen(false)
+          setSelectedOrder(null)
+        }}
+      />
+
+      {/* Modals for Creation Flow */}
+      <NewClientDialog
+        open={isNewClientOpen}
+        onOpenChange={setIsNewClientOpen}
+        onSave={(client) => {
+          setCreatedClientId(client.id)
+          // Chain: Client -> Equipment
+          setTimeout(() => setIsNewEquipmentOpen(true), 500)
+        }}
+      />
+
+      <NewEquipmentDialog
+        open={isNewEquipmentOpen}
+        onOpenChange={(open) => {
+          setIsNewEquipmentOpen(open)
+          if (!open) setCreatedClientId(undefined) // Reset if closed without success
+        }}
+        initialClientId={createdClientId}
+        onSuccess={(equipment) => {
+          if (equipment) {
+            setCreatedEquipmentId(equipment.id)
+            // Chain: Equipment -> Order
+            setTimeout(() => setIsNewOrderOpen(true), 500)
+          }
+        }}
+      />
+
+      <NewServiceOrderDialog
+        open={isNewOrderOpen}
+        onOpenChange={(open) => {
+          setIsNewOrderOpen(open)
+          if (!open) {
+            setCreatedClientId(undefined)
+            setCreatedEquipmentId(undefined)
+          }
+        }}
+        initialClientId={createdClientId}
+        initialEquipmentId={createdEquipmentId}
+        onSave={(order) => {
+          loadOrdenes()
+          // Chain: Order -> Payment
+          if (order.anticipoRequerido > 0) {
+            setCreatedOrderId(order.id)
+            setPaymentAmount(order.anticipoRequerido)
+            setTimeout(() => setIsPaymentOpen(true), 500)
+          }
+        }}
+      />
+
+      <PaymentDialog
+        open={isPaymentOpen}
+        onOpenChange={(open) => {
+          setIsPaymentOpen(open)
+          if (!open) {
+            setCreatedOrderId(undefined)
+            setPaymentAmount(undefined)
+          }
+        }}
+        initialOrderId={createdOrderId}
+        initialAmount={paymentAmount}
+        onSave={() => {
+          loadOrdenes()
+          toast({
+            title: "Proceso completado",
+            description: "Se ha registrado el cliente, equipo, orden y pago exitosamente.",
+          })
+        }}
       />
     </>
   )

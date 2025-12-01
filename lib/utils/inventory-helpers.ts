@@ -147,29 +147,43 @@ export function formatCurrency(amount: number): string {
 /**
  * Format date for display
  */
-export function formatDate(dateString: string): string {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("es-MX", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(date)
+export function formatDate(dateString: string | Date | undefined | null): string {
+    if (!dateString) return "N/A"
+    try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return "Fecha inválida"
+
+        return new Intl.DateTimeFormat("es-MX", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(date)
+    } catch (error) {
+        return "Fecha inválida"
+    }
 }
 
 /**
  * Format relative time (e.g., "hace 2 días")
  */
-export function formatRelativeTime(dateString: string): string {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+export function formatRelativeTime(dateString: string | Date | undefined | null): string {
+    if (!dateString) return "N/A"
+    try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return "Fecha inválida"
 
-    if (diffDays === 0) return "Hoy"
-    if (diffDays === 1) return "Ayer"
-    if (diffDays < 7) return `Hace ${diffDays} días`
-    if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`
-    return formatDate(dateString)
+        const now = new Date()
+        const diffMs = now.getTime() - date.getTime()
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+        if (diffDays === 0) return "Hoy"
+        if (diffDays === 1) return "Ayer"
+        if (diffDays < 7) return `Hace ${diffDays} días`
+        if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`
+        return formatDate(dateString)
+    } catch (error) {
+        return "Fecha inválida"
+    }
 }

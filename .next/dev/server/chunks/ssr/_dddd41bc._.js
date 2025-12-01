@@ -166,7 +166,7 @@ const navItems = [
 ];
 function DashboardSidebar() {
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
-    const { hasPermission } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2d$context$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAuth"])();
+    const { hasPermission, user } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2d$context$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAuth"])();
     const groupedItems = navItems.reduce((acc, item)=>{
         if (!hasPermission(item.permission)) return acc;
         if (!acc[item.section]) acc[item.section] = [];
@@ -174,10 +174,8 @@ function DashboardSidebar() {
         return acc;
     }, {});
     const getBadgeCount = (title)=>{
-        if (title === "Órdenes de Servicio") return 8 // Pending approvals
-        ;
-        if (title === "Inventario") return 5 // Critical items
-        ;
+        // if (title === "Órdenes de Servicio") return 8 // Pending approvals
+        // if (title === "Inventario") return 5 // Critical items
         return null;
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -251,6 +249,11 @@ function DashboardSidebar() {
                                     const isActive = pathname === item.href;
                                     const Icon = item.icon;
                                     const badgeCount = getBadgeCount(item.title);
+                                    // Rename "Inventario" to "Catálogo" for Technicians
+                                    let title = item.title;
+                                    if (title === "Inventario" && user?.role === "Técnico") {
+                                        title = "Catálogo";
+                                    }
                                     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                         href: item.href,
                                         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ease-out group relative", isActive ? "bg-white/5 text-slate-100 shadow-lg shadow-indigo-500/10 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-1 before:rounded-r-full before:bg-gradient-to-b before:from-indigo-500 before:to-violet-500" : "text-slate-400 hover:text-slate-200 hover:bg-white/5 hover:scale-[1.01]"),
@@ -259,15 +262,15 @@ function DashboardSidebar() {
                                                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-4 w-4 flex-shrink-0 transition-all duration-200", isActive ? "text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" : "text-slate-500 group-hover:text-slate-400 opacity-60 group-hover:opacity-100")
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-sidebar.tsx",
-                                                lineNumber: 117,
+                                                lineNumber: 123,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "truncate flex-1",
-                                                children: item.title
+                                                children: title
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-sidebar.tsx",
-                                                lineNumber: 125,
+                                                lineNumber: 131,
                                                 columnNumber: 21
                                             }, this),
                                             badgeCount !== null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -276,13 +279,13 @@ function DashboardSidebar() {
                                                 children: badgeCount
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard-sidebar.tsx",
-                                                lineNumber: 127,
+                                                lineNumber: 133,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, item.href, true, {
                                         fileName: "[project]/components/dashboard-sidebar.tsx",
-                                        lineNumber: 107,
+                                        lineNumber: 113,
                                         columnNumber: 19
                                     }, this);
                                 })
@@ -309,12 +312,12 @@ function DashboardSidebar() {
                     children: "JLaboratories © 2025"
                 }, void 0, false, {
                     fileName: "[project]/components/dashboard-sidebar.tsx",
-                    lineNumber: 143,
+                    lineNumber: 149,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/dashboard-sidebar.tsx",
-                lineNumber: 142,
+                lineNumber: 148,
                 columnNumber: 7
             }, this)
         ]

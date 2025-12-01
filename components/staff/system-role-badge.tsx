@@ -26,7 +26,14 @@ export function SystemRoleBadge({ rol }: SystemRoleBadgeProps) {
         },
     }
 
-    const { icon: Icon, className } = config[rol]
+    // Normalize role to handle potential database inconsistencies (e.g. missing accents)
+    const normalizedRol = (rol as string) === "Recepcion" ? "Recepción" : rol
+    const roleConfig = config[normalizedRol as keyof typeof config] || {
+        icon: UserCircle,
+        className: "bg-slate-500/10 text-slate-400 border-slate-500/20"
+    }
+
+    const { icon: Icon, className } = roleConfig
 
     return (
         <Badge className={`${className} text-xs`}>

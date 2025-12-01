@@ -53,12 +53,12 @@ export async function POST(request: Request) {
       
       const nuevoSaldo = montoTotalOrden - totalPagado
       
+      // Solo actualizar saldoPendiente, NO cambiar estado automáticamente
+      // El estado debe cambiarse manualmente cuando se entregue físicamente
       await prisma.ordenServicio.update({
         where: { id: body.ordenServicioId },
         data: { 
-          saldoPendiente: nuevoSaldo,
-          // Si está completamente pagado, actualizar estado
-          estado: nuevoSaldo <= 0 ? 'Pagado y entregado' : orden.estado
+          saldoPendiente: nuevoSaldo
         }
       })
     }

@@ -15,7 +15,17 @@ export async function GET(request: Request) {
         include: { cliente: true },
         orderBy: { createdAt: 'desc' }
       })
-      return NextResponse.json(equipos)
+
+      // Agregar campo 'nombre' concatenado al cliente
+      const equiposConNombre = equipos.map(equipo => ({
+        ...equipo,
+        cliente: equipo.cliente ? {
+          ...equipo.cliente,
+          nombre: `${equipo.cliente.nombre1}${equipo.cliente.nombre2 ? ' ' + equipo.cliente.nombre2 : ''} ${equipo.cliente.apellidoPaterno}${equipo.cliente.apellidoMaterno ? ' ' + equipo.cliente.apellidoMaterno : ''}`
+        } : null
+      }))
+
+      return NextResponse.json(equiposConNombre)
     }
 
     // Si no hay clienteId, devolver todos los equipos
@@ -24,7 +34,16 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(equipos)
+    // Agregar campo 'nombre' concatenado al cliente
+    const equiposConNombre = equipos.map(equipo => ({
+      ...equipo,
+      cliente: equipo.cliente ? {
+        ...equipo.cliente,
+        nombre: `${equipo.cliente.nombre1}${equipo.cliente.nombre2 ? ' ' + equipo.cliente.nombre2 : ''} ${equipo.cliente.apellidoPaterno}${equipo.cliente.apellidoMaterno ? ' ' + equipo.cliente.apellidoMaterno : ''}`
+      } : null
+    }))
+
+    return NextResponse.json(equiposConNombre)
   } catch (error) {
     console.error('Error al obtener equipos:', error)
     return NextResponse.json(
@@ -38,14 +57,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    
+
+    console.log('Datos recibidos para crear equipo:', JSON.stringify(body, null, 2))
+
     const equipo = await prisma.equipo.create({
       data: {
         clienteId: body.clienteId,
-        tipo: body.tipo,
+        tipo: body.tipo || 'Laptop',
         marca: body.marca,
         modelo: body.modelo,
         numeroSerie: body.numeroSerie || null,
+        color: body.color || null,
+        fechaIngreso: body.fechaIngreso ? new Date(body.fechaIngreso) : new Date(),
+        estadoFisico: body.estadoFisico || null,
+        accesoriosRecibidos: body.accesoriosRecibidos ? JSON.stringify(body.accesoriosRecibidos) : null,
+        enciende: body.enciende || null,
+        tieneContrasena: body.tieneContrasena || false,
+        contrasena: body.contrasena || null,
         notas: body.notas || null,
       },
       include: {
@@ -53,11 +81,13 @@ export async function POST(request: Request) {
       }
     })
 
+    console.log('Equipo creado exitosamente:', equipo.id)
     return NextResponse.json(equipo, { status: 201 })
   } catch (error) {
-    console.error('Error al crear equipo:', error)
+    console.error('Error detallado al crear equipo:', error)
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json(
-      { error: 'Error al crear equipo' },
+      { error: 'Error al crear equipo', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

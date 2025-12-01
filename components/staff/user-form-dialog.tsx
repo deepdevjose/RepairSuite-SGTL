@@ -9,19 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
-import type { User, SystemRole, UserPermissions } from "@/lib/types/staff"
+import type { User, SystemRole, UserPermissions, Employee } from "@/lib/types/staff"
 import { ADMIN_PERMISSIONS, RECEPCION_PERMISSIONS, TECNICO_PERMISSIONS, SOLO_LECTURA_PERMISSIONS } from "@/lib/utils/permission-templates"
-import { mockEmployees, getEmployeesWithoutUser } from "@/lib/data/staff-mock"
 import { AlertCircle, Shield, UserCircle, Wrench, Eye } from "lucide-react"
 
 interface UserFormDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     user?: User | null
+    employees: Employee[]
     onSave?: (user: Partial<User>) => void
 }
 
-export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDialogProps) {
+export function UserFormDialog({ open, onOpenChange, user, employees, onSave }: UserFormDialogProps) {
     const { toast } = useToast()
     const isEditing = !!user
 
@@ -37,7 +37,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
 
     useEffect(() => {
         if (user) {
-            const empleado = mockEmployees.find((e) => e.id === user.empleadoId)
+            const empleado = employees.find((e) => e.id === user.empleadoId)
             setFormData({
                 empleadoId: user.empleadoId,
                 correoLogin: user.correoLogin,
@@ -55,7 +55,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
             })
         }
         setErrors({})
-    }, [user, open])
+    }, [user, open, employees])
 
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {}
@@ -84,7 +84,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
 
         onSave?.(userData)
 
-        const empleado = mockEmployees.find((e) => e.id === formData.empleadoId)
+        const empleado = employees.find((e) => e.id === formData.empleadoId)
         toast({
             title: isEditing ? "Usuario actualizado" : "Usuario creado",
             description: `Usuario para ${empleado?.nombreCompleto} ha sido ${isEditing ? "actualizado" : "creado"} correctamente.`,
@@ -111,7 +111,12 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
         })
     }
 
-    const empleadosSinUsuario = getEmployeesWithoutUser()
+    // Filter employees:
+    // 1. Employees without a user account
+    // 2. OR the employee currently assigned to this user (if editing)
+    const availableEmployees = employees.filter(emp =>
+        !emp.tieneUsuario || (isEditing && emp.id === user?.empleadoId)
+    )
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,14 +142,13 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
                             <Select
                                 value={formData.empleadoId}
                                 onValueChange={(value) => {
-                                    const emp = mockEmployees.find((e) => e.id === value)
+                                    const emp = employees.find((e) => e.id === value)
                                     setFormData({
                                         ...formData,
                                         empleadoId: value,
                                         correoLogin: emp?.correoInterno || "",
                                     })
                                 }}
-                                disabled={isEditing}
                             >
                                 <SelectTrigger
                                     className={`bg-slate-800 border-slate-700 text-slate-100 ${errors.empleadoId ? "border-red-500" : ""
@@ -153,7 +157,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
                                     <SelectValue placeholder="Selecciona un empleado" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-900 border-slate-700">
-                                    {(isEditing ? mockEmployees : empleadosSinUsuario).map((emp) => (
+                                    {availableEmployees.map((emp) => (
                                         <SelectItem key={emp.id} value={emp.id} className="text-slate-300">
                                             {emp.nombreCompleto} - {emp.rolOperativo}
                                         </SelectItem>

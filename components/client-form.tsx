@@ -39,7 +39,7 @@ interface ClientFormData {
 
 interface ClientFormProps {
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess?: (client?: any) => void
   initialData?: Partial<ClientFormData>
 }
 
@@ -48,7 +48,7 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
   const [sectionPersonal, setSectionPersonal] = useState(true)
   const [sectionDireccion, setSectionDireccion] = useState(false)
   const [sectionOtros, setSectionOtros] = useState(false)
-  
+
   const [formData, setFormData] = useState<ClientFormData>({
     nombre1: initialData?.nombre1 || "",
     nombre2: initialData?.nombre2 || "",
@@ -69,7 +69,7 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
     notas: initialData?.notas || "",
     activo: initialData?.activo !== undefined ? initialData.activo : true
   })
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -133,12 +133,14 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
         throw new Error(`Error al ${initialData ? 'actualizar' : 'crear'} cliente`)
       }
 
+      const updatedClient = await response.json()
+
       toast({
         title: initialData ? "Cliente actualizado" : "Cliente creado",
         description: `El cliente se ha ${initialData ? 'actualizado' : 'registrado'} exitosamente`,
       })
 
-      onSuccess?.()
+      onSuccess?.(updatedClient)
       onClose()
     } catch (error) {
       console.error('Error al guardar cliente:', error)
@@ -179,7 +181,7 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
           Información Personal
           {sectionPersonal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-        
+
         {sectionPersonal && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -194,9 +196,8 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
                   id="nombre1"
                   value={formData.nombre1}
                   onChange={(e) => handleChange('nombre1', e.target.value)}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
-                    errors.nombre1 ? 'border-red-500/50' : ''
-                  }`}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${errors.nombre1 ? 'border-red-500/50' : ''
+                    }`}
                 />
                 {errors.nombre1 && (
                   <p className="text-xs text-red-400 flex items-center gap-1">
@@ -228,9 +229,8 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
                   id="apellidoPaterno"
                   value={formData.apellidoPaterno}
                   onChange={(e) => handleChange('apellidoPaterno', e.target.value)}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
-                    errors.apellidoPaterno ? 'border-red-500/50' : ''
-                  }`}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${errors.apellidoPaterno ? 'border-red-500/50' : ''
+                    }`}
                 />
                 {errors.apellidoPaterno && (
                   <p className="text-xs text-red-400 flex items-center gap-1">
@@ -263,9 +263,8 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
                   value={formData.telefono}
                   onChange={(e) => handleChange('telefono', e.target.value.replace(/\D/g, ''))}
                   maxLength={10}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
-                    errors.telefono ? 'border-red-500/50' : ''
-                  }`}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${errors.telefono ? 'border-red-500/50' : ''
+                    }`}
                 />
                 {errors.telefono && (
                   <p className="text-xs text-red-400 flex items-center gap-1">
@@ -286,9 +285,8 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
-                    errors.email ? 'border-red-500/50' : ''
-                  }`}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${errors.email ? 'border-red-500/50' : ''
+                    }`}
                 />
                 {errors.email && (
                   <p className="text-xs text-red-400 flex items-center gap-1">
@@ -338,7 +336,7 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
           Dirección
           {sectionDireccion ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-        
+
         {sectionDireccion && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
@@ -416,7 +414,7 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
           Otros Datos
           {sectionOtros ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-        
+
         {sectionOtros && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -432,13 +430,12 @@ export function ClientForm({ onClose, onSuccess, initialData }: ClientFormProps)
                   value={formData.rfc}
                   onChange={(e) => handleChange('rfc', e.target.value.toUpperCase())}
                   placeholder="XAXX010101000"
-                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${
-                    errors.rfc ? 'border-red-500/50' : ''
-                  }`}
+                  className={`bg-slate-800/50 border-slate-700/50 text-slate-100 ${errors.rfc ? 'border-red-500/50' : ''
+                    }`}
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={sugerirRFCGenerico}
                   className="bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-800"
                 >

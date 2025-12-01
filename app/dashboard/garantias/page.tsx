@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { useAuth } from "@/lib/auth-context"
 import { AccessDenied } from "@/components/access-denied"
@@ -9,47 +9,47 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Eye, Plus } from "lucide-react"
+import { Search, Eye, Plus, Loader2, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
-const mockWarranties = [
-  {
-    id: "GAR-001",
-    cliente: "Juan Pérez",
-    equipo: "HP Pavilion 15",
-    sku: "SSD-256GB",
-    descripcion: "SSD 256GB",
-    fecha_inicio: "2024-10-15",
-    fecha_fin: "2025-01-13",
-    estado: "Activo",
-    os_origen: "RS-OS-1010",
-  },
-  {
-    id: "GAR-002",
-    cliente: "María González",
-    equipo: 'MacBook Pro 13"',
-    sku: "SERV-LIMPIEZA",
-    descripcion: "Limpieza profunda",
-    fecha_inicio: "2024-12-01",
-    fecha_fin: "2024-12-08",
-    estado: "Activo",
-    os_origen: "RS-OS-1015",
-  },
-  {
-    id: "GAR-003",
-    cliente: "Pedro Ramírez",
-    equipo: "Dell XPS 15",
-    sku: "RAM-DDR4-8GB",
-    descripcion: "Memoria RAM DDR4 8GB",
-    fecha_inicio: "2024-08-01",
-    fecha_fin: "2024-10-30",
-    estado: "Inactivo",
-    os_origen: "RS-OS-1005",
-  },
-]
+interface Warranty {
+  id: string
+  cliente: string
+  equipo: string
+  sku: string
+  descripcion: string
+  fecha_inicio: string
+  fecha_fin: string
+  estado: string
+  os_origen: string
+  categoria: string
+}
 
 export default function GarantiasPage() {
   const { hasPermission } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
+  const [warranties, setWarranties] = useState<Warranty[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchWarranties()
+  }, [])
+
+  const fetchWarranties = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/warranties')
+      if (res.ok) {
+        const data = await res.json()
+        setWarranties(data)
+      }
+    } catch (error) {
+      console.error("Error loading warranties:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!hasPermission("garantias")) {
     return (
@@ -60,12 +60,19 @@ export default function GarantiasPage() {
     )
   }
 
-  const filteredWarranties = mockWarranties.filter(
+  const filteredWarranties = warranties.filter(
     (warranty) =>
       warranty.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       warranty.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      warranty.sku.toLowerCase().includes(searchTerm.toLowerCase()),
+      warranty.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      warranty.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const stats = {
+    active: warranties.filter(w => w.estado === 'Activo').length,
+    expired: warranties.filter(w => w.estado === 'Vencida').length,
+    total: warranties.length
+  }
 
   return (
     <>
@@ -73,78 +80,103 @@ export default function GarantiasPage() {
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
-          <Card className="bg-slate-900 border-slate-800 p-4">
-            <div className="relative max-w-md">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div className="relative max-w-md w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
               <Input
-                placeholder="Buscar por ID, cliente o SKU..."
+                placeholder="Buscar por ID, técnico o SKU..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                className="pl-10 bg-slate-900/60 border-slate-700 text-slate-100 placeholder:text-slate-500"
               />
             </div>
-          </Card>
+            <Button onClick={fetchWarranties} variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800">
+              Actualizar
+            </Button>
+          </div>
 
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="bg-slate-900 border-slate-800 p-4">
-              <div className="text-sm text-slate-400">Garantías activas</div>
-              <div className="text-2xl font-bold text-green-400 mt-1">2</div>
+            <Card className="bg-slate-900/60 border-slate-800 p-4 flex items-center gap-4">
+              <div className="p-3 rounded-full bg-green-500/10">
+                <CheckCircle className="h-6 w-6 text-green-400" />
+              </div>
+              <div>
+                <div className="text-sm text-slate-400">Garantías Activas</div>
+                <div className="text-2xl font-bold text-green-400">{stats.active}</div>
+              </div>
             </Card>
-            <Card className="bg-slate-900 border-slate-800 p-4">
-              <div className="text-sm text-slate-400">Por vencer (30 días)</div>
-              <div className="text-2xl font-bold text-yellow-400 mt-1">1</div>
+            <Card className="bg-slate-900/60 border-slate-800 p-4 flex items-center gap-4">
+              <div className="p-3 rounded-full bg-red-500/10">
+                <XCircle className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <div className="text-sm text-slate-400">Vencidas</div>
+                <div className="text-2xl font-bold text-red-400">{stats.expired}</div>
+              </div>
             </Card>
-            <Card className="bg-slate-900 border-slate-800 p-4">
-              <div className="text-sm text-slate-400">Vencidas</div>
-              <div className="text-2xl font-bold text-slate-400 mt-1">1</div>
+            <Card className="bg-slate-900/60 border-slate-800 p-4 flex items-center gap-4">
+              <div className="p-3 rounded-full bg-indigo-500/10">
+                <AlertTriangle className="h-6 w-6 text-indigo-400" />
+              </div>
+              <div>
+                <div className="text-sm text-slate-400">Total Registros</div>
+                <div className="text-2xl font-bold text-indigo-400">{stats.total}</div>
+              </div>
             </Card>
           </div>
 
           {/* Table */}
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="bg-slate-900/60 border-slate-800 overflow-hidden">
             <Table>
-              <TableHeader>
-                <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                  <TableHead className="text-slate-400">ID Garantía</TableHead>
-                  <TableHead className="text-slate-400">Cliente</TableHead>
-                  <TableHead className="text-slate-400">Equipo</TableHead>
-                  <TableHead className="text-slate-400">SKU</TableHead>
-                  <TableHead className="text-slate-400">Fecha inicio</TableHead>
-                  <TableHead className="text-slate-400">Fecha fin</TableHead>
-                  <TableHead className="text-slate-400">Estado</TableHead>
-                  <TableHead className="text-slate-400">OS origen</TableHead>
-                  <TableHead className="text-slate-400">Acciones</TableHead>
+              <TableHeader className="bg-slate-900/80">
+                <TableRow className="border-slate-800 hover:bg-transparent">
+                  <TableHead className="text-slate-400 font-bold">ID Referencia</TableHead>
+                  <TableHead className="text-slate-400 font-bold">Solicitante</TableHead>
+                  <TableHead className="text-slate-400 font-bold">Producto</TableHead>
+                  <TableHead className="text-slate-400 font-bold">SKU</TableHead>
+                  <TableHead className="text-slate-400 font-bold">Inicio</TableHead>
+                  <TableHead className="text-slate-400 font-bold">Vencimiento</TableHead>
+                  <TableHead className="text-slate-400 font-bold">Estado</TableHead>
+                  <TableHead className="text-slate-400 font-bold">Ticket Origen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredWarranties.map((warranty) => (
-                  <TableRow key={warranty.id} className="border-slate-800 hover:bg-slate-800/50 text-slate-300">
-                    <TableCell className="font-mono text-sm">{warranty.id}</TableCell>
-                    <TableCell>{warranty.cliente}</TableCell>
-                    <TableCell>{warranty.equipo}</TableCell>
-                    <TableCell className="font-mono text-sm">{warranty.sku}</TableCell>
-                    <TableCell className="text-slate-400">{warranty.fecha_inicio}</TableCell>
-                    <TableCell className="text-slate-400">{warranty.fecha_fin}</TableCell>
-                    <TableCell>
-                      <BadgeStatus status={warranty.estado} />
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{warranty.os_origen}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="ghost" className="text-indigo-400 hover:text-indigo-300">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {warranty.estado === "Activo" && (
-                          <Button size="sm" variant="ghost" className="text-green-400 hover:text-green-300">
-                            <Plus className="h-4 w-4 mr-1" />
-                            OS
-                          </Button>
-                        )}
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-slate-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                        <p>Cargando garantías...</p>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : filteredWarranties.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-slate-500">
+                      No se encontraron garantías registradas.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredWarranties.map((warranty) => (
+                    <TableRow key={warranty.id} className="border-slate-800 hover:bg-slate-800/50 text-slate-300">
+                      <TableCell className="font-mono text-xs text-slate-500">{warranty.id}</TableCell>
+                      <TableCell className="font-medium">{warranty.cliente}</TableCell>
+                      <TableCell>{warranty.descripcion}</TableCell>
+                      <TableCell className="font-mono text-xs">{warranty.sku}</TableCell>
+                      <TableCell className="text-slate-400 text-sm">
+                        {format(new Date(warranty.fecha_inicio), "dd/MM/yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell className="text-slate-400 text-sm">
+                        {format(new Date(warranty.fecha_fin), "dd/MM/yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell>
+                        <BadgeStatus status={warranty.estado} />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-indigo-400">{warranty.os_origen}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </Card>

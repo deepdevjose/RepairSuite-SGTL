@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const { hasPermission } = useAuth()
+  const { hasPermission, user } = useAuth()
 
   const groupedItems = navItems.reduce(
     (acc, item) => {
@@ -70,8 +70,8 @@ export function DashboardSidebar() {
   )
 
   const getBadgeCount = (title: string): number | null => {
-    if (title === "Órdenes de Servicio") return 8 // Pending approvals
-    if (title === "Inventario") return 5 // Critical items
+    // if (title === "Órdenes de Servicio") return 8 // Pending approvals
+    // if (title === "Inventario") return 5 // Critical items
     return null
   }
 
@@ -103,6 +103,12 @@ export function DashboardSidebar() {
                 const Icon = item.icon
                 const badgeCount = getBadgeCount(item.title)
 
+                // Rename "Inventario" to "Catálogo" for Technicians
+                let title = item.title
+                if (title === "Inventario" && user?.role === "Técnico") {
+                  title = "Catálogo"
+                }
+
                 return (
                   <Link
                     key={item.href}
@@ -122,7 +128,7 @@ export function DashboardSidebar() {
                           : "text-slate-500 group-hover:text-slate-400 opacity-60 group-hover:opacity-100",
                       )}
                     />
-                    <span className="truncate flex-1">{item.title}</span>
+                    <span className="truncate flex-1">{title}</span>
                     {badgeCount !== null && (
                       <Badge
                         variant="secondary"
